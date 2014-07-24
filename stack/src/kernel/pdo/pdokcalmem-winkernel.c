@@ -1,15 +1,16 @@
 /**
 ********************************************************************************
-\file   ctrlucal.h
+\file   /windows-split/stack/src/kernel/pdo/pdokcalmem-winkernel.c
 
-\brief  Definitions for user ctrl CAL module
+\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
 
-This file contains the definitions for the user ctrl CAL module.
+{DETAILED_DESCRIPTION_OF_THE_FILE}
 
+\ingroup {MODULE_GROUP}
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
+Copyright (c) 2014, {DEVELOPER_NAME}
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,45 +36,68 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_ctrlucal_H_
-#define _INC_ctrlucal_H_
-
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/ctrl.h>
+#include <{SYSTEM_INCLUDE_FILE}>
+
+#include "{LOCAL_INCLUDE_FILE}"
+
+
+//============================================================================//
+//            G L O B A L   D E F I N I T I O N S                             //
+//============================================================================//
 
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// typedef
+// module global vars
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// function prototypes
+// global function prototypes
 //------------------------------------------------------------------------------
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-tOplkError ctrlucal_init(void);
-void       ctrlucal_exit(void);
-tOplkError ctrlucal_process(void);
-UINT16     ctrlucal_getStatus(void);
-UINT16     ctrlucal_getHeartbeat(void);
-tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p);
-tOplkError ctrlucal_checkKernelStack(void);
-void       ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p);
-tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p);
-int        ctrlucal_getFd(void);
-void*      ctrlucal_getFileHandle(void);
+//============================================================================//
+//            P R I V A T E   D E F I N I T I O N S                           //
+//============================================================================//
 
-#ifdef __cplusplus
-}
-#endif
+//------------------------------------------------------------------------------
+// const defines
+//------------------------------------------------------------------------------
 
-#endif /* _INC_ctrlucal_H_ */
+//------------------------------------------------------------------------------
+// local types
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local vars
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local function prototypes
+//------------------------------------------------------------------------------
+
+//============================================================================//
+//            P U B L I C   F U N C T I O N S                                 //
+//============================================================================//
+
+
+//============================================================================//
+//            P R I V A T E   F U N C T I O N S                               //
+//============================================================================//
+/// \name Private Functions
+/// \{
+
+
+///\}
+
+
+
+
+
+
+
