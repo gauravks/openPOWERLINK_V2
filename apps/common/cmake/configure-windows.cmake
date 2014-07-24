@@ -28,9 +28,36 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
-SET(CFG_KERNEL_STACK_DIRECTLINK ON CACHE INTERNAL
-    "Link kernel stack directly into application (Single process solution)")
-UNSET(CFG_KERNEL_STACK_USERSPACE_DAEMON CACHE)
+SET (CFG_BUILD_KERNEL_STACK "Link to Application"
+    CACHE STRING "Configure how to build the kernel stack")
 
+SET (KernelStackBuildTypes
+    "Link to Application;Linux Kernel Module;None"
+    CACHE INTERNAL
+    "List of possible kernel stack build types")
+
+SET_PROPERTY(CACHE CFG_BUILD_KERNEL_STACK
+             PROPERTY STRINGS ${KernelStackBuildTypes})
+
+IF (CFG_BUILD_KERNEL_STACK STREQUAL "Link to Application")
+
+    SET (CFG_KERNEL_STACK_DIRECTLINK ON CACHE INTERNAL
+         "Link kernel stack directly into application (Single process solution)")
+    UNSET (CFG_KERNEL_STACK_USERSPACE_DAEMON CACHE)
+    UNSET (CFG_KERNEL_STACK_KERNEL_MODULE CACHE)
+
+ELSEIF (CFG_BUILD_KERNEL_STACK STREQUAL "Linux Kernel Module")
+
+    SET (CFG_KERNEL_STACK_KERNEL_MODULE ON CACHE INTERNAL
+         "Build kernel stack as Linux kernelspace module")
+    UNSET (CFG_KERNEL_STACK_USERSPACE_DAEMON CACHE)
+    UNSET (CFG_KERNEL_STACK_DIRECTLINK CACHE)
+
+ELSEIF (CFG_BUILD_KERNEL_STACK STREQUAL "None")
+    UNSET (CFG_KERNEL_STACK_DIRECTLINK CACHE)
+    UNSET (CFG_KERNEL_STACK_KERNEL_MODULE CACHE)
+    UNSET (CFG_KERNEL_STACK_USERSPACE_DAEMON CACHE)
+
+ENDIF (CFG_BUILD_KERNEL_STACK STREQUAL "Link to Application")
 
 
