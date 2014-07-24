@@ -114,6 +114,10 @@ SET(CTRL_UCAL_DIRECT_SOURCES
     ${USER_SOURCE_DIR}/ctrl/ctrlucal-direct.c
     )
 
+SET(CTRL_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/ctrl/ctrlucal-winioctl.c
+    )
+
 ################################################################################
 # User DLL CAL sources
 
@@ -123,6 +127,10 @@ SET(DLL_UCAL_CIRCBUF_SOURCES
 
 SET(DLL_UCAL_LINUXIOCTL_SOURCES
     ${USER_SOURCE_DIR}/dll/dllucal-ioctl.c
+    )
+
+SET(DLL_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/dll/dllucal-winioctl.c
     )
 
 ################################################################################
@@ -138,6 +146,10 @@ SET(ERRHND_UCAL_POSIXMEM_SOURCES
 
 SET(ERRHND_UCAL_LOCAL_SOURCES
     ${USER_SOURCE_DIR}/errhnd/errhnducal-local.c
+    )
+
+SET(ERRHND_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/errhnd/errhnducal-winioctl.c
     )
 
 ################################################################################
@@ -162,6 +174,10 @@ SET(EVENT_UCAL_NOOSKERNEL_SOURCES
     ${USER_SOURCE_DIR}/event/eventucal-nooscircbuf.c
     )
 
+SET(EVENT_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/event/eventucal-winioctl.c
+    )
+
 ################################################################################
 # User PDO CAL sources
 SET(PDO_UCAL_LOCAL_SOURCES
@@ -177,6 +193,11 @@ SET(PDO_UCAL_POSIX_SOURCES
 SET(PDO_UCAL_LINUXMMAPIOCTL_SOURCES
     ${USER_SOURCE_DIR}/pdo/pdoucalsync-ioctl.c
     ${USER_SOURCE_DIR}/pdo/pdoucalmem-linuxmmap.c
+    )
+
+SET(PDO_UCAL_WINDOWSMMAPIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/pdo/pdoucalsync-winioctl.c
+    ${USER_SOURCE_DIR}/pdo/pdoucalmem-winioctl.c
     )
 
 ################################################################################
