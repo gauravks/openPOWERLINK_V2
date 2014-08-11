@@ -403,7 +403,7 @@ int eventkcal_getEventForUser(ULONG arg)
     tOplkError          error;
     int                 ret;
     size_t              readSize;
-    int                 timeout = 500 * HZ / 1000;
+    int                 timeout = 500 * HZ / 1000; // 500 milliseconds
 
     if (!instance_l.fInitialized)
         return -EIO;

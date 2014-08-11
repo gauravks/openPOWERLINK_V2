@@ -178,7 +178,6 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p)
     return ctrlCmd.retVal;
 }
 
-
 //------------------------------------------------------------------------------
 /**
 \brief Check state of kernel stack

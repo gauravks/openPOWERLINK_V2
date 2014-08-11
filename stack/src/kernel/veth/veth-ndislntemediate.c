@@ -1,16 +1,17 @@
 /**
 ********************************************************************************
-\file   /windows-split/stack/src/kernel/timer/hrestimer-winkernel.c
+\file   veth-winkernel.c
 
-\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
+\brief  Implementation of virtual Ethernet for Windows kernel
 
-{DETAILED_DESCRIPTION_OF_THE_FILE}
+This file contains implementation for virtual Ethernet interface for openPOWERLINK
+stack using NDIS for Windows.
 
-\ingroup {MODULE_GROUP}
+\ingroup module_veth
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, {DEVELOPER_NAME}
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,9 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <{SYSTEM_INCLUDE_FILE}>
-
-#include "{LOCAL_INCLUDE_FILE}"
+#include <kernel/veth.h>
+#include <kernel/dllkcal.h>
+#include <kernel/dllk.h>
+#include <oplk/ami.h>
 
 
 //============================================================================//
@@ -85,7 +87,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
 
+//------------------------------------------------------------------------------
+/**
+\brief  Add virtual Ethernet instance
 
+The function adds a virtual Ethernet instance.
+
+\param  aSrcMac_p       MAC address to set for virtual Ethernet interface.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_veth
+*/
+//------------------------------------------------------------------------------
+tOplkError veth_addInstance(const UINT8 aSrcMac_p[6])
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Delete virtual Ethernet instance
+
+The function deletes a virtual Ethernet instance.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_veth
+*/
+//------------------------------------------------------------------------------
+tOplkError veth_delInstance(void)
+{
+    return kErrorOk;
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
