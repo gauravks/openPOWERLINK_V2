@@ -181,7 +181,7 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p)
                          &ctrlCmdRes, sizeof(tCtrlCmd),
                          &bytesReturned, NULL))
     {
-        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func_, GetLastError());
+        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return kErrorGeneralError;
     }
 
@@ -261,7 +261,7 @@ UINT16 ctrlucal_getStatus(void)
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_GET_STATUS, 0, 0,
                          &status, sizeof(UINT16), &bytesReturned, NULL))
     {
-        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func_, GetLastError());
+        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return kCtrlStatusUnavailable;
     }
     return status;
@@ -286,7 +286,7 @@ UINT16 ctrlucal_getHeartbeat(void)
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_GET_HEARTBEAT, 0, 0,
         &heartbeat, sizeof(UINT16), &bytesReturned, NULL))
     {
-        TRACE("%s() Error in DeviceIoControl : %d\n", __func_, GetLastError());
+        TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return 0;
     }
     return heartbeat;
@@ -312,7 +312,7 @@ void ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p)
                          pInitParam_p, sizeof(tCtrlInitParam),
                          0, 0, &bytesReturned, NULL))
     {
-        TRACE("%s() Error in DeviceIoControl : %d\n", __func_, GetLastError());
+        TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
     }
 }
 
@@ -339,7 +339,7 @@ tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p)
                          pInitParam_p, sizeof(tCtrlInitParam),
                          &bytesReturned, NULL))
     {
-        TRACE("%s() Error in DeviceIoControl : %d\n", __func_, GetLastError());
+        TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return kErrorGeneralError;
     }
     return kErrorOk;
@@ -358,23 +358,8 @@ The function returns the file descriptor of the kernel module.
 //------------------------------------------------------------------------------
 int ctrlucal_getFd(void)
 {
-
-}
-
-//------------------------------------------------------------------------------
-/**
-\brief  Return the file handle of the kernel module
-
-The function returns the file handle of the kernel module.
-
-\return The function returns the file handle.
-
-\ingroup module_ctrlucal
-*/
-//------------------------------------------------------------------------------
-void* ctrlucal_getFileHandle(void)
-{
-    return fileHandle_l;
+    //TODO: return value should be a ULONG_PTR type to handle pointers correctly in 64-bit system
+    return (int)fileHandle_l;
 }
 
 //============================================================================//
@@ -385,10 +370,4 @@ void* ctrlucal_getFileHandle(void)
 
 
 ///\}
-
-
-
-
-
-
 

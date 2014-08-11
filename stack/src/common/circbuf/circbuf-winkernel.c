@@ -77,6 +77,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
+/** \brief Architecture specific part of circular buffer instance */
+typedef struct
+{
+    NDIS_SPIN_LOCK          spinlock;       ///< spinlock used for locking
+} tCircBufArchInstance;
 
 //------------------------------------------------------------------------------
 // local vars
@@ -105,6 +110,19 @@ The function allocates the memory needed for the circular buffer instance.
 //------------------------------------------------------------------------------
 tCircBufInstance* circbuf_createInstance(UINT8 id_p)
 {
+    tCircBufInstance*           pInstance;
+    tCircBufArchInstance*       pArch;
+
+    if ((pInstance = OPLK_MALLOC(sizeof(tCircBufInstance) +
+                                     sizeof(tCircBufArchInstance))) == NULL)
+            return NULL;
+
+    OPLK_MEMSET(pInstance, 0, sizeof(tCircBufInstance) + sizeof(tCircBufArchInstance));
+    pInstance->pCircBufArchInstance = (BYTE*)pInstance + sizeof(tCircBufInstance);
+    pInstance->bufferId = id_p;
+
+    pArch = (tCircBufArchInstance*)pInstance->pCircBufArchInstance;
+    NdisAllocateSpinLock(&pArch->spinlock);
 }
 
 //------------------------------------------------------------------------------
@@ -120,6 +138,7 @@ The function frees the allocated memory used by the circular buffer instance.
 //------------------------------------------------------------------------------
 void circbuf_freeInstance(tCircBufInstance* pInstance_p)
 {
+    NdisFreeSpinLock(&pInstance_p->pCircBufArchInstance->spinlock);
     OPLK_FREE(pInstance_p);
 }
 
@@ -139,7 +158,17 @@ The function allocates the memory needed for the circular buffer.
 //------------------------------------------------------------------------------
 tCircBufError circbuf_allocBuffer(tCircBufInstance* pInstance_p, size_t size_p)
 {
+    if ((pInstance_p->pCircBufHeader = OPLK_MALLOC(sizeof(tCircBufHeader))) == NULL)
+    {
+        return kCircBufNoResource;
+    }
+    if ((pInstance_p->pCircBuf = OPLK_MALLOC(*pSize_p)) == NULL)
+    {
+        OPLK_FREE(pInstance_p->pCircBufHeader);
+        return kCircBufNoResource;
+    }
 
+    return kCircBufOk;
 }
 
 //------------------------------------------------------------------------------
@@ -155,6 +184,8 @@ The function frees the allocated memory used by the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_freeBuffer(tCircBufInstance* pInstance_p)
 {
+    OPLK_FREE(pInstance_p->pCircBuf);
+    OPLK_FREE(pInstance_p->pCircBufHeader);
 }
 
 //------------------------------------------------------------------------------
@@ -172,6 +203,7 @@ The function connects the calling thread to the circular buffer.
 //------------------------------------------------------------------------------
 tCircBufError circbuf_connectBuffer(tCircBufInstance* pInstance_p)
 {
+    UNUSED_PARAMETER(pInstance_p);
     return kCircBufNoResource;
 }
 
@@ -204,6 +236,9 @@ The function enters a locked section of the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_lock(tCircBufInstance* pInstance_p)
 {
+    tCircBufArchInstance* pArchInstance =
+                                  (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
+    NdisAcquireSpinLock(pArchInstance->spinlock);
 }
 
 //------------------------------------------------------------------------------
@@ -219,6 +254,9 @@ The function leaves a locked section of the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_unlock(tCircBufInstance* pInstance_p)
 {
+    tCircBufArchInstance* pArchInstance =
+                              (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
+    NdisReleaseSpinLock(pArchInstance->spinlock);
 }
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //

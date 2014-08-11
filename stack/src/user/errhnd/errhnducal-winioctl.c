@@ -121,7 +121,7 @@ tOplkError errhnducal_init(tErrHndObjects* pLocalObjects_p)
         return kErrorNoFreeInstance;
 
     pLocalObjects_l = pLocalObjects_p;
-    instance_l.fileHandle = ctrlucal_getFileHandle();
+    instance_l.fileHandle = (void*)ctrlucal_getFd();
     fInitialized_l = TRUE;
     return kErrorOk;
 }

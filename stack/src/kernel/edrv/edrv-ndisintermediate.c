@@ -1,14 +1,17 @@
 /**
 ********************************************************************************
-\file   pdokcalmem-winkernel.c
+\file   edrv-ndisintermediate.c
 
-\brief  PDO kernel CAL shared-memory module using the Windows kernel module
+\brief  Implementation of edrv module using NDIS intermediate driver interface
 
-This file contains the implementation for the kernel PDO CAL module which uses
-Windows kernel driver to provide access to the user space by mapping the memory
-into user space virual memory and passing the address in the ioctl call.
+This file contains the implementation of Ethernet driver in windows kernel which
+uses NDIS interface to communicate to native miniport driver. This driver will
+use the protocol access points of NDIS intermediate driver to communicate with
+lower drivers and exchange packets.
 
-\ingroup module_pdokcal
+//TODO:gks complete description for the driver
+
+\ingroup module_edrv
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
@@ -42,8 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 #include <oplk/oplkinc.h>
-#include <common/pdo.h>
-#include <kernel/pdokcal.h>
+#include <oplk/ami.h>
+#include <kernel/edrv.h>
 
 
 //============================================================================//
@@ -74,17 +77,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
-typedef struct
-{
-    void*       pKernelVa;   ///< Pointer to PDO memory in kernel space.
-    void*       pUserVa;     ///< Pointer to PDO memory mapped in user space.
-    PMDL        pMdl;        ///< Memory descriptor list describing the PDO memory.
-}tPdoCalInstance;
 
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-tPdoCalInstance     instance_l;
+
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -95,173 +92,238 @@ tPdoCalInstance     instance_l;
 
 //------------------------------------------------------------------------------
 /**
-\brief  Open PDO shared memory
+\brief  Ethernet driver initialization
 
-The function performs all actions needed to setup the shared memory at the
-start of the stack.
+This function initializes the Ethernet driver.
 
-For the linux kernel mmap implementation nothing needs to be done.
-
-\return The function returns a tOplkError error code.
-
-\ingroup module_pdokcal
-*/
-//------------------------------------------------------------------------------
-tOplkError pdokcal_openMem(void)
-{
-    // Allocate the memory to be shared with user layer
-    return kErrorOk;
-}
-
-//------------------------------------------------------------------------------
-/**
-\brief  Close PDO shared memory
-
-The function performs all actions needed to clean up the shared memory at
-shutdown.
-
-For the linux kernel mmap implementation nothing needs to be done.
+\param  pEdrvInitParam_p    Edrv initialization parameters
 
 \return The function returns a tOplkError error code.
 
-\ingroup module_pdokcal
+\ingroup module_edrv
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_closeMem(void)
+tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
 {
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Allocate PDO shared memory
+\brief  Ethernet driver shutdown
 
-The function allocates shared memory for the kernel needed to transfer the PDOs.
-
-\param  memSize_p               Size of PDO memory
-\param  ppPdoMem_p              Pointer to store the PDO memory pointer
+This function shuts down the Ethernet driver.
 
 \return The function returns a tOplkError error code.
 
-\ingroup module_pdokcal
+\ingroup module_edrv
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
+tOplkError edrv_shutdown(void)
 {
-    instance_l.pKernelVa = OPLK_MALLOC(memSize_p);
-
-    if(instance_l.pKernelVa == NULL)
-    {
-        DEBUG_LVL_ERROR_TRACE ("%s() Unable to allocate PDO memory !\n", __func__);
-        return kErrorNoResource;
-    }
-
-    *ppPdoMem_p = instance_l.pKernelVa;
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Free PDO shared memory
+\brief  Set multicast address entry
 
-The function frees shared memory which was allocated in the kernel layer for
-transfering the PDOs.
+This function sets a multicast entry into the Ethernet controller.
 
-\param  pMem_p                  Pointer to the shared memory segment
-\param  memSize_p               Size of PDO memory
+\param  pMacAddr_p  Multicast address
 
 \return The function returns a tOplkError error code.
 
-\ingroup module_pdokcal
+\ingroup module_edrv
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
+tOplkError edrv_setRxMulticastMacAddr(UINT8* pMacAddr_p)
 {
-    if(instance_l.pKernelVa != NULL)
-    {
-        OPLK_FREE(instance_l.pKernelVa);
-    }
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Map PDO shared memory into user space
+\brief  Clear multicast address entry
 
-//TODO: Add description here
+This function removes the multicast entry from the Ethernet controller.
 
-\param  pMem_p                  Pointer to the shared memory segment
-\param  memSize_p               Size of PDO memory
+\param  pMacAddr_p  Multicast address
 
 \return The function returns a tOplkError error code.
 
-\ingroup module_pdokcal
+\ingroup module_edrv
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_mapMem(BYTE* pMem_p, size_t memSize_p)
+tOplkError edrv_clearRxMulticastMacAddr(UINT8* pMacAddr_p)
 {
-    // Allocate new MDL pointing to PDO memory
-    instance_l.pMdl = IoAllocateMdl(instance_l.pKernelVa, memSize_p, FALSE, FALSE,
-                                    NULL);
-
-    if(!instance_l.pMdl)
-    {
-        DEBUG_LVL_ERROR_TRACE ("%s() Error allocating MDL !\n", __func__);
-        return kErrorNoResource;
-    }
-
-    // Update the MDL with physical addresses
-    MmBuildMdlForNonPagedPool(instance_l.pMdl);
-    // Map the memory in user space and get the address
-    instance_l.pUserVa = MmMapLockedPagesSpecifyCache(instance_l.pMdl,     // MDL
-                                                      UserMode,            // Mode
-                                                      MmCached,            // Caching
-                                                      NULL,                // Address
-                                                      FALSE,               // Bugcheck?
-                                                      NormalPagePriority); // Priority
-
-    if(!instance_l.pUserVa)
-    {
-        MmUnmapLockedPages(instance_l.pUserVa, instance_l.pMdl);
-        IoFreeMdl(instance_l.pMdl);
-        DEBUG_LVL_ERROR_TRACE ("%s() Error mapping MDL !\n", __func__);
-        return kErrorNoResource;
-    }
-
-    pMem_p = instance_l.pUserVa;
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Unmap PDO shared memory into user space
+\brief  Change Rx filter setup
 
-//TODO: Add description here
+This function changes the Rx filter setup. The parameter entryChanged_p
+selects the Rx filter entry that shall be changed and \p changeFlags_p determines
+the property.
+If \p entryChanged_p is equal or larger count_p all Rx filters shall be changed.
 
-\param  pMem_p                  Pointer to the shared memory segment
-\param  memSize_p               Size of PDO memory
+\note Rx filters are not supported by this driver!
+
+\param  pFilter_p           Base pointer of Rx filter array
+\param  count_p             Number of Rx filter array entries
+\param  entryChanged_p      Index of Rx filter entry that shall be changed
+\param  changeFlags_p       Bit mask that selects the changing Rx filter property
 
 \return The function returns a tOplkError error code.
 
-\ingroup module_pdokcal
+\ingroup module_edrv
 */
 //------------------------------------------------------------------------------
-void pdokcal_unMapMem(BYTE* pMem_p, size_t memSize_p)
+tOplkError edrv_changeRxFilter(tEdrvFilter* pFilter_p, UINT count_p,
+                               UINT entryChanged_p, UINT changeFlags_p)
 {
-    if(!instance_l.pMdl)
-    {
-        DEBUG_LVL_ERROR_TRACE ("%s() MDL already deleted !\n", __func__);
-        return;
-    }
+    UNUSED_PARAMETER(pFilter_p);
+    UNUSED_PARAMETER(count_p);
+    UNUSED_PARAMETER(entryChanged_p);
+    UNUSED_PARAMETER(changeFlags_p);
 
-    if(instance_l.pUserVa)
-    {
-        MmUnmapLockedPages(instance_l.pUserVa, instance_l.pMdl);
-        IoFreeMdl(instance_l.pMdl);
-    }
-
-    pMem_p = NULL;
+    return kErrorOk;
 }
+
+//------------------------------------------------------------------------------
+/**
+\brief  Allocate Tx buffer
+
+This function allocates a Tx buffer.
+
+\param  pBuffer_p           Tx buffer descriptor
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Free Tx buffer
+
+This function releases the Tx buffer.
+
+\param  pBuffer_p           Tx buffer descriptor
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_freeTxBuffer(tEdrvTxBuffer* pBuffer_p)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Send Tx buffer
+
+This function sends the Tx buffer.
+
+\param  pBuffer_p           Tx buffer descriptor
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_sendTxBuffer(tEdrvTxBuffer* pBuffer_p)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Set Tx buffer ready
+
+This function sets the Tx buffer buffer ready for transmission.
+
+\param  pBuffer_p   Tx buffer buffer descriptor
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_setTxBufferReady(tEdrvTxBuffer* pBuffer_p)
+{
+    UNUSED_PARAMETER(pBuffer_p);
+
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Start ready Tx buffer
+
+This function sends the Tx buffer marked as ready.
+
+\param  pBuffer_p   Tx buffer buffer descriptor
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_startTxBuffer(tEdrvTxBuffer* pBuffer_p)
+{
+    UNUSED_PARAMETER(pBuffer_p);
+
+    return kErrorOk;
+}
+
+#if CONFIG_EDRV_USE_DIAGNOSTICS != FALSE
+//------------------------------------------------------------------------------
+/**
+\brief  Get Edrv module diagnostics
+
+This function returns the Edrv diagnostics to a provided buffer.
+
+\param  pBuffer_p   Pointer to buffer filled with diagnostics.
+\param  size_p      Size of buffer
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+INT edrv_getDiagnostics(char* pBuffer_p, INT size_p)
+{
+
+}
+#endif
+//------------------------------------------------------------------------------
+/**
+\brief  Release Rx buffer
+
+This function releases a late release Rx buffer.
+
+\param  pRxBuffer_p     Rx buffer to be released
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_edrv
+*/
+//------------------------------------------------------------------------------
+tOplkError edrv_releaseRxBuffer(tEdrvRxBuffer* pRxBuffer_p)
+{
+    return kErrorOk;
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

@@ -121,7 +121,7 @@ descriptor of the kernel driver.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_openMem(void)
 {
-    pFileHandle_l = ctrlucal_getFileHandle();
+    pFileHandle_l = (void*)ctrlucal_getFd();
     return kErrorOk;
 }
 

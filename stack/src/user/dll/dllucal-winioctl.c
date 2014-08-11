@@ -163,7 +163,7 @@ static tOplkError addInstance(tDllCalQueueInstance* ppDllCalQueue_p,
 
     //store parameters in instance
     pInstance->dllCalQueue = dllCalQueue_p;
-    pInstance->fileHandle = ctrlucal_getFileHandle();
+    pInstance->fileHandle = (void*)ctrlucal_getFd();
 
     *ppDllCalQueue_p = (tDllCalQueueInstance*) pInstance;
 

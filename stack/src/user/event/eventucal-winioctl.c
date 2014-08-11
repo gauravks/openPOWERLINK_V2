@@ -127,7 +127,7 @@ tOplkError eventucal_init(void)
 
     OPLK_MEMSET(&instance_l, 0, sizeof(tEventuCalInstance));
 
-    instance_l.fileHandle = ctrlucal_getFileHandle();
+    instance_l.fileHandle = (void*)ctrlucal_getFd();
     instance_l.fStopThread = FALSE;
 
     instance_l.threadHandle = CreateThread(

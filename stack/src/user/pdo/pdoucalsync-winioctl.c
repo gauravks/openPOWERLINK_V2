@@ -104,7 +104,7 @@ tOplkError pdoucal_initSync(tSyncCb pfnSyncCb_p)
 {
     UNUSED_PARAMETER(pfnSyncCb_p);
 
-    pFileHandle_p = ctrlucal_getFileHandle();
+    pFileHandle_p = (void*)ctrlucal_getFd();
     return kErrorOk;
 }
 
