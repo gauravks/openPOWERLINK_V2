@@ -1,16 +1,21 @@
 /**
 ********************************************************************************
-\file   /windows-split/stack/src/kernel/pdo/pdokcalsync-winkernel.c
+\file   pdokcalsync-winkernel.c
 
-\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
+\brief  PDO CAL kernel sync module using the Windows kernel driver
 
-{DETAILED_DESCRIPTION_OF_THE_FILE}
+This file contains the implementation for kernel PDO CAL synchronization module
+for Windows kernel. The synchronization module is responsible for notifying
+the user layer of presence of new data.
 
-\ingroup {MODULE_GROUP}
+The module uses wait queues to get notification of new data and pass it to the
+user layer by completing pended IOCTLs.
+
+\ingroup module_pdokcal
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, {DEVELOPER_NAME}
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,9 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <{SYSTEM_INCLUDE_FILE}>
-
-#include "{LOCAL_INCLUDE_FILE}"
+#include <oplk/oplkinc.h>
+#include <common/pdo.h>
 
 
 //============================================================================//
@@ -85,7 +89,86 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
 
+//------------------------------------------------------------------------------
+/**
+\brief  Initialize kernel PDO CAL sync module
 
+The function initializes the kernel PDO CAL sync module.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_pdokcal
+*/
+//------------------------------------------------------------------------------
+tOplkError pdokcal_initSync(void)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Clean up PDO CAL sync module
+
+The function cleans up the PDO CAL sync module
+
+\ingroup module_pdokcal
+*/
+//------------------------------------------------------------------------------
+void pdokcal_exitSync(void)
+{
+
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Send a sync event
+
+The function sends a sync event
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_pdokcal
+*/
+//------------------------------------------------------------------------------
+tOplkError pdokcal_sendSyncEvent(void)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Wait for a sync event
+
+The function waits for a sync event
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_pdokcal
+*/
+//------------------------------------------------------------------------------
+tOplkError pdokcal_waitSyncEvent(void)
+{
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Enable sync events
+
+The function enables sync events
+
+\param  fEnable_p               enable/disable sync event
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_pdokcal
+*/
+//------------------------------------------------------------------------------
+tOplkError pdokcal_controlSync(BOOL fEnable_p)
+{
+    UNUSED_PARAMETER(fEnable_p);
+    return kErrorOk;
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -94,10 +177,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ///\}
-
-
-
-
-
-
 
