@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   main.c
+\file   /windows-split/drivers/windows/drv_kernelmod_edrv/appintf.c
 
-\brief  main file for Windows kernel module
+\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
 
-This file contains the main part of the Windows kernel module implementation of
-the openPOWERLINK kernel stack.
+{DETAILED_DESCRIPTION_OF_THE_FILE}
 
-\ingroup module_driver_win_kernel
+\ingroup {MODULE_GROUP}
 *******************************************************************************/
+
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Kalycito Infotech Private Limited
+Copyright (c) 2014, {DEVELOPER_NAME}
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,21 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-//TODO: NDIS include
+#include <{SYSTEM_INCLUDE_FILE}>
 
-#include <oplk/oplk.h>
-#include <oplk/driver.h>
+#include "{LOCAL_INCLUDE_FILE}"
 
-#include <common/ctrl.h>
-#include <common/ctrlcal-mem.h>
-#include <kernel/ctrlk.h>
-#include <kernel/ctrlkcal.h>
-#include <kernel/dllkcal.h>
-#include <kernel/pdokcal.h>
-
-#include <kernel/eventk.h>
-#include <kernel/eventkcal.h>
-#include <errhndkcal.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -70,6 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
+
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -91,17 +81,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // local function prototypes
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-//  Kernel module specific data structures
-//------------------------------------------------------------------------------
-
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
 
-//---------------------------------------------------------------------------
-//  Initailize driver
-//---------------------------------------------------------------------------
 
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
@@ -109,5 +92,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /// \name Private Functions
 /// \{
 
+
 ///\}
+
+
+
+
+
+
 

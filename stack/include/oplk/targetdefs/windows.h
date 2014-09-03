@@ -45,10 +45,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
+#ifndef NDIS60
 #define _WIN32_WINNT 0x0501     // Windows version must be at least Windows XP
 #define WIN32_LEAN_AND_MEAN     // Do not use extended Win32 API functions
 #include <Windows.h>
-
+#else
+#include <ntdef.h>
+#endif
 #include <oplk/basictypes.h>
 
 #define ROM_INIT                // variables will be initialized directly in ROM (means no copy from RAM in startup)
@@ -81,10 +84,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #define TRUE 1
 
+#ifndef NDIS60
 #ifdef _CONSOLE // use standard printf in console applications
 #define PRINTF(...)                      printf(__VA_ARGS__)
 #else           // use trace for output in debug window in Windows applications
 #define PRINTF(...)                      TRACE(__VA_ARGS__)
+#endif
+#else
+#define PRINTF(...)         DbgPrint(__VA_ARGS__)
 #endif
 
 #ifdef ASSERTMSG
@@ -106,6 +113,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OPLK_ATOMIC_T    ULONG
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
             oldval = InterlockedExchange(address, newval);
+#ifdef NDIS60
+#define OPLK_TAG                'klpO'
+#define OPLK_MALLOC(siz)        ExAllocatePoolWithTag(PagedPool, (_Size), OPLK_TAG)
+#define OPLK_FREE(ptr)          ExFreePoolWithTag(ptr, OPLK_TAG)
 
 #endif /* _INC_targetdefs_windows_H_ */
 

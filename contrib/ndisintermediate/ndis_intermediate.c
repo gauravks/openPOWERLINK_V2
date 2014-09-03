@@ -45,9 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ndisdriver.h"
 #include <ndis.h>
 
-
-
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -111,13 +108,14 @@ routines to OS using NdisXRegisterXXXDriver.
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
-NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
+tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
 {
     NDIS_STATUS                             ndisStatus = NDIS_STATUS_SUCCESS;
+//    tNdisErrorStatus                        status = NdisStatusSuccess;
     NDIS_PROTOCOL_DRIVER_CHARACTERISTICS    protocolChars;
     NDIS_MINIPORT_DRIVER_CHARACTERISTICS    miniportChars;
     NDIS_HANDLE                             miniportDriverContext;
-    NDIS_HANDLE                             protocolDriverContext;
+    NDIS_HANDLE                             protocolDriverContext = NULL;
     NDIS_STRING                             ndisDriverName;
 
     NdisZeroMemory(&driverInstance_l, sizeof(tNdisDriverInstance));
@@ -161,8 +159,8 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
                                              &miniportChars, &driverInstance_l.pMiniportHandle);
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
-        DbgPrint("%s() Miniport driver registration failed 0x%X\n", __func__, ndisStatus);
-        return ndisStatus;
+        DbgPrint("%s() Miniport driver registration failed 0x%X\n", __FUNCTION__, ndisStatus);
+        return NdisStatusInit;
     }
 
     NdisZeroMemory(&protocolChars, sizeof(NDIS_PROTOCOL_DRIVER_CHARACTERISTICS));
@@ -196,17 +194,128 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
 
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
-        DbgPrint("%s() Protocol driver registration failed 0x%X\n", __func__, ndisStatus);
+        DbgPrint("%s() Protocol driver registration failed 0x%X\n", __FUNCTION__, ndisStatus);
         NdisMDeregisterMiniportDriver(driverInstance_l.pMiniportHandle);
-        return ndisStatus;
+        return NdisStatusInit;
     }
 
     // Create association between protocol and miniport driver
     NdisIMAssociateMiniport(driverInstance_l.pMiniportHandle, driverInstance_l.pProtocolHandle);
 
-    return ndisStatus;
+    return NdisStatusSuccess;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Check lower bing state Tx buffer
+
+Check the status of the miniport binding.
+
+\return Returns TRUE if running else FALSE
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+BOOLEAN ndis_checkBindingState(void)
+{
+    return protocol_checkBindingState();
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Allocate Tx buffer
+
+This routines allocate a Tx buffer to be shared with the caller.
+
+\param  pData_p      Pointer to buffer.
+\param  size_p       Size of the buffer.
+\param  pTxLink_p    Pointer to LIST_ENTRY to track the Tx buffer in next calls
+
+\return Returns tNdisErrorStatus error code
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+tNdisErrorStatus ndis_allocateTxBuff(void* pData_p, size_t size_p, void* pTxLink_p)
+{
+    protocol_getTxBuff(&pData_p, size_p, pTxLink_p);
+
+    if (pData_p == NULL)
+    {
+        return NdisStatusResources;
+    }
+
+    return NdisStatusSuccess;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Free Tx buffer 
+
+This routines frees the previously allocated Tx buffer shared with the caller
+
+\param  pTxLink_p      Pointer to LIST_ENTRY of the Txbuffer
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_freeTxBuff(PVOID pTxLink_p)
+{
+    protocol_freeTxBuff(pTxLink_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Send packet
+
+Send a packet 
+
+\param  pTxLink_p      Pointer to LIST_ENTRY of the Txbuffer
+
+\return Returns tNdisErrorStatus error code
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
+{
+    NDIS_STATUS     ndisStatus;
+
+    if (pData_p == NULL || pTxLink_p == NULL)
+    {
+        return NdisStatusInvalidParams;
+    }
+
+    ndisStatus = protocol_sendPacket(pData_p, size_p, pTxLink_p);
+
+    if (ndisStatus != NDIS_STATUS_SUCCESS)
+    {
+        return NdisStatusTxError;
+    }
+
+    return NdisStatusSuccess;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Register Tx and Rx callback
+
+Ndis intermediate driver calls the Tx callback from SentNetBufferListsComplete
+handler and Rx callback from the NetBufferListsReceive handler.
+
+\param  pfnTxCallback_p      Pointer to Tx callback routine.
+\param  pfnRxCallback_p      Pointer to Rx callback routine.
+
+\return Returns tNdisErrorStatus error code
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
+                                          tNdisReceiveCb pfnRxCallback_p)
+{
+    protocol_registerTxRxHandler(pfnTxCallback_p, pfnRxCallback_p);
+}
 
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
