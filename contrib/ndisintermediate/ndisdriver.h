@@ -44,7 +44,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-
+#define OPLK_MEM_TAG                'klpO'
+#define OPLK_MAX_FRAME_SIZE         1546
 
 
 //------------------------------------------------------------------------------
@@ -56,6 +57,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 typedef void(*tNdisReceiveCb)(void* pRxData_p, size_t size_p);
 
+/**
+\brief TODO:
+
+*/
+typedef void(*tVEthSendCb)(void* pVEthTxData_p, size_t size_p);
 /**
 \brief TODO:
 
@@ -77,6 +83,19 @@ typedef enum eNdisBindingState
 \brief TODO:
 
 */
+typedef enum eNdisErrorStatus
+{
+    NdisStatusSuccess,          ///< Lower end binding is in paused state
+    NdisStatusInit,
+    NdisStatusResources,         ///< Lower end binding is entering into paused state
+    NdisStatusTxError,          ///< Lower end binding is running
+    NdisStatusRxError,
+    NdisStatusInvalidParams
+}tNdisErrorStatus;
+/**
+\brief TODO:
+
+*/
 typedef struct
 {
     NDIS_HANDLE     pMiniportHandle;        ///< Miniport driver handle returned by OS
@@ -94,6 +113,55 @@ typedef struct
     NDIS_OID_REQUEST            oidRequest;
 } tNdisOidRequest;
 
+typedef struct
+{
+    void*       pData;
+    ULONG       maxLength;
+    ULONG       length;
+    BOOLEAN     free;
+} tRxBufInfo;
+
+typedef struct
+{
+    LIST_ENTRY          txLink;
+    PNET_BUFFER_LIST    pNbl;
+    PMDL                pMdl;
+    BOOLEAN             free;
+    ULONG               maxLength;
+    ULONG               length;
+    void*               pToken;
+    void*               pData;
+} tTxBufInfo;
+typedef struct
+{
+    NDIS_HANDLE                 bindingHandle;
+    NDIS_HANDLE                 sendNblPool;
+    NDIS_EVENT                  adapterEvent;       ///<
+    PNDIS_EVENT                 pPauseEvent;
+    PNDIS_EVENT                 pOidCompleteEvent;
+    NDIS_SPIN_LOCK              pauseEventLock;
+    NDIS_SPIN_LOCK              driverLock;
+    NDIS_STATUS                 adapterInitStatus;
+    NDIS_LINK_STATE             lastLinkState;
+    tNdisBindingState           bindingState;
+    NDIS_BIND_PARAMETERS        bindParameters;
+    ULONG                       oidReq;
+    ULONG                       sendRequest;
+    void*                       pVEthInstance;
+    tNdisReceiveCb              pfnReceiveCb;
+    tNdisTransmitCompleteCb     pfnTransmitCompleteCb;
+    tRxBufInfo*                 pReceiveBufInfo;
+    ULONG                       receiveHead;
+    ULONG                       receiveBufCount;
+    ULONG                       transmitBufCount;
+    void*                       pTransmitBuf;
+    tTxBufInfo*                 pTxBuffInfo;
+    void*                       pReceiveBuf;
+    LIST_ENTRY                  txList;
+    NDIS_SPIN_LOCK              txListLock;
+
+}tProtocolInstance;
+
 /**
 \brief TODO:
 
@@ -104,6 +172,7 @@ typedef struct
     NDIS_HANDLE     bindingHandle;         ///< 
                                            ///< to this virtual miniport.
     BOOLEAN         miniportHalting;       ///< Has our Halt entry point been called?
+    BOOLEAN         miniportPaused;
     NDIS_STRING     cfgDeviceName;         ///< Used as the unique ID for the VELAN
     // Some standard miniport parameters (OID values).
     ULONG                       packetFilter;
@@ -130,13 +199,27 @@ typedef struct
     BOOLEAN                     miniportInitPending;
     BOOLEAN                     oidRequestPending;
     NDIS_SPIN_LOCK              miniportLock;
+    NDIS_SPIN_LOCK              pauseLock;
     tNdisOidRequest             ndisOidReq;
+    NDIS_STATUS                 status;
+    tProtocolInstance*          protocolInstance;
+    NET_IFINDEX                 ifIndex;
+
+    ULONG                       sendRequests;
+    ULONG                       receiveIndication;
+    tVEthSendCb                 pfnVEthSendCb;
 }tVEthInstance;
 //------------------------------------------------------------------------------
 // global defines
 //------------------------------------------------------------------------------
 
 extern tNdisDriverInstance driverInstance_l;
+
+//------------------------------------------------------------------------------
+// Macros
+//------------------------------------------------------------------------------
+
+#define TXINFO_FROM_NBL(_NBL) ((tTxBufInfo*)((_NBL)->ProtocolReserved[0]))
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
@@ -159,8 +242,6 @@ MINIPORT_PAUSE miniportPause;
 
 MINIPORT_RESTART miniportRestart;
 
-MINIPORT_CHECK_FOR_HANG miniportCheckForHang;
-
 MINIPORT_OID_REQUEST miniportOidRequest;
 
 MINIPORT_SEND_NET_BUFFER_LISTS miniportSendNetBufferLists;
@@ -175,7 +256,6 @@ MINIPORT_SHUTDOWN miniportShutdown;
 
 MINIPORT_CANCEL_OID_REQUEST miniportCancelOidRequest;
 
-MINIPORT_RESET miniportReset;
 
 
 // Protocol driver protoypes
@@ -199,6 +279,20 @@ PROTOCOL_NET_PNP_EVENT protocolPnpHandler;
 PROTOCOL_RECEIVE_NET_BUFFER_LISTS protocolReceiveNbl;
 
 PROTOCOL_SEND_NET_BUFFER_LISTS_COMPLETE protocolSendNblComplete;
+
+// Protocol Global routine prototype
+void protocol_freeVEthInstance(tVEthInstance* pVEthInstance_p);
+BOOLEAN protocol_checkBindingState();
+void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
+    tNdisReceiveCb pfnRxCallback_p);
+NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p);
+void protocol_freeTxRxBuffers(void);
+void protocol_getTxBuff(void** ppTxBuf_p, size_t size_p, void* pTxLink_p);
+void protocol_freeTxBuff(PVOID pTxLink_p);
+NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
+    PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);
+NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p);
+
 
 #ifdef __cplusplus
 extern "C" {

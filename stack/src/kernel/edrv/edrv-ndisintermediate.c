@@ -195,7 +195,7 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
         DbgPrint("%s() TX and RX buffer allocation failed 0x%X\n",__func__, ret);
         return ret;
     }
-    edrvInstance_l.pTxBuff =  ndis_getTxBuf();
+//    edrvInstance_l.pTxBuff =  ndis_getTxBuf();
     // Register Tx and Rx callbacks
     ndis_registerTxRxHandler(edrvTxHandler, edrvRxHandler);
 
@@ -320,7 +320,9 @@ tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
 
     }
 
-    for(bufIndex = 0; bufIndex < EDRV_MAX_TX_BUFFERS; bufIndex++)
+    ndis_allocateTxBuff(pBuffer_p->pBuffer, pBuffer_p->maxBufferSize,
+                        pBuffer_p->txBufferNumber.pArg);
+/*    for(bufIndex = 0; bufIndex < EDRV_MAX_TX_BUFFERS; bufIndex++)
     {
         if(!edrvInstance_l.afTxBufUsed[bufIndex])
         {
@@ -335,7 +337,7 @@ tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
     {
         return kErrorEdrvNoFreeBufEntry;
     }
-
+*/
     return kErrorOk;
 }
 
@@ -354,14 +356,7 @@ This function releases the Tx buffer.
 //------------------------------------------------------------------------------
 tOplkError edrv_freeTxBuffer(tEdrvTxBuffer* pBuffer_p)
 {
-    UINT bufferNumber;
-
-    bufferNumber = pBuffer_p->txBufferNumber.value;
-
-    if (bufferNumber < EDRV_MAX_TX_BUFFERS)
-    {
-        edrvInstance_l.afTxBufUsed[bufferNumber] = FALSE;
-    }
+    ndis_freeTxBuff(pBuffer_p->txBufferNumber.pArg);
     return kErrorOk;
 }
 
@@ -403,7 +398,7 @@ tOplkError edrv_sendTxBuffer(tEdrvTxBuffer* pBuffer_p)
         pBuffer_p->txFrameSize = EDRV_MIN_FRAME_SIZE;
     }
 
-    ndis_sendPacket(pBuffer_p->pBuffer, pBuffer_p->txFrameSize, (void*)pBuffer_p);
+    ndis_sendPacket(pBuffer_p, pBuffer_p->txFrameSize, pBuffer_p->txBufferNumber.pArg);
 
     // increment Tx queue tail pointer
     edrvInstance_l.tailTxIndex = (edrvInstance_l.tailTxIndex + 1) & EDRV_TX_QUEUE_MASK;

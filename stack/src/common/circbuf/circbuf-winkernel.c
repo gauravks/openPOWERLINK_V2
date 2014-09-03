@@ -123,6 +123,8 @@ tCircBufInstance* circbuf_createInstance(UINT8 id_p)
 
     pArch = (tCircBufArchInstance*)pInstance->pCircBufArchInstance;
     NdisAllocateSpinLock(&pArch->spinlock);
+
+    return pInstance;
 }
 
 //------------------------------------------------------------------------------
