@@ -76,11 +76,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
-
+typedef struct
+{
+    NDIS_EVENT              syncWaitEvent;
+    BOOL                    fInitialized;
+} tPdokCalSyncInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-
+tPdokCalSyncInstance        instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -102,6 +106,11 @@ The function initializes the kernel PDO CAL sync module.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_initSync(void)
 {
+    OPLK_MEMSET(&instance_l, 0, sizeof(tPdokCalSyncInstance));
+
+    NdisInitializeEvent(&instance_l.syncWaitEvent);
+
+    instance_l.fInitialized = TRUE;
     return kErrorOk;
 }
 
@@ -116,7 +125,7 @@ The function cleans up the PDO CAL sync module
 //------------------------------------------------------------------------------
 void pdokcal_exitSync(void)
 {
-
+    instance_l.fInitialized = FALSE;
 }
 
 //------------------------------------------------------------------------------
@@ -132,6 +141,10 @@ The function sends a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_sendSyncEvent(void)
 {
+    if (instance_l.fInitialized)
+    {
+        NdisSetEvent(&instance_l.syncWaitEvent);
+    }
     return kErrorOk;
 }
 
@@ -148,6 +161,19 @@ The function waits for a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_waitSyncEvent(void)
 {
+    int                 timeout = 1000;
+    BOOL                fRet;
+
+    if(!instance_l.fInitialized)
+    {
+        return kErrorNoResource;
+    }
+
+    fRet = NdisWaitEvent(&instance_l.syncWaitEvent, timeout);
+
+    if(fRet)
+      return kErrorRetry;
+
     return kErrorOk;
 }
 

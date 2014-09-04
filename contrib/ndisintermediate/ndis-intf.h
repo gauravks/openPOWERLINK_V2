@@ -1,16 +1,14 @@
 /**
 ********************************************************************************
-\file   common/driver.h
+\file   ndis-intf.h
 
-\brief  Header file for openPOWERLINK drivers
+\brief  NDIS driver interface header
 
-This file contains the necessary definitions for using the openPOWERLINK
-kernel driver modules.
+This file contains the set for routines exported from the NDIS driver.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
-Copyright (c) 2013, SYSTEC electronic GmbH
+Copyright (c) 2014, {DEVELOPER_NAME}
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,54 +34,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_H_
-#define _INC_common_driver_H_
+#ifndef _INC_ndis-intf_H_
+#define _INC_ndis-intf_H_
+
 
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/dllcal.h>
 
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_CLASS_NAME    "plk"
-#define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
-#define PLK_DRV_NAME      "plk"
-#define PLK_IOC_MAGIC     '='
 
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
-typedef struct
-{
-    tDllCalQueue            queue;
-    void*                   pData;
-    size_t                  size;
-} tIoctlDllCalAsync;
+/**
+\brief TODO:
 
-typedef struct
+*/
+typedef enum eNdisErrorStatus
 {
-    void*                   pData;
-    size_t                  size;
-} tIoctlBufInfo;
+    NdisStatusSuccess,          ///< Lower end binding is in paused state
+    NdisStatusInit,
+    NdisStatusResources,         ///< Lower end binding is entering into paused state
+    NdisStatusTxError,          ///< Lower end binding is running
+    NdisStatusRxError,
+    NdisStatusInvalidParams
+}tNdisErrorStatus;
 
-typedef struct
-{
-    UINT32                  offset;
-    UINT32                  errVal;
-} tErrHndIoctl;
-
+typedef void(*tAppIntfRegister)(NDIS_HANDLE driverHandle_p);
+typedef void(*tAppIntfDeRegister)(void);
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// include architecture specific definitions
-//------------------------------------------------------------------------------
-#if (TARGET_SYSTEM == _LINUX_)
-#include <common/driver-linux.h>
-#else if (TARGET_SYSTEM == _WINDOWS_)
-#include <common/driver-windows.h>
-#endif /* _INC_common_driver_H_ */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p);
+BOOLEAN ndis_checkBindingState(void);
+tNdisErrorStatus ndis_allocateTxBuff(void* pData_p, size_t size_p, void* pTxLink_p);
+void ndis_freeTxBuff(void* pTxLink_p);
+tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p);
+void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
+                                          tNdisReceiveCb pfnRxCallback_p);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _INC_ndis-intf_H_ */

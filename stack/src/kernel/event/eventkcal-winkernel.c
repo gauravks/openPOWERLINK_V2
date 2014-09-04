@@ -306,21 +306,21 @@ This function posts a event from the user layer to a queue.
 \ingroup module_eventkcal
 */
 //------------------------------------------------------------------------------
-int eventkcal_postEventFromUser(unsigned long arg)
+void eventkcal_postEventFromUser(void* pEvent_p)
 {
     tOplkError      ret = kErrorOk;
     tEvent          event;
     char*           pArg = NULL;
 
     if (!instance_l.fInitialized)
-        return 1;//Error
+        return;//Error
 
-    OPLK_MEMCPY(&event, &arg, sizeof(tEvent));
+    OPLK_MEMCPY(&event, pEvent_p, sizeof(tEvent));
 
     if (event.eventArgSize != 0)
     {
-        pArg = OPLK_MALLOC(event.eventArgSize);
-        OPLK_MEMCPY(pArg, (arg + sizeof(tEvent)), event.eventArgSize); // TODO: check the arithmetic
+        pArg = (void*)((ULONG_PTR)pEvent_p + sizeof(tEvent));
+        //OPLK_MEMCPY(pArg, , event.eventArgSize); // TODO: check the arithmetic
         event.pEventArg = pArg;
     }
 
@@ -355,14 +355,14 @@ int eventkcal_postEventFromUser(unsigned long arg)
             break;
 
         default:
-            ret = 1; //TODO: error values
+            //ret = 1; //TODO: error values
             break;
     }
 
-    if (event.eventArgSize != 0)
-        OPLK_FREE((ULONG)pArg); // check if we need to modify memory routines for windows kernel
+    //if (event.eventArgSize != 0)
+      //  OPLK_FREE((ULONG)pArg); // check if we need to modify memory routines for windows kernel
 
-    return 0;
+    return;
 }
 
 //------------------------------------------------------------------------------
@@ -378,7 +378,7 @@ This function waits for events to the user.
 \ingroup module_eventkcal
 */
 //------------------------------------------------------------------------------
-int eventkcal_getEventForUser(unsigned long arg)
+void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
 {
     tOplkError          error;
     BOOL                fRet;
@@ -386,18 +386,18 @@ int eventkcal_getEventForUser(unsigned long arg)
     UINT32              timeout = 500;
 
     if (!instance_l.fInitialized)
-        return 1;//Error
+        return;//Error
 
-    fRet = NdisWaitEvent(instance_l.userWaitEvent, timeout);
+    fRet = NdisWaitEvent(&instance_l.userWaitEvent, timeout);
 
     if(fRet)
     {
         TRACE("%s() timeout!\n", __func__);
-        return 1;// TODO: error values
+        return;// TODO: error values
     }
 
     if (!instance_l.fInitialized)
-        return -1;
+        return;
 
     if (eventkcal_getEventCountCircbuf(kEventQueueK2U) > 0)
     {
@@ -407,10 +407,11 @@ int eventkcal_getEventForUser(unsigned long arg)
         if(error != kErrorOk)
         {
             DEBUG_LVL_ERROR_TRACE("%s() Error reading K2U events %d!\n", __func__, error);
-            return -1; //TODO: error
+            return; //TODO: error
         }
 
-        OPLK_MEMCPY((ULONG*)arg, instance_l.aK2URxBuffer, readSize);
+        OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
+        size_p = readSize;
 
         return 0;
     }
@@ -422,13 +423,12 @@ int eventkcal_getEventForUser(unsigned long arg)
             if(error != kErrorOk)
             {
                 DEBUG_LVL_ERROR_TRACE ("%s() Error reading UINT events %d!\n", __func__, error);
-                return -1; //TODO: error
+                return; //TODO: error
             }
 
             //TRACE("%s() copy user event to user: %d Bytes\n", __func__, readSize);
-            OPLK_MEMCPY((ULONG*)arg, instance_l.aUintRxBuffer, readSize);
-
-            return 0;
+            OPLK_MEMCPY(pEvent_p, instance_l.aUintRxBuffer, readSize);
+            size_p = readSize;
     }
     else
     {
@@ -466,7 +466,7 @@ static void eventThread(void* arg)
 
     while(instance_l.fInitialized)
     {
-        fRet = NdisWaitEvent(instance_l.kernelWaitEvent, timeout);
+        fRet = NdisWaitEvent(&instance_l.kernelWaitEvent, timeout);
 
         if(instance_l.fInitialized)
             break;

@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 #include <ndis.h>
+#include "ndis-intf.h"
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
@@ -80,26 +81,18 @@ typedef enum eNdisBindingState
 }tNdisBindingState;
 
 /**
-\brief TODO:
 
-*/
-typedef enum eNdisErrorStatus
-{
-    NdisStatusSuccess,          ///< Lower end binding is in paused state
-    NdisStatusInit,
-    NdisStatusResources,         ///< Lower end binding is entering into paused state
-    NdisStatusTxError,          ///< Lower end binding is running
-    NdisStatusRxError,
-    NdisStatusInvalidParams
-}tNdisErrorStatus;
+
 /**
 \brief TODO:
 
 */
 typedef struct
 {
-    NDIS_HANDLE     pMiniportHandle;        ///< Miniport driver handle returned by OS
-    NDIS_HANDLE     pProtocolHandle;        ///< Protocol driver handle returned by OS
+    tAppIntfRegister    pfnAppIntfRegCb;
+    tAppIntfDeRegister  pfnAppIntfDeregisterCb;
+    NDIS_HANDLE         pMiniportHandle;        ///< Miniport driver handle returned by OS
+    NDIS_HANDLE         pProtocolHandle;        ///< Protocol driver handle returned by OS
 }tNdisDriverInstance;
 
 /**
@@ -132,6 +125,7 @@ typedef struct
     void*               pToken;
     void*               pData;
 } tTxBufInfo;
+
 typedef struct
 {
     NDIS_HANDLE                 bindingHandle;
@@ -169,7 +163,7 @@ typedef struct
 typedef struct
 {
     NDIS_HANDLE     miniportAdapterHandle; ///< Adapter handle for NDIS up-calls related
-    NDIS_HANDLE     bindingHandle;         ///< 
+    NDIS_HANDLE     bindingHandle;         ///<
                                            ///< to this virtual miniport.
     BOOLEAN         miniportHalting;       ///< Has our Halt entry point been called?
     BOOLEAN         miniportPaused;
