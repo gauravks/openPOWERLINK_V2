@@ -291,7 +291,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
 
     relTime = time_p/100;
     pTimerInfo->dueTime.QuadPart = -(relTime);
-    NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime.QuadPart, 0, pTimerInfo);
+    NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime, 0, pTimerInfo);
 
     return kErrorOk;
 }

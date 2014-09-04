@@ -108,7 +108,7 @@ routines to OS using NdisXRegisterXXXDriver.
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
-tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
+NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
 {
     NDIS_STATUS                             ndisStatus = NDIS_STATUS_SUCCESS;
 //    tNdisErrorStatus                        status = NdisStatusSuccess;
@@ -160,7 +160,7 @@ tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
         DbgPrint("%s() Miniport driver registration failed 0x%X\n", __FUNCTION__, ndisStatus);
-        return NdisStatusInit;
+        return ndisStatus;
     }
 
     NdisZeroMemory(&protocolChars, sizeof(NDIS_PROTOCOL_DRIVER_CHARACTERISTICS));
@@ -196,13 +196,18 @@ tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING
     {
         DbgPrint("%s() Protocol driver registration failed 0x%X\n", __FUNCTION__, ndisStatus);
         NdisMDeregisterMiniportDriver(driverInstance_l.pMiniportHandle);
-        return NdisStatusInit;
+        return ndisStatus;
     }
 
     // Create association between protocol and miniport driver
     NdisIMAssociateMiniport(driverInstance_l.pMiniportHandle, driverInstance_l.pProtocolHandle);
 
-    return NdisStatusSuccess;
+    return ndisStatus;
+}
+
+void ndis_registerAppIntf(tAppIntfRegister* pAppIntfCb_p)
+{
+    driverInstance_l.pfnAppIntfCb = pAppIntfCb_p;
 }
 
 //------------------------------------------------------------------------------
@@ -250,7 +255,7 @@ tNdisErrorStatus ndis_allocateTxBuff(void* pData_p, size_t size_p, void* pTxLink
 
 //------------------------------------------------------------------------------
 /**
-\brief  Free Tx buffer 
+\brief  Free Tx buffer
 
 This routines frees the previously allocated Tx buffer shared with the caller
 
@@ -259,7 +264,7 @@ This routines frees the previously allocated Tx buffer shared with the caller
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
-void ndis_freeTxBuff(PVOID pTxLink_p)
+void ndis_freeTxBuff(void* pTxLink_p)
 {
     protocol_freeTxBuff(pTxLink_p);
 }
@@ -268,7 +273,7 @@ void ndis_freeTxBuff(PVOID pTxLink_p)
 /**
 \brief  Send packet
 
-Send a packet 
+Send a packet
 
 \param  pTxLink_p      Pointer to LIST_ENTRY of the Txbuffer
 
@@ -317,6 +322,33 @@ void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
     protocol_registerTxRxHandler(pfnTxCallback_p, pfnRxCallback_p);
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Create Application interface device
+
+This routines calls the application specific applicaiton interface routine which
+initializes a IOCTL interface for user applicaition to interact with the driver
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_createAppIntf(void)
+{
+    driverInstance_l.pfnAppIntfRegCb(driverInstance_l.pMiniportHandle);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Close Application interface device
+
+Close the IOCTL interface created before.
+
+\ingroup module_ndis
+*/
+void ndis_closeAppIntf(void)
+{
+    driverInstance_l.pfnAppIntfDeregisterCb();
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -367,6 +399,7 @@ NDIS_STATUS protocolSetOptions(NDIS_HANDLE driverHandle_p, NDIS_HANDLE driverCon
     UNREFERENCED_PARAMETER(driverContext_p);
     return NDIS_STATUS_SUCCESS;
 }
+
 
 ///\}
 
