@@ -140,7 +140,9 @@ The function frees the allocated memory used by the circular buffer instance.
 //------------------------------------------------------------------------------
 void circbuf_freeInstance(tCircBufInstance* pInstance_p)
 {
-    NdisFreeSpinLock(&pInstance_p->pCircBufArchInstance->spinlock);
+    tCircBufArchInstance* pArchInstance =
+        (tCircBufArchInstance*) pInstance_p->pCircBufArchInstance;
+    NdisFreeSpinLock(&pArchInstance->spinlock);
     OPLK_FREE(pInstance_p);
 }
 
@@ -158,7 +160,7 @@ The function allocates the memory needed for the circular buffer.
 \ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tCircBufError circbuf_allocBuffer(tCircBufInstance* pInstance_p, size_t size_p)
+tCircBufError circbuf_allocBuffer(tCircBufInstance* pInstance_p, size_t* pSize_p)
 {
     if ((pInstance_p->pCircBufHeader = OPLK_MALLOC(sizeof(tCircBufHeader))) == NULL)
     {
@@ -240,7 +242,7 @@ void circbuf_lock(tCircBufInstance* pInstance_p)
 {
     tCircBufArchInstance* pArchInstance =
                                   (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
-    NdisAcquireSpinLock(pArchInstance->spinlock);
+    NdisAcquireSpinLock(&pArchInstance->spinlock);
 }
 
 //------------------------------------------------------------------------------
@@ -258,7 +260,7 @@ void circbuf_unlock(tCircBufInstance* pInstance_p)
 {
     tCircBufArchInstance* pArchInstance =
                               (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
-    NdisReleaseSpinLock(pArchInstance->spinlock);
+    NdisReleaseSpinLock(&pArchInstance->spinlock);
 }
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //

@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   common/driver.h
+\file   /windows-split/drivers/windows/drv_kernelmod_edrv/appintf.c
 
-\brief  Header file for openPOWERLINK drivers
+\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
 
-This file contains the necessary definitions for using the openPOWERLINK
-kernel driver modules.
+{DETAILED_DESCRIPTION_OF_THE_FILE}
+
+\ingroup {MODULE_GROUP}
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
-Copyright (c) 2013, SYSTEC electronic GmbH
+Copyright (c) 2014, {DEVELOPER_NAME}
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,56 +36,68 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_H_
-#define _INC_common_driver_H_
-
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/dllcal.h>
+//#include <{SYSTEM_INCLUDE_FILE}>
+
+//#include "{LOCAL_INCLUDE_FILE}"
+
+
+//============================================================================//
+//            G L O B A L   D E F I N I T I O N S                             //
+//============================================================================//
 
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_CLASS_NAME    "plk"
-#define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
-#define PLK_DRV_NAME      "plk"
-#define PLK_IOC_MAGIC     '='
 
 //------------------------------------------------------------------------------
-// typedef
-//------------------------------------------------------------------------------
-typedef struct
-{
-    tDllCalQueue            queue;
-    void*                   pData;
-    size_t                  size;
-} tIoctlDllCalAsync;
-
-typedef struct
-{
-    void*                   pData;
-    size_t                  size;
-} tIoctlBufInfo;
-
-typedef struct
-{
-    UINT32                  offset;
-    UINT32                  errVal;
-} tErrHndIoctl;
-
-//------------------------------------------------------------------------------
-// function prototypes
+// module global vars
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// include architecture specific definitions
+// global function prototypes
 //------------------------------------------------------------------------------
-#if (TARGET_SYSTEM == _LINUX_)
-#include <common/driver-linux.h>
-#else if (TARGET_SYSTEM == _WIN32_)
-#include <common/driver-windows.h>
-#endif
 
-#endif /* _INC_common_driver_H_ */
+
+//============================================================================//
+//            P R I V A T E   D E F I N I T I O N S                           //
+//============================================================================//
+
+//------------------------------------------------------------------------------
+// const defines
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local types
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local vars
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local function prototypes
+//------------------------------------------------------------------------------
+
+//============================================================================//
+//            P U B L I C   F U N C T I O N S                                 //
+//============================================================================//
+
+
+//============================================================================//
+//            P R I V A T E   F U N C T I O N S                               //
+//============================================================================//
+/// \name Private Functions
+/// \{
+
+
+///\}
+
+
+
+
+
+
+

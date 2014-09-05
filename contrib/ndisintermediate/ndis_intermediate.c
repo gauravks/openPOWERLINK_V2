@@ -114,7 +114,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
 //    tNdisErrorStatus                        status = NdisStatusSuccess;
     NDIS_PROTOCOL_DRIVER_CHARACTERISTICS    protocolChars;
     NDIS_MINIPORT_DRIVER_CHARACTERISTICS    miniportChars;
-    NDIS_HANDLE                             miniportDriverContext;
+    NDIS_HANDLE                             miniportDriverContext = NULL;
     NDIS_HANDLE                             protocolDriverContext = NULL;
     NDIS_STRING                             ndisDriverName;
 
@@ -205,9 +205,10 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
     return ndisStatus;
 }
 
-void ndis_registerAppIntf(tAppIntfRegister* pAppIntfCb_p)
+void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p)
 {
-    driverInstance_l.pfnAppIntfCb = pAppIntfCb_p;
+    driverInstance_l.pfnAppIntfRegCb = pAppIntfRegCb_p;
+    driverInstance_l.pfnAppIntfDeregisterCb = pAppIntfDeregCb_p;
 }
 
 //------------------------------------------------------------------------------
@@ -228,7 +229,41 @@ BOOLEAN ndis_checkBindingState(void)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Allocate Tx buffer
+\brief  Allocate Tx and Rx buffer
+
+This routines allocates Tx and Rx buffers for receive queue and transmit queue
+and sets up queue mechanism.
+
+\param  txBuffCount_p       Tx buffer count.
+\param  rxBuffCount_p       Rx buffer count.
+
+\return Returns tNdisErrorStatus error code
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p)
+{
+    protocol_allocateTxRxBuf(txBuffCount_p, rxBuffCount_p);
+    return NdisStatusSuccess;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Free Tx and Rx buffer
+
+\return Returns tNdisErrorStatus error code
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_freeTxRxBuff(void)
+{
+    protocol_freeTxRxBuffers();
+}
+//------------------------------------------------------------------------------
+/**
+\brief  Get Tx buffer
 
 This routines allocate a Tx buffer to be shared with the caller.
 
@@ -241,7 +276,7 @@ This routines allocate a Tx buffer to be shared with the caller.
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
-tNdisErrorStatus ndis_allocateTxBuff(void* pData_p, size_t size_p, void* pTxLink_p)
+tNdisErrorStatus ndis_getTxBuff(void* pData_p, size_t size_p, void* pTxLink_p)
 {
     protocol_getTxBuff(&pData_p, size_p, pTxLink_p);
 

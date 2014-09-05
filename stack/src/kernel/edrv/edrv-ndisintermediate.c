@@ -45,9 +45,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 #include <oplk/oplkinc.h>
-#include <oplk/ami.h>
+#include <common/ami.h>
 #include <kernel/edrv.h>
 
+#include <ndisintermediate/ndis-intf.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -110,27 +111,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef struct
 {
-    tEdrvTxBuffer*                  apTxBuffer[EDRV_MAX_TX_BUFFERS];
     void*                           pTxBuff;
     UINT                            headTxIndex;
     UINT                            tailTxIndex;
     tEdrvTxBuffer*                  apTxBuffer[EDRV_MAX_TX_BUFFERS];          ///< Array of TX buffers
     BOOL                            afTxBufUsed[EDRV_MAX_TX_BUFFERS];       ///< Array indicating the use of a specific TX buffer
-
-
-    // NDIS Intermediate driver handling parameters
-    NDIS_BIND_PARAMETERS            bindParameters;
-    NDIS_PNP_CAPABILITIES           powerManagementCap;
-    NDIS_RECEIVE_SCALE_CAPABILITIES rcvScaleCap;
-    NDIS_LINK_STATE                 lastIndicatedLinkState;
-    // Power state of the underlying adapter
-    tNdisBindingState               bindingState;
-    // TODO:gks To be created as a part of VEth module
-    tVEthInstance*                  pVEthInstance;
-    NDIS_SPIN_LOCK                  pauseEventLock;
-    PNDIS_EVENT                     pauseEvent;
-    ULONG                           sendRequestCount;
-    NDIS_HANDLE                     sendNblPool;
     tEdrvInitParam                  initParam;
 
 #if CONFIG_EDRV_USE_DIAGNOSTICS != FALSE
@@ -150,7 +135,7 @@ tEdrvInstance   edrvInstance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-static void edrvTxHandler(ULONG buffId_p);
+static void edrvTxHandler(void* txBuff_p);
 static void edrvRxHandler(void* pRxBuffer_p, size_t size_p);
 
 //============================================================================//
@@ -189,7 +174,7 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     }
 
     // Allocate and prepare Transmit and receive Net Buffer Lists
-    ret = ndis_allocateTxRxBuf(EDRV_MAX_TX_BUFFERS, EDRV_MAX_RX_BUFFERS);
+    ret = ndis_allocateTxRxBuff(EDRV_MAX_TX_BUFFERS, EDRV_MAX_RX_BUFFERS);
     if(ret != kErrorOk)
     {
         DbgPrint("%s() TX and RX buffer allocation failed 0x%X\n",__func__, ret);
@@ -315,12 +300,12 @@ tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
 
     if (edrvInstance_l.pTxBuff == NULL)
     {
-        DbgPrintf("%s Tx buffers currently not allocated\n", __FUNCTION__);
+        DEBUG_LVL_ERROR_TRACE("%s Tx buffers currently not allocated\n", __FUNCTION__);
         return kErrorEdrvNoFreeBufEntry;
 
     }
 
-    ndis_allocateTxBuff(pBuffer_p->pBuffer, pBuffer_p->maxBufferSize,
+    ndis_getTxBuff(pBuffer_p->pBuffer, pBuffer_p->maxBufferSize,
                         pBuffer_p->txBufferNumber.pArg);
 /*    for(bufIndex = 0; bufIndex < EDRV_MAX_TX_BUFFERS; bufIndex++)
     {
@@ -509,7 +494,7 @@ static void edrvRxHandler(void* pRxData_p, size_t size_p)
     rxBuffer.rxFrameSize = size_p;
     rxBuffer.bufferInFrame = kEdrvBufferLastInFrame;
 
-    retReleaseRxBuffer =     edrvInstance_l.initParam->pfnRxHandler(&rxBuffer);
+    retReleaseRxBuffer = edrvInstance_l.initParam.pfnRxHandler(&rxBuffer);
 }
 
 //------------------------------------------------------------------------------

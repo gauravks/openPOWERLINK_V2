@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   /windows-split/drivers/windows/drv_kernelmod_edrv/appintf.c
+\file   windows/target-windows.c
 
-\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
+\brief  Target specific functions for Windows
 
-{DETAILED_DESCRIPTION_OF_THE_FILE}
+The file implements target specific functions used in the openPOWERLINK stack.
 
-\ingroup {MODULE_GROUP}
+\ingroup module_target
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, {DEVELOPER_NAME}
+Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,65 +39,73 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <{SYSTEM_INCLUDE_FILE}>
-
-#include "{LOCAL_INCLUDE_FILE}"
-
-
-//============================================================================//
-//            G L O B A L   D E F I N I T I O N S                             //
-//============================================================================//
-
-//------------------------------------------------------------------------------
-// const defines
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// module global vars
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// global function prototypes
-//------------------------------------------------------------------------------
-
-
-//============================================================================//
-//            P R I V A T E   D E F I N I T I O N S                           //
-//============================================================================//
-
-//------------------------------------------------------------------------------
-// const defines
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// local types
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// local vars
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// local function prototypes
-//------------------------------------------------------------------------------
+#include <common/oplkinc.h>
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
 
+//------------------------------------------------------------------------------
+/**
+\brief  Initialize target specific stuff
 
-//============================================================================//
-//            P R I V A T E   F U N C T I O N S                               //
-//============================================================================//
-/// \name Private Functions
-/// \{
+The function initialize target specific stuff which is needed to run the
+openPOWERLINK stack.
 
+\return The function returns a tOplkError error code.
+*/
+//------------------------------------------------------------------------------
+tOplkError target_init(void)
+{
+    return kErrorOk;
+}
 
-///\}
+//------------------------------------------------------------------------------
+/**
+\brief  Clean up target specific stuff
 
+The function cleans up target specific stuff.
 
+\return The function returns a tOplkError error code.
+*/
+//------------------------------------------------------------------------------
+tOplkError target_cleanup(void)
+{
+    return kErrorOk;
+}
 
+//------------------------------------------------------------------------------
+/**
+\brief Sleep for the specified number of milliseconds
 
+The function makes the calling thread sleep until the number of specified
+milliseconds have elapsed.
 
+\param  milliSeconds_p      Number of milliseconds to sleep
 
+\ingroup module_target
+*/
+//------------------------------------------------------------------------------
+void target_msleep(UINT32 milliSeconds_p)
+{
+    NdisMSleep(milliSeconds_p);
+}
 
+//------------------------------------------------------------------------------
+/**
+\brief    Get current system tick
+
+This function returns the current system tick determined by the system timer.
+
+\return Returns the system tick in milliseconds
+
+\ingroup module_target
+*/
+//------------------------------------------------------------------------------
+UINT32 target_getTickCount(void)
+{
+    LARGE_INTEGER    tickCount;
+    KeQueryTickCount(&tickCount);
+
+    return (UINT32)tickCount.QuadPart;
+}

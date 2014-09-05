@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/eventk.h>
 #include <kernel/eventkcal.h>
 #include <errhndkcal.h>
-#include <ndis-intf.h>
+#include <ndisintermediate/ndis-intf.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -72,7 +72,7 @@ NDIS_HANDLE     heartbeatTimer_g;
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-#pragma NDIS_INIT_FUNCTION(DriverEntry)
+//#pragma NDIS_INIT_FUNCTION(DriverEntry)
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -117,7 +117,10 @@ DRIVER_DISPATCH powerlinkCreate;
 DRIVER_DISPATCH powerlinkCleanup;
 DRIVER_DISPATCH powerlinkClose;
 DRIVER_DISPATCH powerlinkIoctl;
-
+static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
+    void* unusedParameter2_p, void* unusedParameter3_p);
+void startHeartbeatTimer(LONG timeInMs_p);
+void stopHeartbeatTimer(void);
 //------------------------------------------------------------------------------
 //  Kernel module specific data structures
 //------------------------------------------------------------------------------
@@ -350,11 +353,13 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     void*               pInBuffer;
     void*               pOutBuffer;
     tFileContext*       pFileContext;
+    tOplkError          oplRet;
 
-
-    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(pDeviceObject_p);
 
     irpStack = IoGetCurrentIrpStackLocation(pIrp_p);
+    
+    pFileContext = irpStack->FileObject->FsContext;
 
     // Acquire the IRP remove lock
     status = IoAcquireRemoveLock(&pFileContext->driverAccessLock, pIrp_p);
@@ -375,56 +380,59 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     switch (irpStack->Parameters.DeviceIoControl.IoControlCode)
     {
         case PLK_CMD_CTRL_EXECUTE_CMD:
+        {
             tCtrlCmd* pCtrlCmd = (tCtrlCmd*) pIrp_p->AssociatedIrp.SystemBuffer;
-//          pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-//          pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            //          pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            //          pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
 
-            executeCmd(pCtrlCmd);
+            //executeCmd(pCtrlCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlCmd);
             break;
-
+        }
         case PLK_CMD_CTRL_STORE_INITPARAM:
-
+        {
             tCtrlInitParam* pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
 
-            storeInitParam(pCtrlInitCmd);
+            // storeInitParam(pCtrlInitCmd);
 
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
-
+        }
         case PLK_CMD_CTRL_READ_INITPARAM:
-
+        {
             tCtrlInitParam* pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
 
-            readInitParam(pCtrlInitCmd);
+            //readInitParam(pCtrlInitCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
-
+        }
         case PLK_CMD_CTRL_GET_STATUS:
+        {
             UINT16*  pStatus = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
 
-            getStatus(pStatus);
+            //getStatus(pStatus);
 
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
-
+        }
         case PLK_CMD_CTRL_GET_HEARTBEAT:
-
+        {
             UINT16*  pHeartBeat = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
-            getHeartbeat(pHeartBeat);
+            //getHeartbeat(pHeartBeat);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
-
+        }
         case PLK_CMD_POST_EVENT:
-
+        {
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
 
             eventkcal_postEventFromUser(pInBuffer);
 
             break;
-
+        }
         case PLK_CMD_GET_EVENT:
-            size_t     eventSize;
+        {
+            size_t     eventSize = 0;
             pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
 
             eventkcal_getEventForUser(pOutBuffer, eventSize);
@@ -435,41 +443,47 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
                 IoMarkIrpPending(pIrp_p);
                 // Insert Irp to eventQueue list
                 NdisInterlockedInsertTailList(&plkDriverInstance_l.eventQueue,
-                                              &pIrp_p->Tail.Overlay.ListEntry,
-                                              &plkDriverInstance_l.eventQueueLock);
+                    &pIrp_p->Tail.Overlay.ListEntry,
+                    &plkDriverInstance_l.eventQueueLock);
             }
             else
             {
                 pIrp_p->IoStatus.Information = 0;
-                Status = STATUS_CANCELLED;
+                status = STATUS_CANCELLED;
                 break;
             }
 
             status = STATUS_PENDING;
             break;
-
+        }
         case PLK_CMD_DLLCAL_ASYNCSEND:
-            ret = sendAsyncFrame(arg);
-            break;
-
+        {
+             // ret = sendAsyncFrame(arg);
+             break;
+        }
         case PLK_CMD_ERRHND_WRITE:
-            ret = writeErrorObject(arg);
+        {
+            //  ret = writeErrorObject(arg);
             break;
+        }
+
 
         case PLK_CMD_ERRHND_READ:
-            ret = readErrorObject(arg);
+        {
+            //ret = readErrorObject(arg);
             break;
-
+        }
         case PLK_CMD_PDO_SYNC:
+        {
             if ((oplRet = pdokcal_waitSyncEvent()) == kErrorRetry)
-                ret = -ERESTARTSYS;
+                status = NDIS_STATUS_RESOURCES;
             else
-                ret = 0;
+                status = STATUS_SUCCESS;
             break;
-
+        }
         default:
-            DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d type=%d)\n", _IOC_NR(cmd), _IOC_TYPE(cmd));
-            ret = -ENOTTY;
+            //DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d type=%d)\n", _IOC_NR(cmd), _IOC_TYPE(cmd));
+            //ret = -ENOTTY;
             break;
     }
 
@@ -489,7 +503,7 @@ The function starts the timer used for updating the heartbeat counter.
 \ingroup module_driver_linux_kernel
 */
 //------------------------------------------------------------------------------
-void startHeartbeatTimer(ULONG timeInMs_p)
+void startHeartbeatTimer(LONG timeInMs_p)
 {
     LARGE_INTEGER   dueTime;
     dueTime.QuadPart = -(timeInMs_p * 10000);
@@ -522,7 +536,7 @@ heartbeat counter.
 \ingroup module_driver_linux_kernel
 */
 //------------------------------------------------------------------------------
-void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
+static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
                          void* unusedParameter2_p, void* unusedParameter3_p)
 {
     UNUSED_PARAMETER(unusedParameter1_p);

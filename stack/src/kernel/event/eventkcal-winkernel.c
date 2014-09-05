@@ -205,7 +205,7 @@ tOplkError eventkcal_exit(void)
 
     while(instance_l.fThreadIsRunning)
     {
-        msleep(10);
+        NdisMSleep(10);
         if (i++ > 1000)
         {
             TRACE("Event Thread is not terminating, continue shutdown...!\n");
@@ -413,7 +413,7 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
         OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
         size_p = readSize;
 
-        return 0;
+        return;
     }
     else if (eventkcal_getEventCountCircbuf(kEventQueueUInt) > 0)
     {
