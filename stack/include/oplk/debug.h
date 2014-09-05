@@ -335,7 +335,7 @@ void DumpData(char* szStr_p, UINT8* pData_p, UINT16 size_p);
 //  definition of TRACE
 //------------------------------------------------------------------------------
 #ifndef NDEBUG
-#define TRACE(...) trace(__VA_ARGS__)
+#define TRACE(...)      DbgPrint(__VA_ARGS__)
 
 #ifdef __cplusplus
 extern "C" {
@@ -348,7 +348,7 @@ void trace(const char* fmt, ...);
 #endif
 #else
 
-#define TRACE(...)
+#define TRACE(...)      DbgPrint(__VA_ARGS__)
 
 #endif
 
@@ -372,18 +372,22 @@ void trace(const char* fmt, ...);
 // This macro doesn't print out C-file and line number of the failed assertion
 // but a string, which exactly names the mistake.
 //------------------------------------------------------------------------------
-#if !defined(ASSERTMSG) && !defined(NDEBUG)
+#if !defined(NDEBUG)
+//don nothing
+#else
+#if !defined(ASSERTMSG) 
 
 #define ASSERTMSG(expr, string) \
-    if (!(expr)) \
+if (!(expr)) \
     { \
-        PRINTF("Assertion failed: " string);\
-        for ( ; ; );\
+    PRINTF("Assertion failed: " string); \
+for (;;); \
     }
 #else
 
 #define ASSERTMSG(expr, string)
+#endif /* !defined(ASSERMSG)*/
 
-#endif
+#endif /*!defined(NDEBUG)*/
 
 #endif /* _INC_oplk_debug_H_ */

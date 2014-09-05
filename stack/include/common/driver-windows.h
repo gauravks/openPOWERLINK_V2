@@ -37,11 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _INC_common_driver_windows_H_
 #define _INC_common_driver_windows_H_
-
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <winioctl.h>
+//#include <winioctl.h>
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------

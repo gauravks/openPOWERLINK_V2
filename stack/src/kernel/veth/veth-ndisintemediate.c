@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/veth.h>
 #include <kernel/dllkcal.h>
 #include <kernel/dllk.h>
-#include <oplk/ami.h>
+#include <common/ami.h>
 
 
 //============================================================================//

@@ -52,22 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
-/**
-\brief TODO:
 
-*/
-typedef void(*tNdisReceiveCb)(void* pRxData_p, size_t size_p);
-
-/**
-\brief TODO:
-
-*/
-typedef void(*tVEthSendCb)(void* pVEthTxData_p, size_t size_p);
-/**
-\brief TODO:
-
-*/
-typedef void(*tNdisTransmitCompleteCb)(void* pTxBuffer_p);
 
 /**
 \brief TODO:
@@ -79,9 +64,6 @@ typedef enum eNdisBindingState
     NdisBindingPausing,         ///< Lower end binding is entering into paused state
     NdisBindingRunning          ///< Lower end binding is running
 }tNdisBindingState;
-
-/**
-
 
 /**
 \brief TODO:

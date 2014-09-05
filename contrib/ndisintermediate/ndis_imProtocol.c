@@ -90,8 +90,6 @@ tProtocolInstance   protocolInstance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-NDIS_STATUS sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
-                           PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);
 NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p);
 void freeVEthInstance(tVEthInstance* pVEthInstance_p);
 void stopVEth(tVEthInstance* pVEthInstance_p);
@@ -397,7 +395,7 @@ void protocol_getTxBuff(void** ppTxBuf_p, size_t size_p, void* pTxLink_p)
 //------------------------------------------------------------------------------
 void protocol_freeTxBuff(PVOID pTxLink_p)
 {
-    PLIST_ENTRY     pTxLink;
+    PLIST_ENTRY     pTxLink = NULL;
 
     if (pTxLink_p != NULL)
     {
@@ -521,6 +519,8 @@ NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
         pTxBufInfo->pNbl,
         NDIS_DEFAULT_PORT_NUMBER,
         sendFlags);
+
+    return NDIS_STATUS_SUCCESS;
 
 }
 
@@ -684,7 +684,7 @@ NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
     NDIS_HANDLE protocolBindingContext_p)
 {
     NDIS_STATUS     Status = NDIS_STATUS_SUCCESS;
-    tVEthInstance*  pVEthInstance;
+    tVEthInstance*  pVEthInstance = NULL;
 
 
     if (protocolInstance_l.pVEthInstance != NULL)
@@ -693,7 +693,7 @@ NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
         stopVEth(pVEthInstance);
     }
 
-    if (pVEthInstance->status != statusClosed)
+    if (pVEthInstance != NULL)
     {
         // Wait for VEth module to close
         NdisMSleep(2000);
@@ -714,7 +714,7 @@ NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
         Status = NDIS_STATUS_FAILURE;
         ASSERT(0);
     }
-
+    return NDIS_STATUS_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
@@ -790,7 +790,7 @@ VOID protocolStatus(NDIS_HANDLE protocolBindingContext_p, PNDIS_STATUS_INDICATIO
     // TODO@gks: DO we need lock here to avoid re-entrance?
     protocolInstance_l.lastLinkState = *((PNDIS_LINK_STATE) (statusIndication_p->StatusBuffer));
 
-    if ((pVEthinstance->state == VEthHalting) || pVEthinstance->miniportAdapterHandle == NULL)
+    if ((pVEthinstance->miniportHalting) || pVEthinstance->miniportAdapterHandle == NULL)
     {
         pVEthinstance->pendingStatusIndication = generalStatus;
         pVEthinstance->lastPendingLinkState = *((PNDIS_LINK_STATE) (statusIndication_p->StatusBuffer));
@@ -965,7 +965,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
 
         offset = NET_BUFFER_CURRENT_MDL_OFFSET(NET_BUFFER_LIST_FIRST_NB(currentNbl));
 
-        while ((pMdl != NULL) && (totalLength >= 0))
+        while ((pMdl != NULL) && (totalLength > 0))
         {
             pRxDataSrc = NULL;
             NdisQueryMdl(pMdl, &pRxDataSrc, &bytesAvailable, NormalPagePriority);
@@ -1083,11 +1083,11 @@ void closeBinding(void)
     ULONG                   multicastAddrBufSize = 0;
 
     // Disable Multicast filter
-    sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
+    protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
                    sizeof(packetFilter));
 
     // Delete multicast list. We have already deleted individual entries before.
-    sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
+    protocol_sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
                    multicastAddrBufSize);
 
     NdisAcquireSpinLock(&protocolInstance_l.driverLock);
@@ -1133,7 +1133,7 @@ void closeBinding(void)
 NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
 {
     NDIS_STATUS                     status = NDIS_STATUS_SUCCESS;
-    tVEthInstance*                  pVEthInstance;
+    tVEthInstance*                  pVEthInstance = NULL;
     NDIS_HANDLE                     adapterConfigHandle;
     PNDIS_CONFIGURATION_PARAMETER   configParam;
     NDIS_STRING                     upperBindingStr = NDIS_STRING_CONST("UpperBindings");

@@ -34,8 +34,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_ndis-intf_H_
-#define _INC_ndis-intf_H_
+#ifndef _INC_ndis_intf_H_
+#define _INC_ndis_intf_H_
 
 
 //------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 \brief TODO:
 
 */
-typedef enum eNdisErrorStatus
+typedef enum
 {
     NdisStatusSuccess,          ///< Lower end binding is in paused state
     NdisStatusInit,
@@ -63,8 +63,25 @@ typedef enum eNdisErrorStatus
     NdisStatusInvalidParams
 }tNdisErrorStatus;
 
-typedef void(*tAppIntfRegister)(NDIS_HANDLE driverHandle_p);
-typedef void(*tAppIntfDeRegister)(void);
+typedef void (*tAppIntfRegister)(NDIS_HANDLE driverHandle_p);
+typedef void (*tAppIntfDeRegister)(void);
+/**
+\brief TODO:
+
+*/
+typedef void (*tNdisReceiveCb)(void* pRxData_p, size_t size_p);
+
+/**
+\brief TODO:
+
+*/
+typedef void(*tVEthSendCb)(void* pVEthTxData_p, size_t size_p);
+
+/**
+\brief TODO:
+
+*/
+typedef void(*tNdisTransmitCompleteCb)(void* pTxBuffer_p);
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
@@ -74,12 +91,14 @@ extern "C" {
 #endif
 
 tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p);
+void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p);
 BOOLEAN ndis_checkBindingState(void);
-tNdisErrorStatus ndis_allocateTxBuff(void* pData_p, size_t size_p, void* pTxLink_p);
+tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p);
+void ndis_freeTxRxBuff(void);
+tNdisErrorStatus ndis_getTxBuff(void* pData_p, size_t size_p, void* pTxLink_p);
 void ndis_freeTxBuff(void* pTxLink_p);
 tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p);
-void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
-                                          tNdisReceiveCb pfnRxCallback_p);
+void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p, tNdisReceiveCb pfnRxCallback_p);
 
 #ifdef __cplusplus
 }

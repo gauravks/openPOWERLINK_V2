@@ -219,7 +219,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     NdisReadNetworkAddress(&status, &macAddress, &macLength, configHandle);
 
     if ((status == NDIS_STATUS_SUCCESS) && (macLength == ETH_LENGTH_OF_ADDRESS) &&
-        (!ETH_IS_MULTICAST(macAddress)) && (ETH_IS_LOCALLY_ADMINISTERED(macAddress)))
+        (!ETH_IS_MULTICAST(macAddress)))
     {
         ETH_COPY_NETWORK_ADDRESS(pVEthInstance->currentAddress, macAddress);
     }
@@ -382,7 +382,7 @@ NDIS_STATUS miniportOidRequest(NDIS_HANDLE adapterContext_p,
             status = NDIS_STATUS_SUCCESS;
             break;
         }
-        defualt:
+        default:
             status = NDIS_STATUS_NOT_SUPPORTED;
             break;
     }
@@ -611,7 +611,7 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
 
         offset = NET_BUFFER_CURRENT_MDL_OFFSET(NET_BUFFER_LIST_FIRST_NB(currentNbl));
 
-        while ((pMdl != NULL) && (totalLength >= 0))
+        while ((pMdl != NULL) && (totalLength > 0))
         {
             pRxDataSrc = NULL;
             NdisQueryMdl(pMdl, &pRxDataSrc, &bytesAvailable, NormalPagePriority);

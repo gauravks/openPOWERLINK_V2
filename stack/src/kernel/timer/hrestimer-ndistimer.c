@@ -43,6 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/hrestimer.h>
 #include <oplk/benchmark.h>
 
+//#include <ndis.h>
+//#include <wdm.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -55,6 +57,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TIMER_MIN_VAL_SINGLE  500000         /* min 500us */
 #define TIMER_MIN_VAL_CYCLE   1000000        /* min 1000us */
 #define TIMER_MEM_TAG         'TirH'
+
+
+#define TIMERHDL_MASK           0x0FFFFFFF
+#define TIMERHDL_SHIFT          28
+#define HDL_TO_IDX(Hdl)         ((Hdl >> TIMERHDL_SHIFT) - 1)
+#define HDL_INIT(Idx)           ((Idx + 1) << TIMERHDL_SHIFT)
+#define HDL_INC(Hdl)            (((Hdl + 1) & TIMERHDL_MASK) \
+                                | (Hdl & ~TIMERHDL_MASK))
 
 //------------------------------------------------------------------------------
 // module global vars
@@ -144,7 +154,8 @@ tOplkError hrestimer_addInstance(void)
 {
     NDIS_TIMER_CHARACTERISTICS        timerChars;
     NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
-    NDIS_HANDLE                       adapterHandle;
+    NDIS_HANDLE                       adapterHandle = NULL;
+    UINT                              index;
 
     OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof (hresTimerInstance_l));
     // TODO: get adapter handle here
@@ -189,17 +200,17 @@ The function deletes an instance of the high-resolution timer module.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_delInstance(void)
 {
-    tHresTimerInfo      pTimerInfo;
+    tHresTimerInfo*      pTimerInfo;
     UINT                    index;
 
     for (index = 0; index < TIMER_COUNT; index++)
     {
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
-        NdisCancelTimerObject(pTimerInfo.timerObjHandle);
-        NdisFreeTimerObject(pTimerInfo.timerObjHandle);
-        pTimerInfo.dueTime.QuadPart = 0;
-        pTimerInfo.eventArg.timerHdl = 0;
-        pTimerInfo.pfnCallback = NULL;
+        NdisCancelTimerObject(pTimerInfo->timerObjHandle);
+        NdisFreeTimerObject(pTimerInfo->timerObjHandle);
+        pTimerInfo->dueTime.QuadPart = 0;
+        pTimerInfo->eventArg.timerHdl = 0;
+        pTimerInfo->pfnCallback = NULL;
     }
 
     return kErrorOk;
@@ -238,7 +249,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     tOplkError              ret = kErrorOk;
     UINT                    index;
     tHresTimerInfo*         pTimerInfo;
-    ULONGULONG              relTime
+    LONGLONG                relTime;
     LARGE_INTEGER           period;
 
     if(pTimerHdl_p == NULL)
@@ -289,7 +300,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     pTimerInfo->pfnCallback   = pfnCallback_p;
     pTimerInfo->fContinuously = fContinue_p;
 
-    relTime = time_p/100;
+    relTime = time_p/100LL;
     pTimerInfo->dueTime.QuadPart = -(relTime);
     NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime, 0, pTimerInfo);
 
@@ -325,6 +336,7 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
 {
     tHresTimerInfo*         pTimerInfo = (tHresTimerInfo*) functionContext_p;
     tTimerHdl               orgTimerHdl;
+    UINT                    index;
 
     UNREFERENCED_PARAMETER(unusedParameter1_p);
     UNREFERENCED_PARAMETER(unusedParameter2_p);
@@ -349,7 +361,7 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
 
     if (pTimerInfo->fContinuously)
     {
-        NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime.QuadPart, 0, pTimerInfo);
+        NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime, 0, pTimerInfo);
     }
 
 Exit:
