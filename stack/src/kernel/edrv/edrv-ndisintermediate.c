@@ -162,11 +162,13 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     // clear instance structure
     OPLK_MEMSET(&edrvInstance_l, 0, sizeof(edrvInstance_l));
 
+
+    DbgPrint("Edrv Init\n");
     // save the init data
     edrvInstance_l.initParam = *pEdrvInitParam_p;
 
     // Check if NDIS intermediate driver is ready
-    if (ndis_checkBindingState())
+    if (!ndis_checkBindingState())
     {
         // The ndis driver has not initialized
         DbgPrint("%s() NDIS Driver not initialized\n",__func__);
@@ -201,6 +203,9 @@ This function shuts down the Ethernet driver.
 //------------------------------------------------------------------------------
 tOplkError edrv_shutdown(void)
 {
+    DbgPrint("%s() \n", __func__);
+    ndis_freeTxRxBuff();
+    ndis_registerTxRxHandler(NULL, NULL);
     return kErrorOk;
 }
 
@@ -292,21 +297,36 @@ This function allocates a Tx buffer.
 //------------------------------------------------------------------------------
 tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
 {
-    UINT        bufIndex;
+    UINT                bufIndex;
+    tNdisErrorStatus    ndisStatus;
+    void*               pTxBuffer = NULL;
     if (pBuffer_p->maxBufferSize > EDRV_MAX_FRAME_SIZE)
     {
         return  kErrorEdrvNoFreeBufEntry;
     }
 
-    if (edrvInstance_l.pTxBuff == NULL)
-    {
-        DEBUG_LVL_ERROR_TRACE("%s Tx buffers currently not allocated\n", __FUNCTION__);
-        return kErrorEdrvNoFreeBufEntry;
+    //if (edrvInstance_l.pTxBuff == NULL)
+    //{
+     //   DEBUG_LVL_ERROR_TRACE("%s Tx buffers currently not allocated\n", __FUNCTION__);
+     //   return kErrorEdrvNoFreeBufEntry;
 
+    //}
+    ndisStatus = ndis_getTxBuff(&pTxBuffer, pBuffer_p->maxBufferSize,
+                        &pBuffer_p->txBufferNumber.pArg);
+    if (ndisStatus != NdisStatusSuccess)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s Tx buffers currently not allocated %x\n", __func__, ndisStatus);
+        return kErrorEdrvNoFreeBufEntry;
     }
 
-    ndis_getTxBuff(pBuffer_p->pBuffer, pBuffer_p->maxBufferSize,
-                        pBuffer_p->txBufferNumber.pArg);
+    if (pTxBuffer != NULL && pBuffer_p->txBufferNumber.pArg)
+    {
+        pBuffer_p->pBuffer = (UINT8*) pTxBuffer;
+    }
+    else
+    {
+        DbgPrint("Now What Happened\n");
+    }
 /*    for(bufIndex = 0; bufIndex < EDRV_MAX_TX_BUFFERS; bufIndex++)
     {
         if(!edrvInstance_l.afTxBufUsed[bufIndex])
@@ -363,19 +383,21 @@ tOplkError edrv_sendTxBuffer(tEdrvTxBuffer* pBuffer_p)
     tOplkError      ret = kErrorOk;
     UINT            bufferNumber;
 
-    bufferNumber = pBuffer_p->txBufferNumber.value;
+    //DbgPrint("%s() \n", __func__);
+    //bufferNumber = pBuffer_p->txBufferNumber.value;
 
-    if ((bufferNumber >= EDRV_MAX_TX_BUFFERS) ||
-        (edrvInstance_l.afTxBufUsed[bufferNumber] == FALSE))
+    if ((pBuffer_p->txFrameSize > EDRV_MAX_FRAME_SIZE))
     {
-        return kErrorEdrvBufNotExisting;
+        return kErrorEdrvInvalidParam;
     }
 
+   // DbgPrint("1\n");
     if (((edrvInstance_l.tailTxIndex + 1) & EDRV_TX_QUEUE_MASK) == edrvInstance_l.headTxIndex)
     {
         return kErrorEdrvNoFreeTxDesc;
     }
 
+    //DbgPrint("2\n");
     edrvInstance_l.apTxBuffer[edrvInstance_l.tailTxIndex] = pBuffer_p;
 
     if(pBuffer_p->txFrameSize < EDRV_MIN_FRAME_SIZE)
@@ -383,6 +405,11 @@ tOplkError edrv_sendTxBuffer(tEdrvTxBuffer* pBuffer_p)
         pBuffer_p->txFrameSize = EDRV_MIN_FRAME_SIZE;
     }
 
+    if (pBuffer_p->txBufferNumber.pArg == NULL)
+    {
+        DbgPrint("Strange\n");
+    }
+    //DbgPrint("Send Packet\n");
     ndis_sendPacket(pBuffer_p, pBuffer_p->txFrameSize, pBuffer_p->txBufferNumber.pArg);
 
     // increment Tx queue tail pointer
@@ -489,7 +516,7 @@ static void edrvRxHandler(void* pRxData_p, size_t size_p)
 {
     tEdrvRxBuffer           rxBuffer;
     tEdrvReleaseRxBuffer    retReleaseRxBuffer;
-
+    DbgPrint("%s() \n", __func__);
     rxBuffer.pBuffer = pRxData_p;
     rxBuffer.rxFrameSize = size_p;
     rxBuffer.bufferInFrame = kEdrvBufferLastInFrame;
@@ -510,16 +537,16 @@ Transmit complete handler regstered with NDIS intermediate driver.
 static void edrvTxHandler(void* txBuff_p)
 {
     tEdrvTxBuffer* pBuffer = (tEdrvTxBuffer*) txBuff_p;
-
+    //DbgPrint("%s() \n", __func__);
     // Process all the frames till specified index
-        if(pBuffer != NULL)
+    if(pBuffer != NULL)
+    {
+        if(pBuffer->pfnTxHandler != NULL)
         {
-            if(pBuffer->pfnTxHandler != NULL)
-            {
-                pBuffer->pfnTxHandler(pBuffer);
-            }
+            pBuffer->pfnTxHandler(pBuffer);
         }
-
+    }
+    edrvInstance_l.headTxIndex = (edrvInstance_l.headTxIndex + 1) & EDRV_TX_QUEUE_MASK;
 }
 
 

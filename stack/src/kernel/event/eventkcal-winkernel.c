@@ -203,6 +203,9 @@ tOplkError eventkcal_exit(void)
 
     instance_l.fInitialized = FALSE;
 
+    NdisSetEvent(&instance_l.kernelWaitEvent);
+    NdisSetEvent(&instance_l.userWaitEvent);
+
     while(instance_l.fThreadIsRunning)
     {
         NdisMSleep(10);
@@ -319,11 +322,14 @@ void eventkcal_postEventFromUser(void* pEvent_p)
 
     if (event.eventArgSize != 0)
     {
-        pArg = (void*)((ULONG_PTR)pEvent_p + sizeof(tEvent));
+        pArg = (char*) ((UCHAR*) pEvent_p + sizeof(tEvent));
         //OPLK_MEMCPY(pArg, , event.eventArgSize); // TODO: check the arithmetic
         event.pEventArg = pArg;
     }
-
+    if (event.eventType == kEventTypePdokSetupPdoBuf)
+    {
+        DbgPrint("$$$$$$$$$$$$$$$$$PDO event in Kernel$$$$$$$$$$$$$$$$\n");
+    }
     switch (event.eventSink)
     {
         case kEventSinkSync:
@@ -378,7 +384,7 @@ This function waits for events to the user.
 \ingroup module_eventkcal
 */
 //------------------------------------------------------------------------------
-void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
+void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
 {
     tOplkError          error;
     BOOL                fRet;
@@ -389,19 +395,22 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
         return;//Error
 
     fRet = NdisWaitEvent(&instance_l.userWaitEvent, timeout);
-
-    if(fRet)
+    //DbgPrint("%s\n", __func__);
+    if (fRet && (instance_l.userEventCount == 0))
     {
         TRACE("%s() timeout!\n", __func__);
+        NdisResetEvent(&instance_l.userWaitEvent);
         return;// TODO: error values
     }
 
     if (!instance_l.fInitialized)
         return;
 
+    NdisResetEvent(&instance_l.userWaitEvent);
     if (eventkcal_getEventCountCircbuf(kEventQueueK2U) > 0)
     {
-        NdisInterlockedDecrement(&instance_l.userEventCount);
+        //DbgPrint("1\n");
+            NdisInterlockedDecrement(&instance_l.userEventCount);
 
         error = eventkcal_getEventCircbuf(kEventQueueK2U, instance_l.aK2URxBuffer, &readSize);
         if(error != kErrorOk)
@@ -409,10 +418,15 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
             DEBUG_LVL_ERROR_TRACE("%s() Error reading K2U events %d!\n", __func__, error);
             return; //TODO: error
         }
-
+        //DbgPrint("2\n");
+        if (pEvent_p == NULL)
+        {
+            DbgPrint("NULL Check\n");
+            return;
+        }
         OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
-        size_p = readSize;
-
+        *pSize_p = readSize;
+       // DbgPrint("3\n");
         return;
     }
     else if (eventkcal_getEventCountCircbuf(kEventQueueUInt) > 0)
@@ -428,12 +442,14 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t size_p)
 
             //TRACE("%s() copy user event to user: %d Bytes\n", __func__, readSize);
             OPLK_MEMCPY(pEvent_p, instance_l.aUintRxBuffer, readSize);
-            size_p = readSize;
+            *pSize_p = readSize;
     }
     else
     {
 
     }
+
+
 
 }
 
@@ -456,9 +472,9 @@ This function contains the main function for the event handler thread.
 //------------------------------------------------------------------------------
 static void eventThread(void* arg)
 {
-    int         timeout = 500;
+    int         timeout = 50;
     PKTHREAD    thread;
-    BOOL        fRet;
+    BOOL        fRet = FALSE;
     // increase the priority of the thread
     thread = KeGetCurrentThread();
     KeSetPriorityThread(thread,LOW_REALTIME_PRIORITY); //todo: Shall we increase the base priority also??
@@ -466,27 +482,38 @@ static void eventThread(void* arg)
 
     while(instance_l.fInitialized)
     {
+        //DbgPrint("Kernel Event Thread\n");
         fRet = NdisWaitEvent(&instance_l.kernelWaitEvent, timeout);
 
-        if(instance_l.fInitialized)
+        //DbgPrint("Kernel Event\n");
+        if(!instance_l.fInitialized)
             break;
-        if(fRet)
-            continue;
 
+        NdisResetEvent(&instance_l.kernelWaitEvent);
+        //if(fRet)
+           // continue;
+        if (instance_l.kernelEventCount <= 0)
+            continue;
+        //DbgPrint("Kernel Event %x\n",fRet);
         /* first handle all kernel internal events --> higher priority! */
         while (eventkcal_getEventCountCircbuf(kEventQueueKInt) > 0)
         {
+            //DbgPrint("kEventQueueKInt\n");
             eventkcal_processEventCircbuf(kEventQueueKInt);
             NdisInterlockedDecrement(&instance_l.kernelEventCount);
         }
 
         if (eventkcal_getEventCountCircbuf(kEventQueueU2K) > 0)
         {
+            //DbgPrint("kEventQueueU2K\n");
             eventkcal_processEventCircbuf(kEventQueueU2K);
             NdisInterlockedDecrement(&instance_l.kernelEventCount);
         }
+
+        
     }
 
+    DbgPrint("%s() Exit\n", __func__);
     instance_l.fThreadIsRunning = FALSE;
 }
 
@@ -500,6 +527,7 @@ the circular buffer library as signal callback function
 //------------------------------------------------------------------------------
 void signalUserEvent(void)
 {
+    DbgPrint("%s()\n", __func__);
     NdisInterlockedIncrement(&instance_l.userEventCount);
     NdisSetEvent(&instance_l.userWaitEvent);
 }
@@ -514,6 +542,7 @@ the circular buffer library as signal callback function
 //------------------------------------------------------------------------------
 void signalKernelEvent(void)
 {
+    //DbgPrint("%s()\n", __func__);
     NdisInterlockedIncrement(&instance_l.kernelEventCount);
     NdisSetEvent(&instance_l.kernelWaitEvent);
 }

@@ -263,7 +263,7 @@ void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
     tNdisReceiveCb pfnRxCallback_p);
 NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p);
 void protocol_freeTxRxBuffers(void);
-void protocol_getTxBuff(void** ppTxBuf_p, size_t size_p, void* pTxLink_p);
+tTxBufInfo* protocol_getTxBuff(size_t size_p);
 void protocol_freeTxBuff(PVOID pTxLink_p);
 NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
     PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);

@@ -43,8 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/hrestimer.h>
 #include <oplk/benchmark.h>
 
-//#include <ndis.h>
-//#include <wdm.h>
+#include <ndisintermediate/ndis-intf.h>
+#include <ndis.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -154,9 +154,9 @@ tOplkError hrestimer_addInstance(void)
 {
     NDIS_TIMER_CHARACTERISTICS        timerChars;
     NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
-    NDIS_HANDLE                       adapterHandle = NULL;
+    NDIS_HANDLE                       adapterHandle = ndis_getAdapterHandle();
     UINT                              index;
-
+    DbgPrint("%s\n",__func__);
     OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof (hresTimerInstance_l));
     // TODO: get adapter handle here
 
@@ -202,7 +202,7 @@ tOplkError hrestimer_delInstance(void)
 {
     tHresTimerInfo*      pTimerInfo;
     UINT                    index;
-
+    DbgPrint("%s\n", __func__);
     for (index = 0; index < TIMER_COUNT; index++)
     {
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
@@ -251,7 +251,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     tHresTimerInfo*         pTimerInfo;
     LONGLONG                relTime;
     LARGE_INTEGER           period;
-
+    //DbgPrint("%s\n %x %llx", __func__, fContinue_p, time_p);
     if(pTimerHdl_p == NULL)
         return kErrorTimerInvalidHandle;
 
@@ -323,6 +323,7 @@ by its timer handle. After deleting, the handle is reset to zero.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
 {
+    DbgPrint("%s\n", __func__);
     return kErrorOk;
 }
 //============================================================================//
@@ -337,7 +338,7 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
     tHresTimerInfo*         pTimerInfo = (tHresTimerInfo*) functionContext_p;
     tTimerHdl               orgTimerHdl;
     UINT                    index;
-
+    //DbgPrint("Timer Interrupt\n");
     UNREFERENCED_PARAMETER(unusedParameter1_p);
     UNREFERENCED_PARAMETER(unusedParameter2_p);
     UNREFERENCED_PARAMETER(unusedParameter3_p);

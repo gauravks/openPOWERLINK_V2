@@ -75,6 +75,17 @@ typedef struct
     UINT32                  errVal;
 } tErrHndIoctl;
 
+/**
+\brief PDO mem structure
+
+The structure is used to retrieve the PDO memory allocated by kernel and
+mapped into user virtual address space.
+*/
+typedef struct
+{
+    UINT32      memSize;        ///< Size of PDO to be allocated and mapped
+    void*       pPdoAddr;       ///< Pointer to the pdo address returned by kernel
+} tPdoMem;
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------

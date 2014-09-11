@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <user/ctrlucal.h>
 #include <common/target.h>
 
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -107,12 +107,12 @@ tOplkError ctrlucal_init(void)
     UINT32      errCode;
 
     fileHandle_l = CreateFile(PLK_DEV_FILE,              // Name of the NT "device" to open
-                            GENERIC_READ|GENERIC_WRITE,  // Access rights requested
-                            0,                           // Share access - NONE
-                            0,                           // Security attributes - not used!
+                            GENERIC_READ | GENERIC_WRITE,  // Access rights requested
+                            FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
+                            NULL,                           // Security attributes - not used!
                             OPEN_EXISTING,               // Device must exist to open it.
-                            FILE_FLAG_OVERLAPPED,        // Open for overlapped I/O
-                            0);                          // Extended attributes - not used!
+                            FILE_ATTRIBUTE_NORMAL,        // Open for overlapped I/O
+                            NULL);                          // Extended attributes - not used!
 
     if (fileHandle_l == INVALID_HANDLE_VALUE)
     {
@@ -264,6 +264,9 @@ UINT16 ctrlucal_getStatus(void)
         DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return kCtrlStatusUnavailable;
     }
+
+    if (status != kCtrlStatusRunning)
+        printf(" Status %x\n", status);
     return status;
 }
 
@@ -356,10 +359,10 @@ The function returns the file descriptor of the kernel module.
 \ingroup module_ctrlucal
 */
 //------------------------------------------------------------------------------
-int ctrlucal_getFd(void)
+HANDLE ctrlucal_getFd(void)
 {
     //TODO: return value should be a ULONG_PTR type to handle pointers correctly in 64-bit system
-    return (int)fileHandle_l;
+    return fileHandle_l;
 }
 
 //============================================================================//

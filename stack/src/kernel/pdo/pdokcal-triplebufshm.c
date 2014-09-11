@@ -132,12 +132,14 @@ tOplkError pdokcal_initPdoMem(tPdoChannelSetup* pPdoChannels, size_t rxPdoMemSiz
     BYTE*   pMem;
     size_t  pdoMemSize;
 
-    pdoMemSize = txPdoMemSize_p + rxPdoMemSize_p;
 
+    pdoMemSize = txPdoMemSize_p + rxPdoMemSize_p;
+    DbgPrint("%s - %d -", __func__, pdoMemSize);
     if (pPdoMem_l != NULL)
         pdokcal_freeMem((BYTE*)pPdoMem_l, pdoMemRegionSize_l);
 
     pdoMemRegionSize_l = (pdoMemSize * 3) + sizeof(tPdoMemRegion);
+    DbgPrint("%d\n", pdoMemRegionSize_l);
     if (pdokcal_allocateMem(pdoMemRegionSize_l, &pMem) != kErrorOk)
     {
         return kErrorNoResource;
@@ -150,6 +152,9 @@ tOplkError pdokcal_initPdoMem(tPdoChannelSetup* pPdoChannels, size_t rxPdoMemSiz
     pTripleBuf_l[2] = pTripleBuf_l[1] + pdoMemSize;
 
     DEBUG_LVL_PDO_TRACE("%s() PdoMem:%p size:%d Triple buffers at: %p/%p/%p\n",
+                        __func__, pPdoMem_l, pdoMemRegionSize_l,
+                        pTripleBuf_l[0], pTripleBuf_l[1], pTripleBuf_l[2]);
+    DbgPrint("%s() PdoMem:%p size:%d Triple buffers at: %p/%p/%p\n",
                         __func__, pPdoMem_l, pdoMemRegionSize_l,
                         pTripleBuf_l[0], pTripleBuf_l[1], pTripleBuf_l[2]);
 

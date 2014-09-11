@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <common/errhnd.h>
 #include <user/ctrlucal.h>
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 
 
 //============================================================================//
@@ -83,7 +83,7 @@ implementation of the user error handler CAL moduel.
 */
 typedef struct
 {
-    void*                       fileHandle;             ///< POWERLINK driver file handle
+    HANDLE                       fileHandle;             ///< POWERLINK driver file handle
     tErrHndObjects              errorObjects;           ///< Error objects
 } tErrIoctlInstance;
 
@@ -121,7 +121,7 @@ tOplkError errhnducal_init(tErrHndObjects* pLocalObjects_p)
         return kErrorNoFreeInstance;
 
     pLocalObjects_l = pLocalObjects_p;
-    instance_l.fileHandle = (void*)ctrlucal_getFd();
+    instance_l.fileHandle = ctrlucal_getFd();
     fInitialized_l = TRUE;
     return kErrorOk;
 }

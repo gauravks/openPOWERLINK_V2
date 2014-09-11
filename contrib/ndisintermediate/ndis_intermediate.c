@@ -118,6 +118,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
     NDIS_HANDLE                             protocolDriverContext = NULL;
     NDIS_STRING                             ndisDriverName;
 
+    DbgPrint("Driver Enrtry\n");
     NdisZeroMemory(&driverInstance_l, sizeof(tNdisDriverInstance));
 
     NdisZeroMemory(&miniportChars, sizeof(NDIS_MINIPORT_DRIVER_CHARACTERISTICS));
@@ -176,7 +177,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
 
     protocolChars.SetOptionsHandler = protocolSetOptions;
 
-    NdisInitUnicodeString(&ndisDriverName, L"OPLK");    // Protocol name
+    NdisInitUnicodeString(&ndisDriverName, L"MUXP");    // Protocol name
     protocolChars.Name = ndisDriverName;
     protocolChars.OpenAdapterCompleteHandlerEx = protocolOpenAdapterComplete;
     protocolChars.CloseAdapterCompleteHandlerEx = protocolCloseAdapterComplete;
@@ -202,11 +203,18 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
     // Create association between protocol and miniport driver
     NdisIMAssociateMiniport(driverInstance_l.pMiniportHandle, driverInstance_l.pProtocolHandle);
 
+    DbgPrint("Driver Enrtry->%x\n", ndisStatus);
     return ndisStatus;
+}
+
+NDIS_HANDLE ndis_getAdapterHandle(void)
+{
+    return driverInstance_l.pMiniportHandle;
 }
 
 void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p)
 {
+    DbgPrint("%s() \n", __FUNCTION__);
     driverInstance_l.pfnAppIntfRegCb = pAppIntfRegCb_p;
     driverInstance_l.pfnAppIntfDeregisterCb = pAppIntfDeregCb_p;
 }
@@ -276,14 +284,21 @@ This routines allocate a Tx buffer to be shared with the caller.
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
-tNdisErrorStatus ndis_getTxBuff(void* pData_p, size_t size_p, void* pTxLink_p)
+tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_p)
 {
-    protocol_getTxBuff(&pData_p, size_p, pTxLink_p);
+    tTxBufInfo* pTxBuffInfo = protocol_getTxBuff(size_p);
 
-    if (pData_p == NULL)
+    if (pTxBuffInfo != NULL)
     {
+        *ppData_p = pTxBuffInfo->pData;
+        *ppTxLink_p = (void*) &pTxBuffInfo->txLink;
+    }
+    else
+    {
+        DbgPrint("Why the fuck its Null Here\n");
         return NdisStatusResources;
     }
+
 
     return NdisStatusSuccess;
 }
@@ -321,18 +336,20 @@ tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
 {
     NDIS_STATUS     ndisStatus;
 
+   // DbgPrint("%s\n", __FUNCTION__);
     if (pData_p == NULL || pTxLink_p == NULL)
     {
         return NdisStatusInvalidParams;
     }
-
+    //DbgPrint("1\n", __FUNCTION__);
     ndisStatus = protocol_sendPacket(pData_p, size_p, pTxLink_p);
 
+    //DbgPrint("2\n", __FUNCTION__);
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
         return NdisStatusTxError;
     }
-
+   // DbgPrint("3\n", __FUNCTION__);
     return NdisStatusSuccess;
 }
 
@@ -369,6 +386,7 @@ initializes a IOCTL interface for user applicaition to interact with the driver
 //------------------------------------------------------------------------------
 void ndis_createAppIntf(void)
 {
+    DbgPrint("%s() \n", __FUNCTION__);
     driverInstance_l.pfnAppIntfRegCb(driverInstance_l.pMiniportHandle);
 }
 

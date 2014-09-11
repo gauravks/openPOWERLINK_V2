@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <common/pdo.h>
 #include <user/ctrlucal.h>
 
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -80,22 +80,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // local types
 //------------------------------------------------------------------------------
 
-/**
-\brief PDO mem structure
-
-The structure is used to retrieve the PDO memory allocated by kernel and
-mapped into user virtual address space.
-*/
-typedef struct
-{
-    void*       pPdoAddr;       ///< Pointer to the pdo address returned by kernel
-    size_t      memSize;        ///< Size of PDO to be allocated and mapped
-} tPdoMem;
-
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-void*           pFileHandle_l;
+HANDLE           pFileHandle_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -121,7 +109,7 @@ descriptor of the kernel driver.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_openMem(void)
 {
-    pFileHandle_l = (void*)ctrlucal_getFd();
+    pFileHandle_l = ctrlucal_getFd();
     return kErrorOk;
 }
 
@@ -161,19 +149,40 @@ The function allocates shared memory for the user needed to transfer the PDOs.
 tOplkError pdoucal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 {
     ULONG       bytesReturned;
-    tPdoMem     PdoMem;
+    tPdoMem     inPdoMem;
+    tPdoMem     outPdoMem;
 
-    PdoMem.memSize = memSize_p;
+    inPdoMem.memSize = memSize_p;
 
+    printf("Allocate PDO memory %d\n", memSize_p);
     if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_GET_MEM,
-        0, 0, &PdoMem, sizeof(tPdoMem),
+        &inPdoMem, sizeof(tPdoMem), &outPdoMem, sizeof(tPdoMem),
         &bytesReturned, NULL))
     {
+        printf("Error in PDO memory allocation %x\n", GetLastError());
         *ppPdoMem_p = NULL;
          return kErrorNoResource;
     }
 
-    *ppPdoMem_p = PdoMem.pPdoAddr;
+    if (bytesReturned != 0)
+    {
+        if (outPdoMem.pPdoAddr != NULL)
+        {
+            *ppPdoMem_p = outPdoMem.pPdoAddr;
+            printf("Pdo Address %x\n", outPdoMem.pPdoAddr);
+        }
+        else
+        {
+            printf("Allocation of PDO memory Failed\n");
+            *ppPdoMem_p = NULL;
+            return kErrorNoResource;
+        }
+    }
+    else
+    {
+        *ppPdoMem_p = NULL;
+        return kErrorNoResource;
+    }
 
     return kErrorOk;
 }
@@ -201,7 +210,7 @@ tOplkError pdoucal_freeMem(BYTE* pMem_p, size_t memSize_p)
     PdoMem.memSize = memSize_p;
 
     if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_FREE_MEM,
-        0, 0, &PdoMem, sizeof(tPdoMem),
+        &PdoMem, sizeof(tPdoMem), NULL, 0,
         &bytesReturned, NULL))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Unable to free mem %d\n", __func__, GetLastError());
