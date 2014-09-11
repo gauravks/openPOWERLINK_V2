@@ -335,8 +335,11 @@ void DumpData(char* szStr_p, UINT8* pData_p, UINT16 size_p);
 //  definition of TRACE
 //------------------------------------------------------------------------------
 #ifndef NDEBUG
+#ifdef _KERNEL_MODE
 #define TRACE(...)      DbgPrint(__VA_ARGS__)
-
+#else
+#define TRACE(...)      printf(__VA_ARGS__)
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -348,7 +351,7 @@ void trace(const char* fmt, ...);
 #endif
 #else
 
-#define TRACE(...)      DbgPrint(__VA_ARGS__)
+#define TRACE(...)      trace(__VA_ARGS__)//DbgPrint(__VA_ARGS__)
 
 #endif
 
@@ -374,6 +377,7 @@ void trace(const char* fmt, ...);
 //------------------------------------------------------------------------------
 #if !defined(NDEBUG)
 //don nothing
+#define ASSERTMSG(expr, string)
 #else
 #if !defined(ASSERTMSG) 
 
@@ -384,7 +388,7 @@ if (!(expr)) \
 for (;;); \
     }
 #else
-
+#error
 #define ASSERTMSG(expr, string)
 #endif /* !defined(ASSERMSG)*/
 

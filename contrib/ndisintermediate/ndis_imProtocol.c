@@ -164,6 +164,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
     NET_BUFFER_LIST_POOL_PARAMETERS   poolParameters;
 
+    DbgPrint("%s() For Tx: %d Rx %d\n", __FUNCTION__, txBufCount_p, rxBufCount_p);
     NdisInitializeListHead(&protocolInstance_l.txList);
     NdisAllocateSpinLock(&protocolInstance_l.txListLock);
 
@@ -182,7 +183,6 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     if (protocolInstance_l.sendNblPool == NULL)
     {
         DbgPrint("%s(): failed to alloc send net buffer list pool\n", __FUNCTION__);
-
         status = NDIS_STATUS_RESOURCES;
         goto Exit;
     }
@@ -216,12 +216,17 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
         {
             pTxInfo->free = TRUE;
             pTxInfo->maxLength = OPLK_MAX_FRAME_SIZE;
-            pTxInfo->pData = (void*) ((ULONG_PTR) protocolInstance_l.pTransmitBuf + (OPLK_MAX_FRAME_SIZE * index));
+            pTxInfo->pData = (void*) (((UCHAR*) protocolInstance_l.pTransmitBuf) + (OPLK_MAX_FRAME_SIZE * index));
 
+            if (pTxInfo->pData == NULL)
+            {
+                DbgPrint("What ffff\n");
+            }
             pTxInfo->pMdl = NdisAllocateMdl(protocolInstance_l.bindingHandle, pTxInfo->pData, OPLK_MAX_FRAME_SIZE);
 
-            if (pTxInfo->pMdl)
+            if (pTxInfo->pMdl == NULL)
             {
+                DbgPrint("%s() Error Allocating MDL\n", __FUNCTION__);
                 status = NDIS_STATUS_RESOURCES;
                 goto Exit;
             }
@@ -229,7 +234,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
             pTxInfo->pNbl = NdisAllocateNetBufferAndNetBufferList(protocolInstance_l.sendNblPool,
                 0, 0, pTxInfo->pMdl, 0, 0);
 
-            if (pTxInfo->pNbl != NULL)
+            if (pTxInfo->pNbl == NULL)
             {
                 DbgPrint("%s() Failed to allocate Tx NBL\n", __FUNCTION__);
                 status = NDIS_STATUS_RESOURCES;
@@ -241,7 +246,6 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
             TXINFO_FROM_NBL(pTxInfo->pNbl) = pTxInfo;
             NdisInterlockedInsertTailList(&protocolInstance_l.txList, &pTxInfo->txLink, &protocolInstance_l.txListLock);
         }
-
     }
 
     protocolInstance_l.pReceiveBuf = NdisAllocateMemoryWithTagPriority(driverInstance_l.pProtocolHandle,
@@ -272,7 +276,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
         rxBufInfo->free = TRUE;
         rxBufInfo->length = 0;
         rxBufInfo->maxLength = OPLK_MAX_FRAME_SIZE;
-        rxBufInfo->pData = (void*) ((ULONG_PTR) protocolInstance_l.pReceiveBuf + (index * OPLK_MAX_FRAME_SIZE));
+        rxBufInfo->pData = (void*) (((UCHAR*) protocolInstance_l.pReceiveBuf) + (index * OPLK_MAX_FRAME_SIZE));
     }
 
     protocolInstance_l.receiveBufCount = rxBufCount_p;
@@ -299,13 +303,13 @@ void protocol_freeTxRxBuffers(void)
 {
     PLIST_ENTRY     pTxLink;
     tTxBufInfo*     pTxBufInfo;
-
-    if (protocolInstance_l.txList.Flink)
+    DbgPrint("%s\n", __FUNCTION__);
+    if (protocolInstance_l.txList.Flink != NULL)
     {
-        pTxLink = NdisInterlockedRemoveHeadList(&protocolInstance_l.txList,
-            &protocolInstance_l.txListLock);
-        while (pTxLink != NULL)
+        while(!IsListEmpty(&protocolInstance_l.txList))
         {
+            pTxLink = NdisInterlockedRemoveHeadList(&protocolInstance_l.txList,
+                                                    &protocolInstance_l.txListLock);
             pTxBufInfo = CONTAINING_RECORD(pTxLink, tTxBufInfo, txLink);
             if (pTxBufInfo->pNbl != NULL)
             {
@@ -363,22 +367,34 @@ void protocol_freeTxRxBuffers(void)
 
 */
 //------------------------------------------------------------------------------
-void protocol_getTxBuff(void** ppTxBuf_p, size_t size_p, void* pTxLink_p)
+tTxBufInfo* protocol_getTxBuff(size_t size_p)
 {
     PLIST_ENTRY     pTxLink;
     tTxBufInfo*     pTxBufInfo;
+    DbgPrint("%s\n", __FUNCTION__);
+
     if (!IsListEmpty(&protocolInstance_l.txList))
     {
         pTxLink = NdisInterlockedRemoveHeadList(&protocolInstance_l.txList,
             &protocolInstance_l.txListLock);
-        if (pTxLink)
+        if (pTxLink != NULL)
         {
+            DbgPrint("Allocate Buffer\n");
             pTxBufInfo = CONTAINING_RECORD(pTxLink, tTxBufInfo, txLink);
 
-            if (pTxBufInfo && size_p <= OPLK_MAX_FRAME_SIZE)
+            if ((pTxBufInfo != NULL) && (size_p <= OPLK_MAX_FRAME_SIZE))
             {
-                *ppTxBuf_p = pTxBufInfo->pData;
-                pTxLink_p = pTxLink;
+                if (pTxBufInfo->pData == NULL)
+                {
+                    DbgPrint("Why the FUck THis iS NUll\n");
+                }
+                else
+                {
+                    DbgPrint("Yeah It not Null\n");
+                }
+                return pTxBufInfo;
+                //*ppTxBuf_p = pTxBufInfo->pData;
+                //*ppTxLink_p = pTxLink;
             }
         }
     }
@@ -396,7 +412,7 @@ void protocol_getTxBuff(void** ppTxBuf_p, size_t size_p, void* pTxLink_p)
 void protocol_freeTxBuff(PVOID pTxLink_p)
 {
     PLIST_ENTRY     pTxLink = NULL;
-
+    DbgPrint("%s\n", __FUNCTION__);
     if (pTxLink_p != NULL)
     {
         pTxLink = (PLIST_ENTRY) pTxLink_p;
@@ -500,6 +516,7 @@ NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
     PNET_BUFFER     netBuffer;
     ULONG           sendFlags = 0;
 
+    //DbgPrint("%s\n", __FUNCTION__);
     pTxBufInfo = CONTAINING_RECORD(pTxLink, tTxBufInfo, txLink);
 
     if (pTxBufInfo == NULL)
@@ -554,9 +571,13 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
     NDIS_OPEN_PARAMETERS              openParameters;
     UINT                              mediumIndex = 0;
     NDIS_STRING                       deviceName;
+
+    PNDIS_STRING                      pConfigString;
     UNREFERENCED_PARAMETER(protocolDriverContext_p);
 //    UNREFERENCED_PARAMETER(bindContext_p);
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
+    pConfigString = (PNDIS_STRING) pBindParameters_p->ProtocolSection;
+    DbgPrint("==> Protocol BindAdapter: %ws\n", pConfigString->Buffer);
     if (driverInstance_l.pProtocolHandle == NULL)
     {
         // Driver not registered yet. Is this even possible?
@@ -626,7 +647,7 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
     protocolInstance_l.bindParameters.AdapterName = NULL;
     protocolInstance_l.bindParameters.PhysicalDeviceObject = NULL;
 
-
+    //protocolInstance_l.bindingState = NdisBindingRunning;
     //
     // Start all VEth for this adapterr.
     //
@@ -664,7 +685,7 @@ Exit:
 VOID protocolOpenAdapterComplete(NDIS_HANDLE protocolBindingContext_p, NDIS_STATUS status_p)
 {
     tProtocolInstance* protInstance = (tProtocolInstance*) protocolBindingContext_p;
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
     protInstance->adapterInitStatus = status_p;
     NdisSetEvent(&protInstance->adapterEvent);
 
@@ -685,7 +706,7 @@ NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
 {
     NDIS_STATUS     Status = NDIS_STATUS_SUCCESS;
     tVEthInstance*  pVEthInstance = NULL;
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
 
     if (protocolInstance_l.pVEthInstance != NULL)
     {
@@ -727,6 +748,7 @@ NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
 //------------------------------------------------------------------------------
 VOID protocolCloseAdapterComplete(NDIS_HANDLE protocolBindingContext_p)
 {
+    DbgPrint("%s() ---> \n", __FUNCTION__);
     NdisSetEvent(&protocolInstance_l.adapterEvent);
 }
 
@@ -780,6 +802,11 @@ VOID protocolStatus(NDIS_HANDLE protocolBindingContext_p, PNDIS_STATUS_INDICATIO
     NDIS_STATUS                generalStatus = statusIndication_p->StatusCode;
     NDIS_STATUS_INDICATION     newStatusIndication;
     tVEthInstance*             pVEthinstance = (tVEthInstance*)protocolInstance_l.pVEthInstance;
+
+    if (pVEthinstance == NULL)
+    {
+        return;
+    }
 
     if (generalStatus != NDIS_STATUS_LINK_STATE)
     {
@@ -835,7 +862,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
 {
     NDIS_STATUS         status = NDIS_STATUS_SUCCESS;
     NDIS_EVENT          pPauseEvent;
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
     switch (pNetPnPEventNotification_p->NetPnPEvent.NetEvent)
     {
         case NetEventSetPower:
@@ -850,7 +877,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
             break;
         case NetEventIMReEnableDevice:
 
-            bootStrapVEth(pNetPnPEventNotification_p->NetPnPEvent.Buffer);
+            //bootStrapVEth(pNetPnPEventNotification_p->NetPnPEvent.Buffer);
 
             status = NDIS_STATUS_SUCCESS;
             break;
@@ -859,7 +886,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
 
             NdisAcquireSpinLock(&protocolInstance_l.driverLock);
 
-            ASSERT(protocolInstance_l.pauseEvent == NULL);
+            ASSERT(protocolInstance_l.pPauseEvent == NULL);
             // Wait for all the send requests to complete
             // TODO@gks : Shall we wait indefinitely?
             if (protocolInstance_l.sendRequest != 0)
@@ -880,6 +907,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
             break;
 
         case NetEventRestart:
+            DbgPrint("PNP: Restart\n");
             protocolInstance_l.bindingState = NdisBindingRunning;
             status = NDIS_STATUS_SUCCESS;
             break;
@@ -922,7 +950,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
     ULONG                   totalLength;
 
     UNREFERENCED_PARAMETER(numberOfNbl_p);
-
+    DbgPrint("%s\n", __FUNCTION__);
     returnFlags = 0;
 
     if (NDIS_TEST_RECEIVE_AT_DISPATCH_LEVEL(receiveFlags_p))
@@ -1034,7 +1062,7 @@ VOID protocolSendNblComplete(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_L
     PNET_BUFFER_LIST        currentNbl;
     PLIST_ENTRY             pTxLink;
     tTxBufInfo*             pTxBufInfo;
-
+    //DbgPrint("%s\n", __FUNCTION__);
     while (netBufferLists_p)
     {
         UINT                TotalLength;
@@ -1081,8 +1109,10 @@ void closeBinding(void)
     ULONG                   packetFilter = 0;
     PVOID                   multicastAddrBuf = NULL;
     ULONG                   multicastAddrBufSize = 0;
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
     // Disable Multicast filter
+    protocolInstance_l.bindingState = NdisBindingPausing;
+
     protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
                    sizeof(packetFilter));
 
@@ -1142,10 +1172,15 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
     NDIS_CONFIGURATION_OBJECT       configObject;
 
     status = NDIS_STATUS_SUCCESS;
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
     // TODO: This peice of code shall be used to identify the lower binding
-    adapterConfigHandle = NULL;
-
+    //adapterConfigHandle = NULL;
+    if (protocolInstance_l.bindingHandle == NULL)
+    {
+        // adapter instance is not ready
+        return status;
+    }
+    NdisZeroMemory(&configObject, sizeof(NDIS_CONFIGURATION_OBJECT));
     // Get the configuration of lower binding
     configObject.Header.Type = NDIS_OBJECT_TYPE_CONFIGURATION_OBJECT;
     configObject.Header.Revision = NDIS_CONFIGURATION_OBJECT_REVISION_1;
@@ -1181,8 +1216,11 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
         return status;
     }
 
+    //DbgPrint("Open Device\n");
     devName = configParam->ParameterData.StringData.Buffer;
 
+    //DbgPrint("Dev String %ws\n", configParam->ParameterData.StringData.Buffer);
+    //devName = "Oplk Miniport Device";
     while (*devName != L'\0')
     {
         NDIS_STRING     devString;
@@ -1192,19 +1230,20 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
 
         if (instanceName_p != NULL)
         {
-            if (NdisEqualString(&devString, instanceName_p, TRUE))
+            //DbgPrint("1\n");
+            //if (NdisEqualString(&devString, instanceName_p, TRUE))
             {
                 length = sizeof(tVEthInstance) + devString.Length + sizeof(WCHAR);
                 // Allocate a new VEth instance
                 pVEthInstance = NdisAllocateMemoryWithTagPriority(protocolInstance_l.bindingHandle,
-                                            length, OPLK_MEM_TAG, LowPoolPriority);
-
-                if (pVEthInstance != NULL)
+                                            length, OPLK_MEM_TAG, HighPoolPriority);
+                //DbgPrint("2\n");
+                if (pVEthInstance == NULL)
                 {
-                    DbgPrint("%s() Failed to allocate memory for VEth instance\n", __FUNCTION__);
+                    DbgPrint("%s() Failed to allocate memory for VEth instance Length %x\n", __FUNCTION__, length);
                     goto ExitFail;
                 }
-
+                //DbgPrint("3\n");
                 NdisZeroMemory(pVEthInstance, length);
                 pVEthInstance->cfgDeviceName.Length = 0;
                 pVEthInstance->cfgDeviceName.Buffer = (PWCHAR) ((PUCHAR) pVEthInstance + sizeof(tVEthInstance));
@@ -1217,7 +1256,7 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
 
                 pVEthInstance->lookAhead = protocolInstance_l.bindParameters.LookaheadSize;
                 pVEthInstance->linkSpeed = protocolInstance_l.bindParameters.RcvLinkSpeed;
-
+                //DbgPrint("4\n");
                 if (protocolInstance_l.bindParameters.MacAddressLength == 6)
                 {
                     NdisMoveMemory(pVEthInstance->permanentAddress,
@@ -1233,6 +1272,7 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
                     status = NDIS_STATUS_NOT_SUPPORTED;
                     goto ExitFail;
                 }
+                //DbgPrint("5\n");
 
                 NdisAllocateSpinLock(&pVEthInstance->miniportLock);
                 NdisAllocateSpinLock(&pVEthInstance->pauseLock);
@@ -1240,20 +1280,30 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
                 pVEthInstance->miniportInitPending = TRUE;
                 NdisInitializeEvent(&pVEthInstance->miniportInitEvent);
 
+                DbgPrint("NdisInitialize Device\n\n");
                 // Initialize Miniport instance for the VEth
+                pVEthInstance->bindingHandle = protocolInstance_l.bindingHandle;
+                pVEthInstance->protocolInstance = &protocolInstance_l;
+
                 status = NdisIMInitializeDeviceInstanceEx(driverInstance_l.pMiniportHandle,
                                                           &pVEthInstance->cfgDeviceName,
                                                           pVEthInstance);
 
                 if (status != NDIS_STATUS_SUCCESS)
                 {
+                    DbgPrint("Failed to initialize miniport %x\n", status);
                     if (!pVEthInstance->miniportHalting)
                     {
                         goto ExitFail;
                     }
                 }
             }
+            //else
+            //{
+            //    DbgPrint("Error\n");
+            //}
         }
+        devName = (PWSTR) ((PUCHAR) devName + devString.Length + sizeof(WCHAR));
     }
 
     if (adapterConfigHandle != NULL)
@@ -1261,6 +1311,7 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
         NdisCloseConfiguration(adapterConfigHandle);
     }
 
+    protocolInstance_l.pVEthInstance = (void*) pVEthInstance;
     goto Exit;
 
 ExitFail:
@@ -1274,7 +1325,6 @@ ExitFail:
     }
 
 Exit:
-    protocolInstance_l.pVEthInstance = (void*)pVEthInstance;
     return status;
 }
 
@@ -1310,7 +1360,8 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
     BOOLEAN         fMiniportInitCancelled;
 
     NdisAcquireSpinLock(&pVEthInstance_p->miniportLock);
-
+    DbgPrint("%s() ---> \n", __FUNCTION__);
+    //DbgPrint("1\n");
     if (pVEthInstance_p->oidRequestPending)
     {
         pVEthInstance_p->oidRequestPending = FALSE;
@@ -1323,6 +1374,7 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
         NdisReleaseSpinLock(&pVEthInstance_p->miniportLock);
     }
 
+    //DbgPrint("2\n");
     if (pVEthInstance_p->miniportInitPending)
     {
         status = NdisIMCancelInitializeDeviceInstance(
@@ -1335,10 +1387,12 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
         }
         else
         {
-            NdisWaitEvent(&pVEthInstance_p->miniportInitEvent, 0);
+            //DbgPrint("3\n");
+            NdisWaitEvent(&pVEthInstance_p->miniportInitEvent, 200);
         }
     }
 
+    //DbgPrint("4\n");
     if (pVEthInstance_p->miniportAdapterHandle != NULL &&
         (!pVEthInstance_p->miniportHalting))
     {
@@ -1352,6 +1406,7 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
             freeVEthInstance(pVEthInstance_p);
         }
     }
+    //DbgPrint("5\n");
 }
 
 

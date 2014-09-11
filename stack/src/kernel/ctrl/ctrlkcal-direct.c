@@ -194,6 +194,7 @@ The function stores the status of the kernel stack in the control memory block.
 //------------------------------------------------------------------------------
 void ctrlkcal_setStatus(UINT16 status_p)
 {
+    DbgPrint("******Set Status %x\n", status_p);
     status_l = status_p;
 }
 

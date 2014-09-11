@@ -145,7 +145,7 @@ int main(int argc, char** argv)
 
     printf("----------------------------------------------------\n");
     printf("openPOWERLINK console MN DEMO application\n");
-    printf("using openPOWERLINK Stack: %s\n", PLK_DEFINED_STRING_VERSION);
+    printf("using openPOWERLINK Stack: %s %s\n", PLK_DEFINED_STRING_VERSION, DEMO_VERSION);
     printf("----------------------------------------------------\n");
 
     if ((ret = initPowerlink(CYCLE_LEN, opts.cdcFile, aMacAddr_g)) != kErrorOk)
@@ -336,7 +336,7 @@ static void loopMain(void)
 
         if (oplk_checkKernelStack() == FALSE)
         {
-            fExit = TRUE;
+            //fExit = TRUE;
             PRINTF("Kernel stack has gone! Exiting...\n");
         }
 

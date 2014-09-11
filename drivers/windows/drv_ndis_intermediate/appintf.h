@@ -1,11 +1,10 @@
 /**
 ********************************************************************************
-\file   common/driver-windows.h
+\file   drv_ndis_intemediate/appintf.h
 
-\brief  Header file for Linux openPOWERLINK drivers
+\brief  Application interface header file
 
-This file contains the necessary definitions for using the openPOWERLINK
-Linux kernel driver.
+// TODO: Add description here
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
@@ -35,46 +34,16 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_windows_H_
-#define _INC_common_driver_windows_H_
+#ifndef _INC_appintf_H_
+#define _INC_appintf_H_
+
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#ifndef _KERNEL_MODE
-#include <winioctl.h>
-#endif
+
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_DEV_FILE      "\\\\.\\plk"
-#define PLK_DEV_STRING    L"\\Device\\plk"
-#define PLK_LINK_NAME     L"\\DosDevices\\Global\\plk"
-//------------------------------------------------------------------------------
-//  Commands for <ioctl>
-//------------------------------------------------------------------------------
-
-#define PLK_IO_TYPE                    40001
-
-// TODO:gks modify method as per requirements later
-#define PLK_CMD_CTRL_EXECUTE_CMD \
-                                CTL_CODE(PLK_IO_TYPE, 0x901, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_CTRL_STORE_INITPARAM \
-                                CTL_CODE(PLK_IO_TYPE, 0x902, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_CTRL_READ_INITPARAM \
-                                CTL_CODE(PLK_IO_TYPE, 0x903, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_CTRL_GET_STATUS \
-                                CTL_CODE(PLK_IO_TYPE, 0x904, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_CTRL_GET_HEARTBEAT \
-                                CTL_CODE(PLK_IO_TYPE, 0x905, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_POST_EVENT      CTL_CODE(PLK_IO_TYPE, 0x906, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_GET_EVENT       CTL_CODE(PLK_IO_TYPE, 0x907, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_DLLCAL_ASYNCSEND \
-                                CTL_CODE(PLK_IO_TYPE, 0x908, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_ERRHND_WRITE    CTL_CODE(PLK_IO_TYPE, 0x909, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_ERRHND_READ     CTL_CODE(PLK_IO_TYPE, 0x90A, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_PDO_SYNC        CTL_CODE(PLK_IO_TYPE, 0x90B, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_PDO_GET_MEM     CTL_CODE(PLK_IO_TYPE, 0x90C, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define PLK_CMD_PDO_FREE_MEM    CTL_CODE(PLK_IO_TYPE, 0x90D, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //------------------------------------------------------------------------------
 // typedef
@@ -84,4 +53,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // function prototypes
 //------------------------------------------------------------------------------
 
-#endif /* _INC_common_driver_linux_H_ */
+int      app_mapMemory(struct file* filp, struct vm_area_struct* vma);
+void     app_memoryOpen(struct vm_area_struct* vma);
+void     app_memoryClose(struct vm_area_struct* vma);
+
+int      app_executeCmd(tCtrlCmd* ctrlCmd_p);
+int      app_readInitParam(tCtrlInitParam* pInitParam_p);
+int      app_storeInitParam(tCtrlInitParam* pInitParam_p);
+int      app_getStatus(UINT16* status_p);
+int      app_getHeartbeat(UINT16* heartbeat);
+int      app_sendAsyncFrame(unsigned char* pArg_p);
+int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p);
+int      app_readErrorObject(tErrHndIoctl* pReadObject_p);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _INC_appintf_H_ */

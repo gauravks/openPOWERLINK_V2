@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <common/target.h>
 
 #include <user/ctrlucal.h>
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-
+#define DEVICE_CLOSE_IO            995
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -87,7 +87,8 @@ CAL module.
 */
 typedef struct
 {
-    HANDLE                 fileHandle;
+    HANDLE                 sendfileHandle;
+    HANDLE                 rcvfileHandle;
     HANDLE                 threadHandle;
     BOOL                   fStopThread;
     UINT32                 threadId;
@@ -127,7 +128,7 @@ tOplkError eventucal_init(void)
 
     OPLK_MEMSET(&instance_l, 0, sizeof(tEventuCalInstance));
 
-    instance_l.fileHandle = (void*)ctrlucal_getFd();
+    instance_l.sendfileHandle = ctrlucal_getFd();
     instance_l.fStopThread = FALSE;
 
     instance_l.threadHandle = CreateThread(
@@ -146,18 +147,18 @@ tOplkError eventucal_init(void)
         return kErrorNoResource;
     }
 
-    if (!SetPriorityClass(instance_l.threadHandle, REALTIME_PRIORITY_CLASS))
+    if (!SetPriorityClass(instance_l.threadHandle, HIGH_PRIORITY_CLASS))
     {
-        DEBUG_LVL_ERROR_TRACE("%s() Failed to boost thread priority with error: 0x%X\n",
+        DEBUG_LVL_ERROR_TRACE("%s() Failed to boost thread priority class with error: 0x%X\n",
                                 __func__, GetLastError());
-        return kErrorNoResource;
+        //return kErrorNoResource;
     }
 
     if (!SetThreadPriority(instance_l.threadHandle, THREAD_PRIORITY_TIME_CRITICAL))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Failed to boost thread priority with error: 0x%X\n",
                               __func__, GetLastError());
-        return kErrorNoResource;
+        //return kErrorNoResource;
     }
 
     return kErrorOk;
@@ -283,7 +284,11 @@ static tOplkError postEvent(tEvent* pEvent_p)
     OPLK_MEMCPY(eventBuf, pEvent_p, sizeof(tEvent));
     OPLK_MEMCPY((eventBuf + sizeof(tEvent)), pEvent_p->pEventArg, pEvent_p->eventArgSize);
 
-    if (!DeviceIoControl(instance_l.fileHandle, PLK_CMD_POST_EVENT,
+    if (pEvent_p->eventType == kEventTypePdokSetupPdoBuf)
+    {
+        printf("PDO event\n");
+    }
+    if (!DeviceIoControl(instance_l.sendfileHandle, PLK_CMD_POST_EVENT,
                          eventBuf, eventBufSize,
                          0, 0, &bytesReturned, NULL))
                   return kErrorNoResource;
@@ -305,9 +310,35 @@ static UINT32 eventThread(void* arg_p)
 {
     tEvent*     pEvent;
     BOOL        ret;
-    char        eventBuf[sizeof(tEvent) +MAX_EVENT_ARG_SIZE];
-    size_t      eventBufSize;
+    char        eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    size_t      eventBufSize = sizeof(tEvent) + MAX_EVENT_ARG_SIZE;
     ULONG       bytesReturned;
+    UINT        errNum = 0;
+
+
+    instance_l.rcvfileHandle = CreateFile(PLK_DEV_FILE,              // Name of the NT "device" to open
+                                       GENERIC_READ | GENERIC_WRITE,  // Access rights requested
+                                       FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
+                                       NULL,                           // Security attributes - not used!
+                                       OPEN_EXISTING,               // Device must exist to open it.
+                                       FILE_ATTRIBUTE_NORMAL,        // Open for overlapped I/O
+                                       NULL);
+
+    if (instance_l.rcvfileHandle == INVALID_HANDLE_VALUE)
+    {
+
+        errNum = GetLastError();
+
+        if (!(errNum == ERROR_FILE_NOT_FOUND ||
+            errNum == ERROR_PATH_NOT_FOUND))
+        {
+
+            DEBUG_LVL_ERROR_TRACE("%s() createFile failed!  ERROR_FILE_NOT_FOUND = %d\n",
+                                  errNum);
+            return kErrorNoResource;
+        }
+    }
+
 
     UNUSED_PARAMETER(arg_p);
 
@@ -315,11 +346,28 @@ static UINT32 eventThread(void* arg_p)
 
     while (!instance_l.fStopThread)
     {
-        ret = DeviceIoControl(instance_l.fileHandle, PLK_CMD_GET_EVENT,
-                              0, 0, eventBuf, eventBufSize,
+        //printf("Get Event\n");
+        ret = DeviceIoControl(instance_l.rcvfileHandle, PLK_CMD_GET_EVENT,
+                              NULL, 0, eventBuf, eventBufSize,
                               &bytesReturned, NULL);
-        if (ret != 0)
+        //printf("Event\n");
+        if (!ret)
         {
+            if (DEVICE_CLOSE_IO == GetLastError())
+            {
+                DEBUG_LVL_ALWAYS_TRACE("Closing Event Thread\n");
+            }
+            else
+            {
+                DEBUG_LVL_ERROR_TRACE("[AppEvent]:Error in DeviceIoControl : %d\n", GetLastError());
+            }
+
+            break;
+        }
+        //printf("Event\n");
+        if (bytesReturned != 0)
+        {
+            //printf("eventBufSize %d\n", eventBufSize);
             /*TRACE ("%s() User: got event type:%d(%s) sink:%d(%s)\n", __func__,
             pEvent->eventType, debugstr_getEventTypeStr(pEvent->eventType),
             pEvent->eventSink, debugstr_getEventSinkStr(pEvent->eventSink));*/
@@ -328,9 +376,11 @@ static UINT32 eventThread(void* arg_p)
 
             ret = eventu_process(pEvent);
         }
-        /*else
-        TRACE("%s() ret = %d\n", __func__, ret);*/
+        else
+            TRACE("%s() ret = %d %d\n", __func__, ret, bytesReturned);
     }
+
+    CloseHandle(instance_l.rcvfileHandle);
     instance_l.fStopThread = FALSE;
 
     return 0;

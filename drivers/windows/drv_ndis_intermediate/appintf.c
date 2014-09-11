@@ -39,9 +39,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-//#include <{SYSTEM_INCLUDE_FILE}>
+#include <oplk/oplk.h>
 
-//#include "{LOCAL_INCLUDE_FILE}"
+#include <common/driver.h>
+#include <common/ctrl.h>
+#include <common/ctrlcal-mem.h>
+#include <kernel/ctrlk.h>
+#include <kernel/ctrlkcal.h>
+#include <kernel/dllkcal.h>
+#include <kernel/pdokcal.h>
+
+#include <kernel/eventk.h>
+#include <kernel/eventkcal.h>
+#include <errhndkcal.h>
+
+#include <appintf.h>
 
 
 //============================================================================//
@@ -84,7 +96,76 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
+int      app_executeCmd(tCtrlCmd* ctrlCmd_p)
+{
+    tOplkError      ret;
+    UINT16          status;
 
+    ctrlk_executeCmd(ctrlCmd_p->cmd, &ret, &status, NULL);
+    ctrlCmd_p->cmd = 0;
+    ctrlCmd_p->retVal = ret;
+    ctrlkcal_setStatus(status);
+
+    return 0;
+}
+
+int      app_readInitParam(tCtrlInitParam* pInitParam_p)
+{
+    ctrlkcal_readInitParam(pInitParam_p);
+
+    return 0;
+}
+
+int      app_storeInitParam(tCtrlInitParam* pInitParam_p)
+{
+    ctrlkcal_storeInitParam(pInitParam_p);
+    return 0;
+}
+
+int      app_getStatus(UINT16* status_p)
+{
+    *status_p = ctrlkcal_getStatus();
+    return 0;
+}
+
+int      app_getHeartbeat(UINT16* heartbeat)
+{
+    *heartbeat = ctrlk_getHeartbeat();
+    return 0;
+}
+
+int      app_sendAsyncFrame(unsigned char* pArg_p)
+{
+    tIoctlDllCalAsync*  asyncFrameInfo;
+    tFrameInfo          frameInfo;
+
+    asyncFrameInfo = (tIoctlDllCalAsync*) pArg_p;
+    frameInfo.frameSize = asyncFrameInfo->size;
+    frameInfo.pFrame = (tPlkFrame*) (pArg_p + sizeof(tIoctlDllCalAsync));
+
+    dllkcal_writeAsyncFrame(&frameInfo, asyncFrameInfo->queue);
+
+    return 0;
+
+}
+
+int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p)
+{
+    tErrHndObjects* errorObjects;
+
+    errorObjects = errhndkcal_getMemPtr();
+    *((char*) errorObjects + pWriteObject_p->offset) = pWriteObject_p->errVal;
+    return 0;
+}
+
+int      app_readErrorObject(tErrHndIoctl* pReadObject_p)
+{
+    tErrHndObjects* errorObjects;
+
+    errorObjects = errhndkcal_getMemPtr();
+    pReadObject_p->errVal = *((char*) errorObjects + pReadObject_p->offset);
+    return 0;
+}
 
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //

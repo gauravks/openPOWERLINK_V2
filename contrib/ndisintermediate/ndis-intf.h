@@ -95,11 +95,13 @@ void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister p
 BOOLEAN ndis_checkBindingState(void);
 tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p);
 void ndis_freeTxRxBuff(void);
-tNdisErrorStatus ndis_getTxBuff(void* pData_p, size_t size_p, void* pTxLink_p);
+tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_p);
 void ndis_freeTxBuff(void* pTxLink_p);
 tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p);
 void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p, tNdisReceiveCb pfnRxCallback_p);
-
+void ndis_createAppIntf(void);
+void ndis_closeAppIntf(void);
+NDIS_HANDLE ndis_getAdapterHandle(void);
 #ifdef __cplusplus
 }
 #endif

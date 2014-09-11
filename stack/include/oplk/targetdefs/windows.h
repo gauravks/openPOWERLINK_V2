@@ -118,9 +118,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             oldval = InterlockedExchange(address, newval);
 
 #ifdef _KERNEL_MODE
-#define OPLK_TAG                'klpO'
-#define OPLK_MALLOC(siz)        ExAllocatePoolWithTag(PagedPool, (siz), OPLK_TAG)
-#define OPLK_FREE(ptr)          ExFreePoolWithTag(ptr, OPLK_TAG)
+#define OPLK_TAG                    'negO'
+#define OPLK_MALLOC(siz)            ExAllocatePool(NonPagedPool, (siz))
+#define OPLK_FREE(ptr)              ExFreePool(ptr)
+#define OPLK_MEMSET(dst, val, siz)  NdisZeroMemory(dst, siz)
 #endif
 #endif /* _INC_targetdefs_windows_H_ */
 

@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <user/pdoucal.h>
 #include <user/ctrlucal.h>
 
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -79,7 +79,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-void*           pFileHandle_p;
+HANDLE           pFileHandle_p;
 
 //------------------------------------------------------------------------------
 // local function prototypes
@@ -104,7 +104,7 @@ tOplkError pdoucal_initSync(tSyncCb pfnSyncCb_p)
 {
     UNUSED_PARAMETER(pfnSyncCb_p);
 
-    pFileHandle_p = (void*)ctrlucal_getFd();
+    pFileHandle_p = ctrlucal_getFd();
     return kErrorOk;
 }
 

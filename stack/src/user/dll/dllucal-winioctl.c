@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #include <common/dllcal.h>
 #include <user/ctrlucal.h>
-#include <oplk/powerlink-module.h>
+#include <common/driver.h>
 
 //#include "{LOCAL_INCLUDE_FILE}"
 
@@ -85,7 +85,7 @@ typedef struct
 {
     tDllCalQueue                dllCalQueue;        ///< DLL CAL queue
     tDllAsyncReqPriority        priority;           ///< Request priority
-    void*                       fileHandle;         ///< File handle of openPOWERLINK driver
+    HANDLE                      fileHandle;         ///< File handle of openPOWERLINK driver
 } tDllCalIoctlInstance;
 //------------------------------------------------------------------------------
 // local vars
@@ -163,7 +163,7 @@ static tOplkError addInstance(tDllCalQueueInstance* ppDllCalQueue_p,
 
     //store parameters in instance
     pInstance->dllCalQueue = dllCalQueue_p;
-    pInstance->fileHandle = (void*)ctrlucal_getFd();
+    pInstance->fileHandle = ctrlucal_getFd();
 
     *ppDllCalQueue_p = (tDllCalQueueInstance*) pInstance;
 
@@ -213,6 +213,7 @@ static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p,
     tOplkError                      ret = kErrorOk;
     tDllCalIoctlInstance*           pInstance =
                                          (tDllCalIoctlInstance*) pDllCalQueue_p;
+    UINT8*                          ioctlAsyncBuf;
     tIoctlDllCalAsync               ioctlAsyncFrame;
     BOOLEAN                         ioctlRet;
     ULONG                           bytesReturned;
@@ -222,12 +223,21 @@ static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p,
         return kErrorInvalidInstanceParam;
     }
 
+    ioctlAsyncBuf = OPLK_MALLOC(sizeof(tIoctlDllCalAsync) + *pDataSize_p);
+
+    if (ioctlAsyncBuf == NULL)
+    {
+        return kErrorNoResource;
+    }
+
     ioctlAsyncFrame.size = *pDataSize_p;
     ioctlAsyncFrame.queue = pInstance->dllCalQueue;
-    ioctlAsyncFrame.pData = pData_p;
+
+    OPLK_MEMCPY(ioctlAsyncBuf, &ioctlAsyncFrame, sizeof(tIoctlDllCalAsync));
+    OPLK_MEMCPY((ioctlAsyncBuf + sizeof(tIoctlDllCalAsync)), pData_p, *pDataSize_p);
     //TRACE ("%s() send async frame: size:%d\n", __func__, pFrameInfo_p->frameSize);
     ioctlRet = DeviceIoControl(pInstance->fileHandle, PLK_CMD_DLLCAL_ASYNCSEND,
-                          &ioctlAsyncFrame, sizeof(tIoctlDllCalAsync),
+                          &ioctlAsyncFrame, sizeof(tIoctlDllCalAsync) + *pDataSize_p,
                           0, 0,
                           &bytesReturned, NULL);
     if (ioctlRet == 0)

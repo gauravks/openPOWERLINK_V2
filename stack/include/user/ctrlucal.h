@@ -69,8 +69,12 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p);
 tOplkError ctrlucal_checkKernelStack(void);
 void       ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p);
 tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p);
+#ifdef  __LINUX__
 int        ctrlucal_getFd(void);
-void*      ctrlucal_getFileHandle(void);
+#elif   _WIN32
+HANDLE     ctrlucal_getFd(void);
+#endif
+
 
 #ifdef __cplusplus
 }

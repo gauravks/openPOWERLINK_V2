@@ -336,6 +336,7 @@ tCircBufError circbuf_writeData (tCircBufInstance* pInstance_p, const void* pDat
 
     if (pInstance_p->pfnSigCb != NULL)
     {
+       // DbgPrint("%s()->%x\n", __func__, pInstance_p->bufferId);
         pInstance_p->pfnSigCb();
     }
 
@@ -437,6 +438,7 @@ tCircBufError circbuf_writeMultipleData(tCircBufInstance* pInstance_p,
     circbuf_unlock(pInstance_p);
     if (pInstance_p->pfnSigCb != NULL)
     {
+        //DbgPrint("%s()->%x\n", __func__,pInstance_p->bufferId);
         pInstance_p->pfnSigCb();
     }
     return kCircBufOk;
@@ -471,6 +473,7 @@ tCircBufError circbuf_readData(tCircBufInstance* pInstance_p, void* pData_p,
     if ((pData_p == NULL) || (size_p == 0))
         return kCircBufOk;
 
+    //DbgPrint("%s() -->\n",__func__);
     circbuf_lock(pInstance_p);
     if (pHeader->freeSize == pHeader->bufferSize)
     {
@@ -510,6 +513,7 @@ tCircBufError circbuf_readData(tCircBufInstance* pInstance_p, void* pData_p,
     circbuf_unlock(pInstance_p);
 
     *pDataBlockSize_p = dataSize;
+    //DbgPrint("%s() <--\n", __func__);
     return kCircBufOk;
 
 }
