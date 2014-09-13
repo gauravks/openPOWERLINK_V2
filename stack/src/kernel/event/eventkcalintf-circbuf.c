@@ -320,7 +320,10 @@ tOplkError eventkcal_processEventCircbuf(tEventQueue eventQueue_p)
            debugstr_getEventTypeStr(pEvent->eventType), pEvent->eventType,
            debugstr_getEventSinkStr(pEvent->eventSink), pEvent->eventSink,
            pEplEvent->eventArgSize);*/
-
+    if (pEvent->eventType == kEventTypeNmtStateChange)
+    {
+        DbgPrint("$$$$$$$$$$$$$$$$$NMt Event$$$$$$$$$$$$$$$$\n");
+    }
     ret = eventk_process(pEvent);
     return ret;
 }

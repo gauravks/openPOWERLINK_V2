@@ -68,7 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #define PLK_MEM_TAG     'klpO'
 #define DRIVER_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
-#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 2, 3)
+#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 2, 10)
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------

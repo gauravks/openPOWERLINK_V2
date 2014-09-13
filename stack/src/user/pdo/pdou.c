@@ -647,6 +647,7 @@ static tOplkError setupRxPdoChannelTables(
             case kErrorObdSubindexNotExist:
             case kErrorObdIllegalPart:
                 // PDO does not exist
+                printf("i5\n");
                 break;
 
             case kErrorOk:

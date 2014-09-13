@@ -172,6 +172,7 @@ tOplkError dllk_process(tEvent* pEvent_p)
 
 #if defined(CONFIG_INCLUDE_NMT_MN)
         case kEventTypeDllkStartReducedCycle:
+            DbgPrint("Start Reduced Cycle\n");
             ret = processStartReducedCycle();
             break;
 
@@ -386,6 +387,7 @@ static tOplkError processNmtStateChange(tNmtState newNmtState_p, tNmtState oldNm
 
 #if defined (CONFIG_INCLUDE_NMT_MN)
         case kNmtMsPreOperational1:
+            DbgPrint("PreOp1\n");
 #if CONFIG_TIMER_USE_HIGHRES != FALSE
             ret = hrestimer_deleteTimer(&dllkInstance_g.timerHdlCycle);
             if (ret != kErrorOk)
@@ -412,13 +414,16 @@ static tOplkError processNmtStateChange(tNmtState newNmtState_p, tNmtState oldNm
             break;
 
         case kNmtMsReadyToOperate:
+            DbgPrint("ReadyToOperate\n");
             /// activate sync generation
             if ((ret = controlPdokcalSync(TRUE)) != kErrorOk)
                 return ret;
             break;
 
         case kNmtMsPreOperational2:
+            DbgPrint("PreOp2\n");
         case kNmtMsOperational:
+            
             // signal update of IdentRes and StatusRes on SoA
             dllkInstance_g.updateTxFrame = DLLK_UPDATE_BOTH;
             break;

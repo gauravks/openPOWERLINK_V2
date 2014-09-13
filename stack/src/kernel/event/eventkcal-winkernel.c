@@ -326,9 +326,9 @@ void eventkcal_postEventFromUser(void* pEvent_p)
         //OPLK_MEMCPY(pArg, , event.eventArgSize); // TODO: check the arithmetic
         event.pEventArg = pArg;
     }
-    if (event.eventType == kEventTypePdokSetupPdoBuf)
+    if (event.eventType == kEventTypeTimer)
     {
-        DbgPrint("$$$$$$$$$$$$$$$$$PDO event in Kernel$$$$$$$$$$$$$$$$\n");
+        DbgPrint("$$$$$$$$$$$$$$$$$Timer event in Kernel$$$$$$$$$$$$$$$$\n");
     }
     switch (event.eventSink)
     {
@@ -343,6 +343,10 @@ void eventkcal_postEventFromUser(void* pEvent_p)
                    debugstr_getEventTypeStr(event.eventType), event.eventType,
                    debugstr_getEventSinkStr(event.eventSink), event.eventSink,
                    event.eventArgSize);*/
+            if (event.eventType == kEventTypeTimer)
+            {
+                DbgPrint("$$$$$$$$$$$$$$$$$Kernel in Kernel$$$$$$$$$$$$$$$$\n");
+            }
             ret = eventkcal_postEventCircbuf(kEventQueueU2K, &event);
             break;
 
@@ -357,6 +361,10 @@ void eventkcal_postEventFromUser(void* pEvent_p)
                    debugstr_getEventTypeStr(event.eventType), event.eventType,
                    debugstr_getEventSinkStr(event.eventSink), event.eventSink,
                    event.eventArgSize);*/
+            if (event.eventType == kEventTypeTimer)
+            {
+                DbgPrint("$$$$$$$$$$$$$$$$$Post event in Kernel$$$$$$$$$$$$$$$$\n");
+            }
             ret = eventkcal_postEventCircbuf(kEventQueueUInt, &event);
             break;
 
@@ -390,6 +398,7 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     BOOL                fRet;
     size_t              readSize;
     UINT32              timeout = 500;
+    tEvent*              event = (tEvent*)pEvent_p;
 
     if (!instance_l.fInitialized)
         return;//Error
@@ -410,6 +419,7 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     if (eventkcal_getEventCountCircbuf(kEventQueueK2U) > 0)
     {
         //DbgPrint("1\n");
+        tEventNmtStateChange    *nmtStateChange;
             NdisInterlockedDecrement(&instance_l.userEventCount);
 
         error = eventkcal_getEventCircbuf(kEventQueueK2U, instance_l.aK2URxBuffer, &readSize);
@@ -426,6 +436,11 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
         }
         OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
         *pSize_p = readSize;
+        if (event->eventType == kEventTypeNmtStateChange)
+        {
+            nmtStateChange = (tEventNmtStateChange*) event->pEventArg;
+            DbgPrint("State change %x->%x \n", nmtStateChange->oldNmtState, nmtStateChange->newNmtState);
+        }
        // DbgPrint("3\n");
         return;
     }

@@ -319,7 +319,7 @@ static tOplkError processErrorWarningEvent(tOplkApiEventType EventType_p,
     // on error the API layer stops the NMT state machine
 
     tEventError*            pInternalError = &pEventArg_p->internalError;
-
+    tEventObdError*          obdError = &pInternalError->errorArg.obdError;
     UNUSED_PARAMETER(EventType_p);
     UNUSED_PARAMETER(pUserArg_p);
 
@@ -334,7 +334,10 @@ static tOplkError processErrorWarningEvent(tOplkApiEventType EventType_p,
                   pInternalError->eventSource,
                   debugstr_getRetValStr(pInternalError->oplkError),
                   pInternalError->oplkError);
-
+    if (pInternalError->eventSource == kEventSourceObdu)
+    {
+        printf("Index %x SubIndex %x\n", obdError->index, obdError->subIndex);
+    }
     // check additional argument
     switch (pInternalError->eventSource)
     {

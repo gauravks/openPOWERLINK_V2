@@ -469,7 +469,7 @@ tOplkError dllucal_issueRequest(tDllReqServiceId service_p, UINT nodeId_p,
     tOplkError          ret = kErrorOk;
     tEvent              event;
     tDllCalIssueRequest issueReq;
-
+    printf("Issue Request %d\n", nodeId_p);
     // add node to appropriate request queue
     switch (service_p)
     {

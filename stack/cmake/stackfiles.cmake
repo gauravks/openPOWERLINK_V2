@@ -119,6 +119,10 @@ SET(CTRL_UCAL_HOSTIF_SOURCES
     ${USER_SOURCE_DIR}/ctrl/ctrlucal-hostif.c
     )
 
+SET(CTRL_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/ctrl/ctrlucal-winioctl.c
+    )
+
 ################################################################################
 # User DLL CAL sources
 
@@ -128,6 +132,10 @@ SET(DLL_UCAL_CIRCBUF_SOURCES
 
 SET(DLL_UCAL_LINUXIOCTL_SOURCES
     ${USER_SOURCE_DIR}/dll/dllucal-ioctl.c
+    )
+
+SET(DLL_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/dll/dllucal-winioctl.c
     )
 
 ################################################################################
@@ -147,6 +155,10 @@ SET(ERRHND_UCAL_LOCAL_SOURCES
 
 SET(ERRHND_UCAL_HOSTIF_SOURCES
     ${USER_SOURCE_DIR}/errhnd/errhnducal-hostif.c
+    )
+
+SET(ERRHND_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/errhnd/errhnducal-winioctl.c
     )
 
 ################################################################################
@@ -176,6 +188,10 @@ SET(EVENT_UCAL_NOOSHOSTIF_SOURCES
     ${USER_SOURCE_DIR}/event/eventucal-nooshostif.c
     )
 
+SET(EVENT_UCAL_WINDOWSIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/event/eventucal-winioctl.c
+    )
+
 ################################################################################
 # User PDO CAL sources
 SET(PDO_UCAL_LOCAL_SOURCES
@@ -196,6 +212,11 @@ SET(PDO_UCAL_LINUXMMAPIOCTL_SOURCES
 SET(PDO_UCAL_HOSTIF_SOURCES
     ${USER_SOURCE_DIR}/pdo/pdoucalsync-hostif.c
     ${USER_SOURCE_DIR}/pdo/pdoucalmem-hostif.c
+    )
+
+SET(PDO_UCAL_WINDOWSMMAPIOCTL_SOURCES
+    ${USER_SOURCE_DIR}/pdo/pdoucalsync-winioctl.c
+    ${USER_SOURCE_DIR}/pdo/pdoucalmem-winioctl.c
     )
 
 ################################################################################

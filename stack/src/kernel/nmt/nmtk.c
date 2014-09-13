@@ -263,6 +263,7 @@ tOplkError nmtk_process(tEvent* pEvent_p)
 
         case kEventTypeTimer:
             nmtEvent = (tNmtEvent)((tTimerEventArg*)pEvent_p->pEventArg)->argument.value;
+            DbgPrint("Timer Event %x \n", nmtEvent);
             break;
 
         default:
@@ -277,6 +278,7 @@ tOplkError nmtk_process(tEvent* pEvent_p)
     ret = nmtkStates_g[nmtkInstance_g.stateIndex].pfnState(nmtEvent);
 
     // inform higher layer about State-Change if needed
+    DbgPrint("Old %x->%x\n", oldState, nmtkInstance_g.stateIndex);
     if (oldState != nmtkInstance_g.stateIndex)
     {
         OPLK_NMTK_DBG_POST_TRACE_VALUE(nmtEvent, nmtkStates_g[oldState].nmtState,
@@ -1202,24 +1204,30 @@ static tOplkError doStateMsPreOperational1(tNmtEvent nmtEvent_p)
 
         case kNmtEventAllMandatoryCNIdent:
             // all mandatory CN identified
+            DbgPrint("Mandatory Ident\n");
             if (nmtkInstance_g.fTimerMsPreOp2 != FALSE)
             {   // NMT_MT3
+                DbgPrint("1\n");
                 nmtkInstance_g.stateIndex = kNmtkMsPreOperational2;
             }
             else
             {
+                DbgPrint("2\n");
                 nmtkInstance_g.fAllMandatoryCNIdent = TRUE;
             }
             break;
 
         case kNmtEventTimerMsPreOp2:
             // residence time for PreOp1 is elapsed
+            DbgPrint("PreOp2\n");
             if (nmtkInstance_g.fAllMandatoryCNIdent != FALSE)
             {   // NMT_MT3
+                DbgPrint("1\n");
                 nmtkInstance_g.stateIndex = kNmtkMsPreOperational2;
             }
             else
             {
+                DbgPrint("2\n");
                 nmtkInstance_g.fTimerMsPreOp2 = TRUE;
             }
             break;

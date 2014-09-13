@@ -436,6 +436,8 @@ static tOplkError processCdc(tObdCdcInfo* pCdcInfo_p)
 
             DEBUG_LVL_OBD_TRACE("%s: Writing object 0x%04X/%u to local OBD failed with 0x%02X\n",
                                  __func__, objectIndex, objectSubIndex, ret);
+            printf("%s: Writing object 0x%04X/%u to local OBD failed with 0x%02X\n",
+                                __func__, objectIndex, objectSubIndex, ret);
             ret = eventu_postError(kEventSourceObdu, ret, sizeof(tEventObdError), &obdError);
             if (ret != kErrorOk)
                 return ret;
