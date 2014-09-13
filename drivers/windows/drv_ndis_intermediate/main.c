@@ -68,7 +68,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #define PLK_MEM_TAG     'klpO'
 #define DRIVER_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
-#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 2, 10)
+#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 4, 6)
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -220,8 +220,15 @@ static void registerAppIntf(NDIS_HANDLE driverHandle_p)
 
 static void deRegisterAppIntf(void)
 {
+    //UINT16                            status;
+    //tCtrlCmd                          ctrlCmd;
+
     NdisFreeSpinLock(&plkDriverInstance_l.eventQueueLock);
     NdisFreeSpinLock(&plkDriverInstance_l.pdoSyncLock);
+
+    //    ctrlCmd.cmd = kCtrlShutdown;
+    //    app_executeCmd(&ctrlCmd);
+
 
     if (plkDriverInstance_l.pAppDeviceHandle != NULL)
     {
@@ -530,10 +537,6 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_PDO_GET_MEM:
         {
-             if (pIrp_p->AssociatedIrp.SystemBuffer == NULL)
-             {
-                 DbgPrint("Memory Buffer Null\n");
-             }
              tPdoMem*    pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
              DEBUG_LVL_ALWAYS_TRACE("Allocate PDO mem %d\n", pPdoMem->memSize);
              oplRet = pdokcal_mapMem(&pPdoMem->pPdoAddr, pPdoMem->memSize);

@@ -49,6 +49,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
+
+
+/**
+\brief TODO:
+
+*/
+typedef enum eNdisBindingState
+{
+    NdisBindingPaused,          ///< Lower end binding is in paused state
+    NdisBindingPausing,         ///< Lower end binding is entering into paused state
+    NdisBindingReady,          ///< Lower end binding is running
+    NdisBindingRunning
+}tNdisBindingState;
+
 /**
 \brief TODO:
 
@@ -93,6 +107,7 @@ extern "C" {
 tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p);
 void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p);
 BOOLEAN ndis_checkBindingState(void);
+void ndis_setBindingState(ULONG state_p);
 tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p);
 void ndis_freeTxRxBuff(void);
 tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_p);

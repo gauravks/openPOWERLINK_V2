@@ -284,10 +284,6 @@ static tOplkError postEvent(tEvent* pEvent_p)
     OPLK_MEMCPY(eventBuf, pEvent_p, sizeof(tEvent));
     OPLK_MEMCPY((eventBuf + sizeof(tEvent)), pEvent_p->pEventArg, pEvent_p->eventArgSize);
 
-    if (pEvent_p->eventType == kEventTypeTimer)
-    {
-        printf("Timer event\n");
-    }
     if (!DeviceIoControl(instance_l.sendfileHandle, PLK_CMD_POST_EVENT,
                          eventBuf, eventBufSize,
                          0, 0, &bytesReturned, NULL))
@@ -374,10 +370,6 @@ static UINT32 eventThread(void* arg_p)
             if (pEvent->eventArgSize != 0)
                 pEvent->pEventArg = (char*) pEvent + sizeof(tEvent);
 
-            if (pEvent->eventType == kEventTypeTimer)
-            {
-                printf("GEt Timer event\n");
-            }
             ret = eventu_process(pEvent);
         }
         else

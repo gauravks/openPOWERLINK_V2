@@ -1567,10 +1567,7 @@ static tOplkError getEntry(UINT index_p, UINT subIndex_p, tObdEntryPtr* ppObdEnt
     cbParam.obdEvent = kObdEvCheckExist;
     ret = callObjectCallback(pObdEntry->pfnCallback, &cbParam);
     if (ret != kErrorOk)
-    {
-        printf("i4\n");
         return kErrorObdIndexNotExist;
-    }
 
     // it is allowed to set ppObdEntry_p to NULL
     // if so, no address will be written to calling function
@@ -1906,7 +1903,7 @@ static tOplkError getIndex(tObdInitParam MEM* pInitParam_p, UINT index_p,
     if ((*ppObdEntry_p = searchIndex(pObdEntry, numEntries, index_p)) != NULL)
         return kErrorOk;
 #endif
-    //printf("i1 %x\n", index_p);
+
     return kErrorObdIndexNotExist;
 }
 

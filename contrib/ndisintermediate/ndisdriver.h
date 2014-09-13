@@ -53,18 +53,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // typedef
 //------------------------------------------------------------------------------
 
-
-/**
-\brief TODO:
-
-*/
-typedef enum eNdisBindingState
-{
-    NdisBindingPaused,          ///< Lower end binding is in paused state
-    NdisBindingPausing,         ///< Lower end binding is entering into paused state
-    NdisBindingRunning          ///< Lower end binding is running
-}tNdisBindingState;
-
 /**
 \brief TODO:
 
@@ -259,6 +247,7 @@ PROTOCOL_SEND_NET_BUFFER_LISTS_COMPLETE protocolSendNblComplete;
 // Protocol Global routine prototype
 void protocol_freeVEthInstance(tVEthInstance* pVEthInstance_p);
 BOOLEAN protocol_checkBindingState();
+void protocol_setBindingState(ULONG state_p);
 void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
     tNdisReceiveCb pfnRxCallback_p);
 NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p);

@@ -237,6 +237,22 @@ BOOLEAN ndis_checkBindingState(void)
 
 //------------------------------------------------------------------------------
 /**
+\brief  Set binding to Active
+
+Check the status of the miniport binding.
+
+\return Returns TRUE if running else FALSE
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_setBindingState(ULONG state_p)
+{
+    protocol_setBindingState(state_p);
+}
+
+//------------------------------------------------------------------------------
+/**
 \brief  Allocate Tx and Rx buffer
 
 This routines allocates Tx and Rx buffers for receive queue and transmit queue

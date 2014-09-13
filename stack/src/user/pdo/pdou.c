@@ -647,7 +647,6 @@ static tOplkError setupRxPdoChannelTables(
             case kErrorObdSubindexNotExist:
             case kErrorObdIllegalPart:
                 // PDO does not exist
-                printf("i5\n");
                 break;
 
             case kErrorOk:
@@ -949,7 +948,7 @@ static tOplkError configureAllPdos(void)
     pdoucal_postSetupPdoBuffers(rxPdoMemSize, txPdoMemSize);
 
     // TODO how to be sure that kernel is ready before starting??
-    target_msleep(5000);
+    target_msleep(1500);
 
     ret = pdoucal_initPdoMem(&pdouInstance_g.pdoChannels, rxPdoMemSize,
                              txPdoMemSize);

@@ -257,7 +257,7 @@ tOplkError timeru_process(void)
     tEvent              event;
     tTimerEventArg      timerEventArg;
     tOplkError          ret = kErrorOk;
-    printf("Timer Interrupt\n");
+
     enterCriticalSection(TIMERU_TIMER_LIST);
     // calculate elapsed time since start time
     timeoutInMs = target_getTickCount() - timeruInstance_l.startTimeInMs;
@@ -291,7 +291,6 @@ tOplkError timeru_process(void)
         event.pEventArg = &timerEventArg;
         event.eventArgSize = sizeof(timerEventArg);
 
-        printf("Post Timer event\n");
         ret = eventu_postEvent(&event);
     }
 
@@ -322,7 +321,7 @@ tOplkError timeru_setTimer(tTimerHdl* pTimerHdl_p, ULONG timeInMs_p, tTimerArg a
     // check pointer to handle
     if (pTimerHdl_p == NULL)
         return kErrorTimerInvalidHandle;
-    printf("Set Timer %d\n", timeInMs_p);
+
     // We can only handle timeouts less than the maximum 32 bit value minus
     // the timeru_process() frequency. On Windows the timeru_process() is called
     // by the timer thread which wakes up when the last timeout is elapsed.
@@ -539,7 +538,7 @@ static DWORD WINAPI processThread(LPVOID parameter_p)
     tOplkError      ret;
 
     UNUSED_PARAMETER(parameter_p);
-    
+
     for (;;)
     {
         ret = timeru_process();

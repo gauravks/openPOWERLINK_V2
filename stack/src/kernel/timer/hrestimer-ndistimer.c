@@ -108,6 +108,7 @@ The structure defines a high-resolution timer module instance.
 typedef struct
 {
     tHresTimerInfo      aTimerInfo[TIMER_COUNT];
+    BOOLEAN             fInitialized;
 } tHresTimerInstance;
 //------------------------------------------------------------------------------
 // local vars
@@ -137,6 +138,7 @@ The function initializes the high-resolution timer module
 tOplkError hrestimer_init(void)
 {
     return hrestimer_addInstance();
+    hresTimerInstance_l.fInitialized = TRUE;
 }
 
 //------------------------------------------------------------------------------
@@ -200,9 +202,13 @@ The function deletes an instance of the high-resolution timer module.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_delInstance(void)
 {
-    tHresTimerInfo*      pTimerInfo;
+    tHresTimerInfo*         pTimerInfo;
     UINT                    index;
     DbgPrint("%s\n", __func__);
+
+    if (!hresTimerInstance_l.fInitialized)
+        return kErrorOk;
+
     for (index = 0; index < TIMER_COUNT; index++)
     {
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
@@ -213,6 +219,7 @@ tOplkError hrestimer_delInstance(void)
         pTimerInfo->pfnCallback = NULL;
     }
 
+    hresTimerInstance_l.fInitialized = FALSE;
     return kErrorOk;
 }
 
@@ -323,6 +330,35 @@ by its timer handle. After deleting, the handle is reset to zero.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
 {
+    tOplkError              ret = kErrorOk;
+    UINT                    index;
+    tHresTimerInfo*         pTimerInfo;
+
+    if (pTimerHdl_p == NULL)
+        return kErrorTimerInvalidHandle;
+
+    if (*pTimerHdl_p == 0)
+    {
+        return ret;      // no timer created yet
+    }
+    else
+    {
+        index = HDL_TO_IDX(*pTimerHdl_p);
+        if (index >= TIMER_COUNT)
+        {   // invalid handle
+            return kErrorTimerInvalidHandle;
+        }
+
+        pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
+        if (pTimerInfo->eventArg.timerHdl != *pTimerHdl_p)
+        {   // invalid handle
+            return ret;
+        }
+    }
+
+    *pTimerHdl_p = 0;
+    pTimerInfo->eventArg.timerHdl = 0;
+    pTimerInfo->pfnCallback = NULL;
     DbgPrint("%s\n", __func__);
     return kErrorOk;
 }

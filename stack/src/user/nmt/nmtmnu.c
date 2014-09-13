@@ -942,20 +942,17 @@ tOplkError nmtmnu_cbNmtStateChange(tEventNmtStateChange nmtStateChange_p)
 
         // node processes only async frames
         case kNmtMsPreOperational1:
-            printf("PreOp1\n");
             ret = doPreop1(nmtStateChange_p);
             break;
 
         // node processes isochronous and asynchronous frames
         case kNmtMsPreOperational2:
-            printf("PreOp2\n");
             ret = startBootStep2();
             // wait for NMT state change of CNs
             break;
 
         // node should be configured and application is ready
         case kNmtMsReadyToOperate:
-            printf("ReadyToOperate\n");
             // check if PRes of CNs are OK
             // d.k. that means wait CycleLength * MultiplexCycleCount (i.e. start timer)
             //      because Dllk checks PRes of CNs automatically in ReadyToOp
@@ -964,7 +961,6 @@ tOplkError nmtmnu_cbNmtStateChange(tEventNmtStateChange nmtStateChange_p)
 
         // normal work state
         case kNmtMsOperational:
-            printf("Operational\n");
             // send StartNode to CNs
             // wait for NMT state change of CNs
             ret = startNodes();
@@ -1030,9 +1026,8 @@ tOplkError nmtmnu_processEvent(tEvent* pEvent_p)
             {
                 tTimerEventArg*  pTimerEventArg = (tTimerEventArg*)pEvent_p->pEventArg;
                 UINT             nodeId;
-                
+
                 nodeId = (UINT)(pTimerEventArg->argument.value & NMTMNU_TIMERARG_NODE_MASK);
-                printf("%s() Timer Event %d\n", __func__, nodeId);
                 if (nodeId != 0)
                 {
                     tObdSize             ObdSize;
@@ -1061,7 +1056,6 @@ tOplkError nmtmnu_processEvent(tEvent* pEvent_p)
                                                         ((pNodeInfo->nodeState << 8) | 0x80
                                                          | ((pNodeInfo->flags & NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                                          | ((pTimerEventArg->argument.value & NMTMNU_TIMERARG_COUNT_SR) >> 8)));*/
-                        printf("IdentReq Timer\n");
                         ret = processInternalEvent(nodeId, (tNmtState) (bNmtState | NMT_TYPE_CS),
                                                    E_NO_ERROR, kNmtMnuIntNodeEventTimerIdentReq);
                     }
@@ -1129,7 +1123,6 @@ tOplkError nmtmnu_processEvent(tEvent* pEvent_p)
                 }
                 else
                 {   // global timer event
-                    printf("GLobal timer\n");
                 }
             }
             break;
@@ -1657,7 +1650,7 @@ static tOplkError startBootStep1(BOOL fNmtResetAllIssued_p)
     tObdSize            obdSize;
     tNmtMnuNodeInfo*    pNodeInfo;
     UINT8               count;
-    printf("%s\n", __func__);
+
     // $$$ d.k.: save current time for 0x1F89/2 MNTimeoutPreOp1_U32
 
     // read number of nodes from object 0x1F81/0
@@ -1669,27 +1662,26 @@ static tOplkError startBootStep1(BOOL fNmtResetAllIssued_p)
     {
         count = tabentries(nmtMnuInstance_g.aNodeInfo);
     }
-    printf("1\n");
+
     // start network scan
     nmtMnuInstance_g.mandatorySlaveCount = 0;
     nmtMnuInstance_g.signalSlaveCount = 0;
     // check 0x1F81
     localNodeId = obd_getNodeId();
-    printf("2\n");
+
     pNodeInfo = nmtMnuInstance_g.aNodeInfo;
     for (subIndex = 1; subIndex <= count; subIndex++, pNodeInfo++)
     {
-        //printf("3\n");
         obdSize = 4;
         ret = obd_readEntry(0x1F81, subIndex, &nodeCfg, &obdSize);
         if (ret != kErrorOk)
             goto Exit;
-        //printf("4\n");
+
         if (subIndex != localNodeId)
         {
             // reset flags "not scanned" and "isochronous"
             pNodeInfo->flags &= ~(NMTMNU_NODE_FLAG_ISOCHRON | NMTMNU_NODE_FLAG_NOT_SCANNED);
-            //printf("5\n");
+
             // Reset all PRC flags and PRC related values
             pNodeInfo->prcFlags = 0;
             pNodeInfo->pResTimeFirstNs = 0;
@@ -1708,10 +1700,8 @@ static tOplkError startBootStep1(BOOL fNmtResetAllIssued_p)
 
             if ((nodeCfg & (NMT_NODEASSIGN_NODE_IS_CN | NMT_NODEASSIGN_NODE_EXISTS)) != 0)
             {   // node is configured as CN
-                printf("3\n");
                 if (fNmtResetAllIssued_p == FALSE)
                 {
-                    printf("6\n");
                     // identify the node
                     ret = identu_requestIdentResponse(subIndex, cbIdentResponse);
                     if (ret != kErrorOk)
@@ -1732,7 +1722,6 @@ static tOplkError startBootStep1(BOOL fNmtResetAllIssued_p)
         }
         else
         {   // subindex of MN
-            printf("7\n");
             if ((nodeCfg & (NMT_NODEASSIGN_MN_PRES | NMT_NODEASSIGN_NODE_EXISTS)) != 0)
             {   // MN shall send PRes
                 ret = addNodeIsochronous(localNodeId);
@@ -1746,7 +1735,6 @@ static tOplkError startBootStep1(BOOL fNmtResetAllIssued_p)
     }
 
 Exit:
-    printf("ret = %x\n", ret);
     return ret;
 }
 
@@ -1769,7 +1757,7 @@ static tOplkError doPreop1(tEventNmtStateChange nmtStateChange_p)
     tEvent          event;
     BOOL            fNmtResetAllIssued = FALSE;
     tOplkError      ret = kErrorOk;
-    printf("%s()\n", __func__);
+
     // reset IdentResponses and running IdentRequests and StatusRequests
     ret = identu_reset();
     ret = statusu_reset();
@@ -1831,7 +1819,6 @@ static tOplkError doPreop1(tEventNmtStateChange nmtStateChange_p)
         }
         timerArg.eventSink = kEventSinkNmtMnu;
         timerArg.argument.value = 0;
-        printf("t1\n");
         ret = timeru_modifyTimer(&nmtMnuInstance_g.timerHdlNmtState, dwTimeout, timerArg);
     }
     return ret;
@@ -1888,7 +1875,7 @@ static tOplkError startBootStep2(void)
 
             // set NMT state change flag
             pNodeInfo->flags |= NMTMNU_NODE_FLAG_NMT_CMD_ISSUED;
-            printf("t2\n");
+
             ret = timeru_modifyTimer(&pNodeInfo->timerHdlStatReq,
                                      nmtMnuInstance_g.statusRequestDelay, timerArg);
             if (ret != kErrorOk)
@@ -1980,7 +1967,6 @@ static tOplkError nodeBootStep2(UINT nodeId_p, tNmtMnuNodeInfo* pNodeInfo_p)
     {   // start timer
         // when the timer expires the CN must be ReadyToOp
         NMTMNU_SET_FLAGS_TIMERARG_LONGER(pNodeInfo_p, nodeId_p, timerArg);
-        printf("t3\n");
         ret = timeru_modifyTimer(&pNodeInfo_p->timerHdlLonger,
                                  nmtMnuInstance_g.timeoutReadyToOp, timerArg);
     }
@@ -2073,7 +2059,6 @@ static tOplkError nodeCheckCom(UINT nodeId_p, tNmtMnuNodeInfo* pNodeInfo_p)
         // that means wait some time and if no error occurred everything is OK;
 
         // start timer (when the timer expires the CN must be still ReadyToOp)
-        printf("t4\n");
         NMTMNU_SET_FLAGS_TIMERARG_LONGER(pNodeInfo_p, nodeId_p, timerArg);
         ret = timeru_modifyTimer(&pNodeInfo_p->timerHdlLonger,
                                  nmtMnuInstance_g.timeoutCheckCom, timerArg);
@@ -2211,7 +2196,7 @@ static INT processNodeEventIdentResponse(UINT nodeId_p, tNmtState nodeNmtState_p
             // Set NMT state change flag and ignore unexpected NMT states
             // until the state monitor timer is elapsed.
             pNodeInfo->flags |= NMTMNU_NODE_FLAG_NMT_CMD_ISSUED;
-            printf("t6\n");
+
             NMTMNU_SET_FLAGS_TIMERARG_STATE_MON(pNodeInfo, nodeId_p, timerArg);
 
             *pRet_p = timeru_modifyTimer(&pNodeInfo->timerHdlStatReq,
@@ -2473,7 +2458,6 @@ INT processNodeEventNoIdentResponse(UINT nodeId_p, tNmtState nodeNmtState_p, tNm
                                        ((pNodeInfo->nodeState << 8) | 0x80
                                         | ((pNodeInfo->flags & NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                         | ((TimerArg.argument.value & NMTMNU_TIMERARG_COUNT_SR) >> 8)));*/
-        printf("t7\n");
         *pRet_p = timeru_modifyTimer(&pNodeInfo->timerHdlStatReq,
                                      nmtMnuInstance_g.statusRequestDelay, timerArg);
     }
@@ -2545,7 +2529,6 @@ static INT processNodeEventStatusResponse(UINT nodeId_p, tNmtState nodeNmtState_
                                       ((pNodeInfo->nodeState << 8) | 0x80
                                        | ((pNodeInfo->flags & NMTMNU_NODE_FLAG_COUNT_STATREQ) >> 6)
                                        | ((TimerArg.argument.value & NMTMNU_TIMERARG_COUNT_SR) >> 8)));*/
-        printf("t8\n");
         *pRet_p = timeru_modifyTimer(&pNodeInfo->timerHdlStatReq,
                                      nmtMnuInstance_g.statusRequestDelay, timerArg);
     }
@@ -2765,7 +2748,6 @@ static INT processNodeEventTimerIdentReq(UINT nodeId_p, tNmtState nodeNmtState_p
     UNUSED_PARAMETER(nmtState_p);
     UNUSED_PARAMETER(nodeNmtState_p);
 
-    printf("%s\n", __func__);
     DEBUG_LVL_NMTMN_TRACE("TimerStatReq->IdentReq(%02X)\n", nodeId_p);
     // trigger IdentRequest again
     *pRet_p = identu_requestIdentResponse(nodeId_p, cbIdentResponse);
@@ -3005,7 +2987,6 @@ static INT processNodeEventNmtCmdSent(UINT nodeId_p, tNmtState nodeNmtState_p, t
         // set NMT state change flag
         pNodeInfo->flags |= NMTMNU_NODE_FLAG_NMT_CMD_ISSUED;
     }
-    printf("t9\n");
     *pRet_p = timeru_modifyTimer(&pNodeInfo->timerHdlStatReq,
                                  nmtMnuInstance_g.statusRequestDelay, timerArg);
     // finish processing, because NmtState_p is the expected and not the current state
@@ -3036,7 +3017,6 @@ static tOplkError processInternalEvent(UINT nodeId_p, tNmtState nodeNmtState_p,
     if (nmtState <= kNmtMsNotActive)        // MN is not active
         goto Exit;
 
-    printf("%s() %x\n", __func__, nmtState);
     // call internal node event handler
     if (apfnNodeEventFuncs_l[nodeEvent_p](nodeId_p, nodeNmtState_p, nmtState, errorCode_p, &ret) < 0)
         goto Exit;
@@ -3047,7 +3027,6 @@ static tOplkError processInternalEvent(UINT nodeId_p, tNmtState nodeNmtState_p,
         switch (nmtState)
         {
             case kNmtMsPreOperational1:
-                printf("%s()PreOp1\n", __func__);
                 if ((nmtMnuInstance_g.signalSlaveCount == 0) &&
                     (nmtMnuInstance_g.mandatorySlaveCount == 0))
                 {   // all optional CNs scanned once and all mandatory CNs configured successfully
@@ -3063,7 +3042,6 @@ static tOplkError processInternalEvent(UINT nodeId_p, tNmtState nodeNmtState_p,
                         break;
                     }
                     // enter PreOp2
-                    printf("Enter PreOp2\n");
                     ret = nmtu_postNmtEvent(kNmtEventAllMandatoryCNIdent);
                 }
                 break;

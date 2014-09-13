@@ -169,8 +169,8 @@ tEdrvReleaseRxBuffer dllkframe_processFrameReceived(tEdrvRxBuffer* pRxBuffer_p)
     tMsgType                msgType;
     TGT_DLLK_DECLARE_FLAGS
 
-    TGT_DLLK_ENTER_CRITICAL_SECTION()
-
+        TGT_DLLK_ENTER_CRITICAL_SECTION()
+        DbgPrint("Receive Frame\n");
     BENCHMARK_MOD_02_SET(3);
     nmtState = dllkInstance_g.nmtState;
     if (nmtState <= kNmtGsResetConfiguration)

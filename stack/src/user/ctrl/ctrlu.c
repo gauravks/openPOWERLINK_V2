@@ -524,8 +524,8 @@ BOOL ctrlu_checkKernelStack(void)
     {
         DEBUG_LVL_CTRL_TRACE("heartbeat:%d ctrlInstance_l.lastHeartbeat:%d\n", heartbeat, ctrlInstance_l.lastHeartbeat);
         printf("heartbeat:%d ctrlInstance_l.lastHeartbeat:%d\n", heartbeat, ctrlInstance_l.lastHeartbeat);
-        return FALSE;
-        //return TRUE;
+        //return FALSE;
+        return TRUE;
     }
     else
     {

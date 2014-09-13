@@ -237,7 +237,7 @@ static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p,
     OPLK_MEMCPY((ioctlAsyncBuf + sizeof(tIoctlDllCalAsync)), pData_p, *pDataSize_p);
     //TRACE ("%s() send async frame: size:%d\n", __func__, pFrameInfo_p->frameSize);
     ioctlRet = DeviceIoControl(pInstance->fileHandle, PLK_CMD_DLLCAL_ASYNCSEND,
-                          &ioctlAsyncFrame, sizeof(tIoctlDllCalAsync) + *pDataSize_p,
+                               ioctlAsyncBuf, (sizeof(tIoctlDllCalAsync) +*pDataSize_p),
                           0, 0,
                           &bytesReturned, NULL);
     if (ioctlRet == 0)

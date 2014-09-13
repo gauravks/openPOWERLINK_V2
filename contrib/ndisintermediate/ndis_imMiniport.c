@@ -129,6 +129,8 @@ NDIS_OID VEthSupportedOids[] =
     OID_PNP_REMOVE_WAKE_UP_PATTERN,
     OID_PNP_ENABLE_WAKE_UP
 };
+
+static BOOLEAN         fInitialize = FALSE;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -173,9 +175,14 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     UINT                                macLength;
     NET_IFINDEX                         highLayerIfIndex;
     NET_IFINDEX                         lowerLayerIfIndex;
-
+    ULONG                               packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
     UNREFERENCED_PARAMETER(driverContext_p);
     DbgPrint("%s() ---> \n", __FUNCTION__);
+
+    if (fInitialize == TRUE)
+    {
+        return NDIS_STATUS_SUCCESS;
+    }
     pVEthInstance = (tVEthInstance*) initParams_p->IMDeviceInstanceContext;
 
     NdisZeroMemory(&miniportAttributes, sizeof(NDIS_MINIPORT_ADAPTER_ATTRIBUTES));
@@ -270,7 +277,8 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     miniportAttributes.GeneralAttributes.IfType = pVEthInstance->protocolInstance->bindParameters.IfType;
     miniportAttributes.GeneralAttributes.IfConnectorPresent = FALSE; // RFC 2665 TRUE if physical adapter
     miniportAttributes.GeneralAttributes.RecvScaleCapabilities = NULL;
-    miniportAttributes.GeneralAttributes.MacOptions = NDIS_MAC_OPTION_NO_LOOPBACK;
+    miniportAttributes.GeneralAttributes.MacOptions = NDIS_MAC_OPTION_NO_LOOPBACK |
+                                                      NDIS_MAC_OPTION_TRANSFERS_NOT_PEND;
 
     miniportAttributes.GeneralAttributes.SupportedPacketFilters = pVEthInstance->protocolInstance->bindParameters.SupportedPacketFilters;
 
@@ -339,6 +347,9 @@ Exit:
     }
 
     // TODO: check to see if we can set the init event in a failure case?
+
+    protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
+                            sizeof(packetFilter));
 
     NdisSetEvent(&pVEthInstance->miniportInitEvent);
 

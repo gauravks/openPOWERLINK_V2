@@ -732,7 +732,10 @@ static tOplkError processTxBufferList(void)
                                         timerHdlSlotCb,
                                         0L,
                                         FALSE);
-
+            if (ret != kErrorOk)
+            {
+                DbgPrint("Error in Creating TImer %x\n", ret);
+            }
             break;
         }
 

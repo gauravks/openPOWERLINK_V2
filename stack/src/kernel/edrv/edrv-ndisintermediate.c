@@ -186,6 +186,7 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     // Register Tx and Rx callbacks
     ndis_registerTxRxHandler(edrvTxHandler, edrvRxHandler);
 
+    ndis_setBindingState(NdisBindingRunning);
     // TODO@gks: Get the MAC address here and assign to init params
     return kErrorOk;
 }
@@ -405,10 +406,8 @@ tOplkError edrv_sendTxBuffer(tEdrvTxBuffer* pBuffer_p)
         pBuffer_p->txFrameSize = EDRV_MIN_FRAME_SIZE;
     }
 
-    if (pBuffer_p->txBufferNumber.pArg == NULL)
-    {
-        DbgPrint("Strange\n");
-    }
+
+
     //DbgPrint("Send Packet\n");
     ndis_sendPacket(pBuffer_p, pBuffer_p->txFrameSize, pBuffer_p->txBufferNumber.pArg);
 
@@ -541,8 +540,10 @@ static void edrvTxHandler(void* txBuff_p)
     // Process all the frames till specified index
     if(pBuffer != NULL)
     {
+        //DbgPrint("%s() \n", __func__);
         if(pBuffer->pfnTxHandler != NULL)
         {
+            //DbgPrint("1 \n");
             pBuffer->pfnTxHandler(pBuffer);
         }
     }

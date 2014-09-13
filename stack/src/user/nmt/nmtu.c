@@ -226,14 +226,13 @@ tOplkError nmtu_processEvent(tEvent* pEvent_p)
 {
     tOplkError                  ret = kErrorOk;
     tEventNmtStateChange*       pNmtStateChange;
-    printf("%s()\n ", __func__);
+
     switch (pEvent_p->eventType)
     {
         // state change of NMT-Module
         case kEventTypeNmtStateChange:
             ret = timeru_deleteTimer(&nmtuInstance_g.timerHdl);
             pNmtStateChange = (tEventNmtStateChange*)pEvent_p->pEventArg;
-            printf("State Change %x->%x\n", pNmtStateChange->oldNmtState, pNmtStateChange->newNmtState);
             nmtuInstance_g.localNmtState = pNmtStateChange->newNmtState;
 
             // call cb-functions to inform higher layer
@@ -543,7 +542,6 @@ static BOOL processMnStateChange(tNmtState newNmtState_p, tOplkError* pRet_p)
             }
             else
             {
-                printf("kNmtEventTimerMsPreOp2\n");
                 ret = setupNmtTimerEvent(waitTime, kNmtEventTimerMsPreOp2);
             }
             // potential error is forwarded to event queue which generates error event
@@ -551,7 +549,6 @@ static BOOL processMnStateChange(tNmtState newNmtState_p, tOplkError* pRet_p)
 
         // node processes isochronous and asynchronous frames
         case kNmtMsPreOperational2:
-            printf("MsPreOp2\n");
             break;
 
         // node should be configured and application is ready
@@ -671,8 +668,7 @@ static tOplkError setupNmtTimerEvent(UINT32 timeout_p, tNmtEvent event_p)
     if (timeout_p == 0)  // timer was below one ms -> set one ms
         timeout_p = 1;
     timerArg.eventSink = kEventSinkNmtk;
-    timerArg.argument.value = (UINT32) event_p; 
-    printf("t10 %x\n", (UINT32) event_p);
+    timerArg.argument.value = (UINT32)event_p;
     ret = timeru_modifyTimer(&nmtuInstance_g.timerHdl, (ULONG)timeout_p, timerArg);
     return  ret;
 }

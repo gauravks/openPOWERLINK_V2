@@ -204,7 +204,6 @@ tOplkError identu_getIdentResponse(UINT nodeId_p, tIdentResponse** ppIdentRespon
     tOplkError          ret = kErrorOk;
     tIdentResponse*     pIdentResponse;
 
-    printf("%s %d\n", __func__, nodeId_p);
     // decrement node ID, because array is zero based
     nodeId_p--;
     if (nodeId_p < tabentries(instance_g.apIdentResponse))
@@ -244,7 +243,6 @@ tOplkError identu_requestIdentResponse(UINT nodeId_p, tIdentuCbResponse pfnCbRes
 {
     tOplkError  ret = kErrorOk;
 
-    printf("%s %d\n", __func__, nodeId_p);
 #if !defined(CONFIG_INCLUDE_NMT_MN)
     UNUSED_PARAMETER(pfnCbResponse_p);
 #endif
