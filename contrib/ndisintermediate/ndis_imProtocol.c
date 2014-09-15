@@ -71,7 +71,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-
+#define PROTO_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
+#define IM_DEFINED_STRING_VERSION                   PROTO_STRING_VERSION(1, 0, 1)
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
@@ -123,7 +124,7 @@ void protocol_freeVEthInstance(tVEthInstance* pVEthInstance_p)
 //------------------------------------------------------------------------------
 BOOLEAN protocol_checkBindingState(void)
 {
-    if (protocolInstance_l.bindingState == NdisBindingReady)
+    if (protocolInstance_l.bindingState >= NdisBindingReady)
     {
         return TRUE;
     }
@@ -451,6 +452,7 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
     {
         return NDIS_STATUS_FAILURE;
     }
+    NdisInitializeEvent(&pNdisOidReq->waitEvent);
 
     // Create the oid request
     pNdisOidReq->oidRequest.Header.Type = NDIS_OBJECT_TYPE_OID_REQUEST;
@@ -472,6 +474,7 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
     }
     else
     {
+        DbgPrint("Send OID request\n");
         NdisReleaseSpinLock(&protocolInstance_l.driverLock);
         status = NdisOidRequest(protocolInstance_l.bindingHandle, &pNdisOidReq->oidRequest);
     }
@@ -534,7 +537,7 @@ NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
     netBuffer = NET_BUFFER_LIST_FIRST_NB(pTxBufInfo->pNbl);
     NET_BUFFER_DATA_LENGTH(netBuffer) = size_p;
 
-    //sendFlags |= NDIS_SEND_FLAGS_CHECK_FOR_LOOPBACK;
+    sendFlags &= ~NDIS_SEND_FLAGS_CHECK_FOR_LOOPBACK;
 
     // Forward the packet to Lower binding
     NdisSendNetBufferLists(protocolInstance_l.bindingHandle,
@@ -580,7 +583,7 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
     PNDIS_STRING                      pConfigString;
     UNREFERENCED_PARAMETER(protocolDriverContext_p);
 //    UNREFERENCED_PARAMETER(bindContext_p);
-    DbgPrint("%s() ---> \n", __FUNCTION__);
+    DbgPrint("%s() ---> %s\n", __FUNCTION__, IM_DEFINED_STRING_VERSION);
 
     if (fBinding_l == TRUE)
     {
@@ -875,6 +878,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
 {
     NDIS_STATUS         status = NDIS_STATUS_SUCCESS;
     NDIS_EVENT          pPauseEvent;
+        ULONG                               packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     switch (pNetPnPEventNotification_p->NetPnPEvent.NetEvent)
     {
@@ -922,6 +926,8 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
         case NetEventRestart:
             DbgPrint("PNP: Restart\n");
             protocolInstance_l.bindingState = NdisBindingReady;
+            protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
+                                    sizeof(packetFilter));
             status = NDIS_STATUS_SUCCESS;
             break;
 
@@ -963,7 +969,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
     ULONG                   totalLength;
 
     UNREFERENCED_PARAMETER(numberOfNbl_p);
-    DbgPrint("%s\n", __FUNCTION__);
+    //DbgPrint("%s\n", __FUNCTION__);
     returnFlags = 0;
 
     if (NDIS_TEST_RECEIVE_AT_DISPATCH_LEVEL(receiveFlags_p))
@@ -988,6 +994,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
     {
         ULONG                   bytesAvailable = 0;
         PUCHAR                  pRxDataSrc;
+        PUCHAR                  pRxDataDest;
         ULONG                   bytesToCopy = 0;
         tRxBufInfo*             rxBufInfo = NULL;
 
@@ -1005,7 +1012,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
         }
 
         offset = NET_BUFFER_CURRENT_MDL_OFFSET(NET_BUFFER_LIST_FIRST_NB(currentNbl));
-
+        pRxDataDest = rxBufInfo->pData;
         while ((pMdl != NULL) && (totalLength > 0))
         {
             pRxDataSrc = NULL;
@@ -1018,8 +1025,8 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
             bytesToCopy = min(bytesToCopy, totalLength);
             
            
-            NdisMoveMemory(rxBufInfo->pData, pRxDataSrc, bytesToCopy);
-            rxBufInfo->pData = (PVOID)((UCHAR*)rxBufInfo->pData + bytesToCopy);
+            NdisMoveMemory(pRxDataDest, pRxDataSrc, bytesToCopy);
+            pRxDataDest = (PVOID) ((UCHAR*) pRxDataDest + bytesToCopy);
             totalLength -= bytesToCopy;
 
             offset = 0;
@@ -1123,19 +1130,19 @@ void closeBinding(void)
 {
     NDIS_STATUS             status;
     NDIS_EVENT              oidCompleteEvent;
-    ULONG                   packetFilter = 0;
-    PVOID                   multicastAddrBuf = NULL;
-    ULONG                   multicastAddrBufSize = 0;
+   // ULONG                   packetFilter = 0;
+   // PVOID                   multicastAddrBuf = NULL;
+   // ULONG                   multicastAddrBufSize = 0;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     // Disable Multicast filter
     protocolInstance_l.bindingState = NdisBindingPausing;
 
-    protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
-                   sizeof(packetFilter));
+    //protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
+      //             sizeof(packetFilter));
 
     // Delete multicast list. We have already deleted individual entries before.
-    protocol_sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
-                   multicastAddrBufSize);
+   // protocol_sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
+     //              multicastAddrBufSize);
 
     NdisAcquireSpinLock(&protocolInstance_l.driverLock);
 

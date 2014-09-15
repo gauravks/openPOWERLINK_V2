@@ -277,8 +277,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     miniportAttributes.GeneralAttributes.IfType = pVEthInstance->protocolInstance->bindParameters.IfType;
     miniportAttributes.GeneralAttributes.IfConnectorPresent = FALSE; // RFC 2665 TRUE if physical adapter
     miniportAttributes.GeneralAttributes.RecvScaleCapabilities = NULL;
-    miniportAttributes.GeneralAttributes.MacOptions = NDIS_MAC_OPTION_NO_LOOPBACK |
-                                                      NDIS_MAC_OPTION_TRANSFERS_NOT_PEND;
+    miniportAttributes.GeneralAttributes.MacOptions = NDIS_MAC_OPTION_NO_LOOPBACK;
 
     miniportAttributes.GeneralAttributes.SupportedPacketFilters = pVEthInstance->protocolInstance->bindParameters.SupportedPacketFilters;
 

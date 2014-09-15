@@ -170,7 +170,7 @@ tEdrvReleaseRxBuffer dllkframe_processFrameReceived(tEdrvRxBuffer* pRxBuffer_p)
     TGT_DLLK_DECLARE_FLAGS
 
         TGT_DLLK_ENTER_CRITICAL_SECTION()
-        DbgPrint("Receive Frame\n");
+   //     DbgPrint("Receive Frame\n");
     BENCHMARK_MOD_02_SET(3);
     nmtState = dllkInstance_g.nmtState;
     if (nmtState <= kNmtGsResetConfiguration)
@@ -241,6 +241,7 @@ tEdrvReleaseRxBuffer dllkframe_processFrameReceived(tEdrvRxBuffer* pRxBuffer_p)
     }
 
     msgType = (tMsgType)ami_getUint8Le(&pFrame->messageType);
+    //DbgPrint("Msg Type %x\n", msgType);
     switch (msgType)
     {
         case kMsgTypePreq:
@@ -2317,7 +2318,6 @@ static tOplkError processReceivedAsnd(tFrameInfo* pFrameInfo_p, tEdrvRxBuffer* p
     tPlkFrame*      pFrame;
     UINT            asndServiceId;
     UINT            nodeId;
-
 #if defined(CONFIG_INCLUDE_NMT_MN)
     UINT8           flag1;
 #endif

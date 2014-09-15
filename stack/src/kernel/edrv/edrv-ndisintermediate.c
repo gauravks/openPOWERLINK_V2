@@ -515,7 +515,7 @@ static void edrvRxHandler(void* pRxData_p, size_t size_p)
 {
     tEdrvRxBuffer           rxBuffer;
     tEdrvReleaseRxBuffer    retReleaseRxBuffer;
-    DbgPrint("%s() \n", __func__);
+    //DbgPrint("%s() \n", __func__);
     rxBuffer.pBuffer = pRxData_p;
     rxBuffer.rxFrameSize = size_p;
     rxBuffer.bufferInFrame = kEdrvBufferLastInFrame;
