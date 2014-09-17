@@ -68,7 +68,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -84,7 +83,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-tNdisDriverInstance     driverInstance_l;
+tNdisDriverInstance    driverInstance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -110,13 +109,13 @@ routines to OS using NdisXRegisterXXXDriver.
 //------------------------------------------------------------------------------
 NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
 {
-    NDIS_STATUS                             ndisStatus = NDIS_STATUS_SUCCESS;
-//    tNdisErrorStatus                        status = NdisStatusSuccess;
-    NDIS_PROTOCOL_DRIVER_CHARACTERISTICS    protocolChars;
-    NDIS_MINIPORT_DRIVER_CHARACTERISTICS    miniportChars;
-    NDIS_HANDLE                             miniportDriverContext = NULL;
-    NDIS_HANDLE                             protocolDriverContext = NULL;
-    NDIS_STRING                             ndisDriverName;
+    NDIS_STATUS                            ndisStatus = NDIS_STATUS_SUCCESS;
+    //    tNdisErrorStatus                        status = NdisStatusSuccess;
+    NDIS_PROTOCOL_DRIVER_CHARACTERISTICS   protocolChars;
+    NDIS_MINIPORT_DRIVER_CHARACTERISTICS   miniportChars;
+    NDIS_HANDLE                            miniportDriverContext = NULL;
+    NDIS_HANDLE                            protocolDriverContext = NULL;
+    NDIS_STRING                            ndisDriverName;
 
     DbgPrint("Driver Enrtry\n");
     NdisZeroMemory(&driverInstance_l, sizeof(tNdisDriverInstance));
@@ -212,14 +211,13 @@ NDIS_HANDLE ndis_getAdapterHandle(void)
     return driverInstance_l.pMiniportHandle;
 }
 
-
 void ndis_getMacAddress(UCHAR*  pMac_p)
 {
     UCHAR*   currentMac;
     currentMac = protocol_getCurrentMac();
 
     if (currentMac != NULL)
-    NdisMoveMemory(pMac_p, currentMac, ETH_LENGTH_OF_ADDRESS);
+        NdisMoveMemory(pMac_p, currentMac, ETH_LENGTH_OF_ADDRESS);
 }
 
 void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p)
@@ -295,6 +293,7 @@ void ndis_freeTxRxBuff(void)
 {
     protocol_freeTxRxBuffers();
 }
+
 //------------------------------------------------------------------------------
 /**
 \brief  Get Tx buffer
@@ -312,7 +311,7 @@ This routines allocate a Tx buffer to be shared with the caller.
 //------------------------------------------------------------------------------
 tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_p)
 {
-    tTxBufInfo* pTxBuffInfo = protocol_getTxBuff(size_p);
+    tTxBufInfo*   pTxBuffInfo = protocol_getTxBuff(size_p);
 
     if (pTxBuffInfo != NULL)
     {
@@ -324,7 +323,6 @@ tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_
         DbgPrint("Why the fuck its Null Here\n");
         return NdisStatusResources;
     }
-
 
     return NdisStatusSuccess;
 }
@@ -360,9 +358,9 @@ Send a packet
 //------------------------------------------------------------------------------
 tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
 {
-    NDIS_STATUS     ndisStatus;
+    NDIS_STATUS    ndisStatus;
 
-   // DbgPrint("%s\n", __FUNCTION__);
+    // DbgPrint("%s\n", __FUNCTION__);
     if (pData_p == NULL || pTxLink_p == NULL)
     {
         return NdisStatusInvalidParams;
@@ -375,7 +373,7 @@ tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
     {
         return NdisStatusTxError;
     }
-   // DbgPrint("3\n", __FUNCTION__);
+    // DbgPrint("3\n", __FUNCTION__);
     return NdisStatusSuccess;
 }
 
@@ -395,7 +393,7 @@ handler and Rx callback from the NetBufferListsReceive handler.
 */
 //------------------------------------------------------------------------------
 void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
-                                          tNdisReceiveCb pfnRxCallback_p)
+                              tNdisReceiveCb pfnRxCallback_p)
 {
     protocol_registerTxRxHandler(pfnTxCallback_p, pfnRxCallback_p);
 }
@@ -428,6 +426,7 @@ void ndis_closeAppIntf(void)
 {
     driverInstance_l.pfnAppIntfDeregisterCb();
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -478,7 +477,6 @@ NDIS_STATUS protocolSetOptions(NDIS_HANDLE driverHandle_p, NDIS_HANDLE driverCon
     UNREFERENCED_PARAMETER(driverContext_p);
     return NDIS_STATUS_SUCCESS;
 }
-
 
 ///\}
 

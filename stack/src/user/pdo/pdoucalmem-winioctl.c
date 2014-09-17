@@ -67,7 +67,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -83,7 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-HANDLE           pFileHandle_l;
+HANDLE    pFileHandle_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -148,20 +147,20 @@ The function allocates shared memory for the user needed to transfer the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 {
-    ULONG       bytesReturned;
-    tPdoMem     inPdoMem;
-    tPdoMem     outPdoMem;
+    ULONG      bytesReturned;
+    tPdoMem    inPdoMem;
+    tPdoMem    outPdoMem;
 
     inPdoMem.memSize = memSize_p;
 
     printf("Allocate PDO memory %d\n", memSize_p);
     if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_GET_MEM,
-        &inPdoMem, sizeof(tPdoMem), &outPdoMem, sizeof(tPdoMem),
-        &bytesReturned, NULL))
+                         &inPdoMem, sizeof(tPdoMem), &outPdoMem, sizeof(tPdoMem),
+                         &bytesReturned, NULL))
     {
         printf("Error in PDO memory allocation %x\n", GetLastError());
         *ppPdoMem_p = NULL;
-         return kErrorNoResource;
+        return kErrorNoResource;
     }
 
     if (bytesReturned != 0)
@@ -204,14 +203,14 @@ transfering the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_freeMem(BYTE* pMem_p, size_t memSize_p)
 {
-    ULONG       bytesReturned;
-    tPdoMem     PdoMem;
+    ULONG      bytesReturned;
+    tPdoMem    PdoMem;
 
     PdoMem.memSize = memSize_p;
 
     if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_FREE_MEM,
-        &PdoMem, sizeof(tPdoMem), NULL, 0,
-        &bytesReturned, NULL))
+                         &PdoMem, sizeof(tPdoMem), NULL, 0,
+                         &bytesReturned, NULL))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Unable to free mem %d\n", __func__, GetLastError());
         return kErrorGeneralError;
@@ -219,18 +218,12 @@ tOplkError pdoucal_freeMem(BYTE* pMem_p, size_t memSize_p)
 
     return kErrorOk;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 

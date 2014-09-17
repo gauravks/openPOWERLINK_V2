@@ -66,7 +66,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -82,7 +81,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static HANDLE          fileHandle_l;
+static HANDLE    fileHandle_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -104,15 +103,15 @@ The function initializes the user control CAL module.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_init(void)
 {
-    UINT32      errCode;
+    UINT32    errCode;
 
-    fileHandle_l = CreateFile(PLK_DEV_FILE,              // Name of the NT "device" to open
-                            GENERIC_READ | GENERIC_WRITE,  // Access rights requested
-                            FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
-                            NULL,                           // Security attributes - not used!
-                            OPEN_EXISTING,               // Device must exist to open it.
-                            FILE_ATTRIBUTE_NORMAL,        // Open for overlapped I/O
-                            NULL);                          // Extended attributes - not used!
+    fileHandle_l = CreateFile(PLK_DEV_FILE,                                                 // Name of the NT "device" to open
+                              GENERIC_READ | GENERIC_WRITE,                                 // Access rights requested
+                              FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
+                              NULL,                                                         // Security attributes - not used!
+                              OPEN_EXISTING,                                                // Device must exist to open it.
+                              FILE_ATTRIBUTE_NORMAL,                                        // Open for overlapped I/O
+                              NULL);                                                        // Extended attributes - not used!
 
     if (fileHandle_l == INVALID_HANDLE_VALUE)
     {
@@ -169,9 +168,9 @@ The function executes a control command in the kernel stack.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p)
 {
-    tCtrlCmd            ctrlCmd;
-    tCtrlCmd            ctrlCmdRes;
-    ULONG               bytesReturned;
+    tCtrlCmd    ctrlCmd;
+    tCtrlCmd    ctrlCmdRes;
+    ULONG       bytesReturned;
 
     ctrlCmd.cmd = cmd_p;
     ctrlCmd.retVal = 0;
@@ -204,8 +203,8 @@ it tries to shutdown.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_checkKernelStack(void)
 {
-    UINT16              kernelStatus;
-    tOplkError          ret;
+    UINT16        kernelStatus;
+    tOplkError    ret;
 
     TRACE("Checking for kernel stack...\n");
     kernelStatus = ctrlucal_getStatus();
@@ -255,8 +254,8 @@ The function gets the status of the kernel stack
 //------------------------------------------------------------------------------
 UINT16 ctrlucal_getStatus(void)
 {
-    UINT16      status;
-    ULONG       bytesReturned;
+    UINT16    status;
+    ULONG     bytesReturned;
 
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_GET_STATUS, 0, 0,
                          &status, sizeof(UINT16), &bytesReturned, NULL))
@@ -283,11 +282,11 @@ The function reads the heartbeat genereated by the kernel stack.
 //------------------------------------------------------------------------------
 UINT16 ctrlucal_getHeartbeat(void)
 {
-    UINT16      heartbeat;
-    ULONG       bytesReturned;
+    UINT16    heartbeat;
+    ULONG     bytesReturned;
 
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_GET_HEARTBEAT, 0, 0,
-        &heartbeat, sizeof(UINT16), &bytesReturned, NULL))
+                         &heartbeat, sizeof(UINT16), &bytesReturned, NULL))
     {
         TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return 0;
@@ -309,7 +308,7 @@ can be accessed by the kernel stack.
 //------------------------------------------------------------------------------
 void ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p)
 {
-    ULONG       bytesReturned;
+    ULONG    bytesReturned;
 
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_STORE_INITPARAM,
                          pInitParam_p, sizeof(tCtrlInitParam),
@@ -335,7 +334,7 @@ The function reads the initialization parameter from the kernel stack.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p)
 {
-    ULONG       bytesReturned;
+    ULONG    bytesReturned;
 
     if (!DeviceIoControl(fileHandle_l, PLK_CMD_CTRL_READ_INITPARAM,
                          0, 0,
@@ -370,7 +369,6 @@ HANDLE ctrlucal_getFd(void)
 //============================================================================//
 /// \name Private Functions
 /// \{
-
 
 ///\}
 

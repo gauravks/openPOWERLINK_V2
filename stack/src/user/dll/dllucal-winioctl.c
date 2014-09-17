@@ -46,7 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //#include "{LOCAL_INCLUDE_FILE}"
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -62,7 +61,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -83,9 +81,9 @@ event posting.
 */
 typedef struct
 {
-    tDllCalQueue                dllCalQueue;        ///< DLL CAL queue
-    tDllAsyncReqPriority        priority;           ///< Request priority
-    HANDLE                      fileHandle;         ///< File handle of openPOWERLINK driver
+    tDllCalQueue            dllCalQueue;            ///< DLL CAL queue
+    tDllAsyncReqPriority    priority;               ///< Request priority
+    HANDLE                  fileHandle;             ///< File handle of openPOWERLINK driver
 } tDllCalIoctlInstance;
 //------------------------------------------------------------------------------
 // local vars
@@ -99,7 +97,7 @@ static tOplkError delInstance(tDllCalQueueInstance pDllCalQueue_p);
 static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p, UINT8* pData_p, UINT* pDataSize_p);
 
 /* define external function interface */
-static tDllCalFuncIntf funcintf_l =
+static tDllCalFuncIntf    funcintf_l =
 {
     addInstance,
     delInstance,
@@ -153,7 +151,7 @@ Add an instance for TX packet forwarding in DLL CAL.
 static tOplkError addInstance(tDllCalQueueInstance* ppDllCalQueue_p,
                               tDllCalQueue dllCalQueue_p)
 {
-    tDllCalIoctlInstance*       pInstance;
+    tDllCalIoctlInstance*   pInstance;
 
     pInstance = (tDllCalIoctlInstance*) OPLK_MALLOC(sizeof(tDllCalIoctlInstance));
     if (pInstance == NULL)
@@ -185,7 +183,7 @@ Delete the DLL CAL instance.
 //------------------------------------------------------------------------------
 static tOplkError delInstance(tDllCalQueueInstance pDllCalQueue_p)
 {
-    tDllCalIoctlInstance*     pInstance = (tDllCalIoctlInstance*) pDllCalQueue_p;
+    tDllCalIoctlInstance*   pInstance = (tDllCalIoctlInstance*) pDllCalQueue_p;
 
     OPLK_FREE(pInstance);
     return kErrorOk;
@@ -210,13 +208,12 @@ Inserts a data block into the DLL CAL queue.
 static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p,
                                   UINT8* pData_p, UINT* pDataSize_p)
 {
-    tOplkError                      ret = kErrorOk;
-    tDllCalIoctlInstance*           pInstance =
-                                         (tDllCalIoctlInstance*) pDllCalQueue_p;
-    UINT8*                          ioctlAsyncBuf;
-    tIoctlDllCalAsync               ioctlAsyncFrame;
-    BOOLEAN                         ioctlRet;
-    ULONG                           bytesReturned;
+    tOplkError              ret = kErrorOk;
+    tDllCalIoctlInstance*   pInstance = (tDllCalIoctlInstance*) pDllCalQueue_p;
+    UINT8*                  ioctlAsyncBuf;
+    tIoctlDllCalAsync       ioctlAsyncFrame;
+    BOOLEAN                 ioctlRet;
+    ULONG                   bytesReturned;
 
     if (pInstance == NULL)
     {
@@ -237,9 +234,9 @@ static tOplkError insertDataBlock(tDllCalQueueInstance pDllCalQueue_p,
     OPLK_MEMCPY((ioctlAsyncBuf + sizeof(tIoctlDllCalAsync)), pData_p, *pDataSize_p);
     //TRACE ("%s() send async frame: size:%d\n", __func__, pFrameInfo_p->frameSize);
     ioctlRet = DeviceIoControl(pInstance->fileHandle, PLK_CMD_DLLCAL_ASYNCSEND,
-                               ioctlAsyncBuf, (sizeof(tIoctlDllCalAsync) +*pDataSize_p),
-                          0, 0,
-                          &bytesReturned, NULL);
+                               ioctlAsyncBuf, (sizeof(tIoctlDllCalAsync) + *pDataSize_p),
+                               0, 0,
+                               &bytesReturned, NULL);
     if (ioctlRet == 0)
         return kErrorDllAsyncTxBufferFull;
 

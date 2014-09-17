@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define DEVICE_CLOSE_IO            995
+#define DEVICE_CLOSE_IO    995
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -66,7 +66,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -87,11 +86,11 @@ CAL module.
 */
 typedef struct
 {
-    HANDLE                 sendfileHandle;
-    HANDLE                 rcvfileHandle;
-    HANDLE                 threadHandle;
-    BOOL                   fStopThread;
-    UINT32                 threadId;
+    HANDLE    sendfileHandle;
+    HANDLE    rcvfileHandle;
+    HANDLE    threadHandle;
+    BOOL      fStopThread;
+    UINT32    threadId;
 } tEventuCalInstance;
 
 //------------------------------------------------------------------------------
@@ -101,7 +100,7 @@ static tEventuCalInstance    instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-static UINT32 eventThread(void* arg_p);
+static UINT32     eventThread(void* arg_p);
 static tOplkError postEvent(tEvent* pEvent_p);
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -124,21 +123,20 @@ implementations and calls the appropriate init functions.
 //------------------------------------------------------------------------------
 tOplkError eventucal_init(void)
 {
-    tOplkError          ret = kErrorOk;
+    tOplkError    ret = kErrorOk;
 
     OPLK_MEMSET(&instance_l, 0, sizeof(tEventuCalInstance));
 
     instance_l.sendfileHandle = ctrlucal_getFd();
     instance_l.fStopThread = FALSE;
 
-    instance_l.threadHandle = CreateThread(
-                                     NULL,                // Default security attributes
-                                     0,                   // Use Default stack size
-                                     eventThread,         // Thread routine
-                                     NULL,                // Argum to the thread routine
-                                     0,                   // Use default creation flags
-                                     &instance_l.threadId // Returened thread Id
-                                     );
+    instance_l.threadHandle = CreateThread(NULL,                  // Default security attributes
+                                           0,                     // Use Default stack size
+                                           eventThread,           // Thread routine
+                                           NULL,                  // Argum to the thread routine
+                                           0,                     // Use default creation flags
+                                           &instance_l.threadId   // Returened thread Id
+                                          );
 
     if (instance_l.threadHandle == NULL)
     {
@@ -150,7 +148,7 @@ tOplkError eventucal_init(void)
     if (!SetPriorityClass(instance_l.threadHandle, HIGH_PRIORITY_CLASS))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Failed to boost thread priority class with error: 0x%X\n",
-                                __func__, GetLastError());
+                              __func__, GetLastError());
         //return kErrorNoResource;
     }
 
@@ -180,7 +178,7 @@ functions of the queue implementations for each used queue.
 //------------------------------------------------------------------------------
 tOplkError eventucal_exit(void)
 {
-    UINT            i = 0;
+    UINT    i = 0;
 
     instance_l.fStopThread = TRUE;
     while (instance_l.fStopThread == TRUE)
@@ -277,9 +275,9 @@ queue post function is called.
 //------------------------------------------------------------------------------
 static tOplkError postEvent(tEvent* pEvent_p)
 {
-    UINT8   eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
-    size_t  eventBufSize = sizeof(tEvent) + pEvent_p->eventArgSize;
-    ULONG   bytesReturned;
+    UINT8     eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    size_t    eventBufSize = sizeof(tEvent) + pEvent_p->eventArgSize;
+    ULONG     bytesReturned;
 
     OPLK_MEMCPY(eventBuf, pEvent_p, sizeof(tEvent));
     OPLK_MEMCPY((eventBuf + sizeof(tEvent)), pEvent_p->pEventArg, pEvent_p->eventArgSize);
@@ -287,7 +285,7 @@ static tOplkError postEvent(tEvent* pEvent_p)
     if (!DeviceIoControl(instance_l.sendfileHandle, PLK_CMD_POST_EVENT,
                          eventBuf, eventBufSize,
                          0, 0, &bytesReturned, NULL))
-                  return kErrorNoResource;
+        return kErrorNoResource;
 
     return kErrorOk;
 }
@@ -304,37 +302,33 @@ This function implements the event thread.
 //------------------------------------------------------------------------------
 static UINT32 eventThread(void* arg_p)
 {
-    tEvent*     pEvent;
-    BOOL        ret;
-    char        eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
-    size_t      eventBufSize = sizeof(tEvent) + MAX_EVENT_ARG_SIZE;
-    ULONG       bytesReturned;
-    UINT        errNum = 0;
+    tEvent*   pEvent;
+    BOOL      ret;
+    char      eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    size_t    eventBufSize = sizeof(tEvent) + MAX_EVENT_ARG_SIZE;
+    ULONG     bytesReturned;
+    UINT      errNum = 0;
 
-
-    instance_l.rcvfileHandle = CreateFile(PLK_DEV_FILE,              // Name of the NT "device" to open
-                                       GENERIC_READ | GENERIC_WRITE,  // Access rights requested
-                                       FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
-                                       NULL,                           // Security attributes - not used!
-                                       OPEN_EXISTING,               // Device must exist to open it.
-                                       FILE_ATTRIBUTE_NORMAL,        // Open for overlapped I/O
-                                       NULL);
+    instance_l.rcvfileHandle = CreateFile(PLK_DEV_FILE,                                                 // Name of the NT "device" to open
+                                          GENERIC_READ | GENERIC_WRITE,                                 // Access rights requested
+                                          FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
+                                          NULL,                                                         // Security attributes - not used!
+                                          OPEN_EXISTING,                                                // Device must exist to open it.
+                                          FILE_ATTRIBUTE_NORMAL,                                        // Open for overlapped I/O
+                                          NULL);
 
     if (instance_l.rcvfileHandle == INVALID_HANDLE_VALUE)
     {
-
         errNum = GetLastError();
 
         if (!(errNum == ERROR_FILE_NOT_FOUND ||
-            errNum == ERROR_PATH_NOT_FOUND))
+              errNum == ERROR_PATH_NOT_FOUND))
         {
-
             DEBUG_LVL_ERROR_TRACE("%s() createFile failed!  ERROR_FILE_NOT_FOUND = %d\n",
                                   errNum);
             return kErrorNoResource;
         }
     }
-
 
     UNUSED_PARAMETER(arg_p);
 

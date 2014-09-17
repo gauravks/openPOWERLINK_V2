@@ -60,19 +60,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // function prototypes
 //------------------------------------------------------------------------------
 
-int      app_mapMemory(struct file* filp, struct vm_area_struct* vma);
-void     app_memoryOpen(struct vm_area_struct* vma);
-void     app_memoryClose(struct vm_area_struct* vma);
+int  app_mapMemory(struct file* filp, struct vm_area_struct* vma);
+void app_memoryOpen(struct vm_area_struct* vma);
+void app_memoryClose(struct vm_area_struct* vma);
 
-int      app_executeCmd(tCtrlCmd* ctrlCmd_p);
-int      app_readInitParam(tCtrlInitParam* pInitParam_p);
-int      app_storeInitParam(tCtrlInitParam* pInitParam_p);
-int      app_getStatus(UINT16* status_p);
-int      app_getHeartbeat(UINT16* heartbeat);
-int      app_sendAsyncFrame(unsigned char* pArg_p);
-int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p);
-int      app_readErrorObject(tErrHndIoctl* pReadObject_p);
-void     drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p);
+int  app_executeCmd(tCtrlCmd* ctrlCmd_p);
+int  app_readInitParam(tCtrlInitParam* pInitParam_p);
+int  app_storeInitParam(tCtrlInitParam* pInitParam_p);
+int  app_getStatus(UINT16* status_p);
+int  app_getHeartbeat(UINT16* heartbeat);
+int  app_sendAsyncFrame(unsigned char* pArg_p);
+int  app_writeErrorObject(tErrHndIoctl* pWriteObject_p);
+int  app_readErrorObject(tErrHndIoctl* pReadObject_p);
+void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p);
 #ifdef __cplusplus
 extern "C" {
 #endif

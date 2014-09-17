@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ndisdriver.h"
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -54,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 
-#define OPLK_ALLOCATED_NBL          0x10000000
+#define OPLK_ALLOCATED_NBL    0x10000000
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -63,7 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -71,32 +69,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PROTO_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
-#define IM_DEFINED_STRING_VERSION                   PROTO_STRING_VERSION(1, 0, 1)
+#define PROTO_STRING_VERSION(ver, rev, rel)    "V" # ver "." # rev "." # rel
+#define IM_DEFINED_STRING_VERSION    PROTO_STRING_VERSION(1, 0, 1)
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
 
-
-
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-NDIS_MEDIUM        aMediumArray[1] =
+NDIS_MEDIUM          aMediumArray[1] =
 {
     NdisMedium802_3,    // Ethernet
 };
 
-tProtocolInstance   protocolInstance_l;
-static BOOLEAN             fBinding_l = FALSE;
+tProtocolInstance    protocolInstance_l;
+static BOOLEAN       fBinding_l = FALSE;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
 NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p);
-void freeVEthInstance(tVEthInstance* pVEthInstance_p);
-void stopVEth(tVEthInstance* pVEthInstance_p);
+void        freeVEthInstance(tVEthInstance* pVEthInstance_p);
+void        stopVEth(tVEthInstance* pVEthInstance_p);
 NDIS_STATUS allocateTxRxBuf(ULONG txBufCount, ULONG rxBufCount);
-void closeBinding(void);
+void        closeBinding(void);
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
@@ -146,6 +142,7 @@ void protocol_setBindingState(ULONG state_p)
 {
     protocolInstance_l.bindingState = state_p;
 }
+
 //------------------------------------------------------------------------------
 /**
 \brief
@@ -155,7 +152,7 @@ void protocol_setBindingState(ULONG state_p)
 */
 //------------------------------------------------------------------------------
 void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
-    tNdisReceiveCb pfnRxCallback_p)
+                                  tNdisReceiveCb pfnRxCallback_p)
 {
     protocolInstance_l.pfnReceiveCb = pfnRxCallback_p;
     protocolInstance_l.pfnTransmitCompleteCb = pfnTxCallback_p;
@@ -173,10 +170,10 @@ void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
 {
-    UINT                              index;
-    tRxBufInfo*                       rxBufInfo = NULL;
-    NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
-    NET_BUFFER_LIST_POOL_PARAMETERS   poolParameters;
+    UINT                               index;
+    tRxBufInfo*                        rxBufInfo = NULL;
+    NDIS_STATUS                        status = NDIS_STATUS_SUCCESS;
+    NET_BUFFER_LIST_POOL_PARAMETERS    poolParameters;
 
     DbgPrint("%s() For Tx: %d Rx %d\n", __FUNCTION__, txBufCount_p, rxBufCount_p);
     NdisInitializeListHead(&protocolInstance_l.txList);
@@ -190,10 +187,10 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     poolParameters.ProtocolId = NDIS_PROTOCOL_ID_IPX;       // Sequenced Packet exchanger
     poolParameters.ContextSize = 0;
     poolParameters.fAllocateNetBuffer = TRUE;
-    poolParameters.PoolTag = OPLK_MEM_TAG;           //TODO@gks: Change this with a valid tag
+    poolParameters.PoolTag = OPLK_MEM_TAG;                  //TODO@gks: Change this with a valid tag
 
     protocolInstance_l.sendNblPool = NdisAllocateNetBufferListPool(driverInstance_l.pProtocolHandle,
-        &poolParameters);
+                                                                   &poolParameters);
     if (protocolInstance_l.sendNblPool == NULL)
     {
         DbgPrint("%s(): failed to alloc send net buffer list pool\n", __FUNCTION__);
@@ -202,8 +199,8 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     }
     // Allocate Tx memory
     protocolInstance_l.pTransmitBuf = NdisAllocateMemoryWithTagPriority(driverInstance_l.pProtocolHandle,
-        (OPLK_MAX_FRAME_SIZE * txBufCount_p),
-        OPLK_MEM_TAG, NormalPoolPriority);
+                                                                        (OPLK_MAX_FRAME_SIZE * txBufCount_p),
+                                                                        OPLK_MEM_TAG, NormalPoolPriority);
 
     if (protocolInstance_l.pTransmitBuf == NULL)
     {
@@ -212,8 +209,8 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     }
 
     protocolInstance_l.pTxBuffInfo = NdisAllocateMemoryWithTagPriority(driverInstance_l.pProtocolHandle,
-        (sizeof(tTxBufInfo) * txBufCount_p),
-        OPLK_MEM_TAG, NormalPoolPriority);
+                                                                       (sizeof(tTxBufInfo) * txBufCount_p),
+                                                                       OPLK_MEM_TAG, NormalPoolPriority);
 
     if (protocolInstance_l.pTxBuffInfo == NULL)
     {
@@ -224,13 +221,13 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
 
     for (index = 0; index < txBufCount_p; index++)
     {
-        tTxBufInfo*     pTxInfo = &protocolInstance_l.pTxBuffInfo[index];
+        tTxBufInfo*   pTxInfo = &protocolInstance_l.pTxBuffInfo[index];
 
         if (pTxInfo != NULL)
         {
             pTxInfo->free = TRUE;
             pTxInfo->maxLength = OPLK_MAX_FRAME_SIZE;
-            pTxInfo->pData = (void*) (((UCHAR*) protocolInstance_l.pTransmitBuf) + (OPLK_MAX_FRAME_SIZE * index));
+            pTxInfo->pData =    (void*)(((UCHAR*) protocolInstance_l.pTransmitBuf) + (OPLK_MAX_FRAME_SIZE * index));
 
             if (pTxInfo->pData == NULL)
             {
@@ -246,7 +243,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
             }
             // Allocate empty NetBufferLists
             pTxInfo->pNbl = NdisAllocateNetBufferAndNetBufferList(protocolInstance_l.sendNblPool,
-                0, 0, pTxInfo->pMdl, 0, 0);
+                                                                  0, 0, pTxInfo->pMdl, 0, 0);
 
             if (pTxInfo->pNbl == NULL)
             {
@@ -263,8 +260,8 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     }
 
     protocolInstance_l.pReceiveBuf = NdisAllocateMemoryWithTagPriority(driverInstance_l.pProtocolHandle,
-        (OPLK_MAX_FRAME_SIZE * rxBufCount_p),
-        OPLK_MEM_TAG, NormalPoolPriority);
+                                                                       (OPLK_MAX_FRAME_SIZE * rxBufCount_p),
+                                                                       OPLK_MEM_TAG, NormalPoolPriority);
     if (protocolInstance_l.pReceiveBuf == NULL)
     {
         DbgPrint("%s() Failed to allocate Rx buffers\n", __FUNCTION__);
@@ -273,8 +270,8 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
     }
 
     protocolInstance_l.pReceiveBufInfo = NdisAllocateMemoryWithTagPriority(driverInstance_l.pProtocolHandle,
-        (sizeof(tRxBufInfo) * rxBufCount_p),
-        OPLK_MEM_TAG, NormalPoolPriority);
+                                                                           (sizeof(tRxBufInfo) * rxBufCount_p),
+                                                                           OPLK_MEM_TAG, NormalPoolPriority);
     if (protocolInstance_l.pReceiveBufInfo == NULL)
     {
         DbgPrint("%s() Failed to allocate Rx Info buffers\n", __FUNCTION__);
@@ -290,7 +287,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
         rxBufInfo->free = TRUE;
         rxBufInfo->length = 0;
         rxBufInfo->maxLength = OPLK_MAX_FRAME_SIZE;
-        rxBufInfo->pData = (void*) (((UCHAR*) protocolInstance_l.pReceiveBuf) + (index * OPLK_MAX_FRAME_SIZE));
+        rxBufInfo->pData = (void*)(((UCHAR*) protocolInstance_l.pReceiveBuf) + (index * OPLK_MAX_FRAME_SIZE));
     }
 
     protocolInstance_l.receiveBufCount = rxBufCount_p;
@@ -315,12 +312,12 @@ Exit:
 //------------------------------------------------------------------------------
 void protocol_freeTxRxBuffers(void)
 {
-    PLIST_ENTRY     pTxLink;
-    tTxBufInfo*     pTxBufInfo;
+    PLIST_ENTRY    pTxLink;
+    tTxBufInfo*    pTxBufInfo;
     DbgPrint("%s\n", __FUNCTION__);
     if (protocolInstance_l.txList.Flink != NULL)
     {
-        while(!IsListEmpty(&protocolInstance_l.txList))
+        while (!IsListEmpty(&protocolInstance_l.txList))
         {
             pTxLink = NdisInterlockedRemoveHeadList(&protocolInstance_l.txList,
                                                     &protocolInstance_l.txListLock);
@@ -351,8 +348,8 @@ void protocol_freeTxRxBuffers(void)
     if (protocolInstance_l.pTransmitBuf != NULL)
     {
         NdisFreeMemory(protocolInstance_l.pTransmitBuf,
-            (protocolInstance_l.transmitBufCount * OPLK_MAX_FRAME_SIZE),
-            0);
+                       (protocolInstance_l.transmitBufCount * OPLK_MAX_FRAME_SIZE),
+                       0);
     }
 
     NdisFreeSpinLock(&protocolInstance_l.txListLock);
@@ -360,15 +357,15 @@ void protocol_freeTxRxBuffers(void)
     if (protocolInstance_l.pReceiveBuf != NULL)
     {
         NdisFreeMemory(protocolInstance_l.pReceiveBuf,
-            (protocolInstance_l.receiveBufCount * OPLK_MAX_FRAME_SIZE),
-            0);
+                       (protocolInstance_l.receiveBufCount * OPLK_MAX_FRAME_SIZE),
+                       0);
     }
 
     if (protocolInstance_l.pReceiveBufInfo != NULL)
     {
         NdisFreeMemory(protocolInstance_l.pReceiveBufInfo,
-            (sizeof(tRxBufInfo) * OPLK_MAX_FRAME_SIZE),
-            0);
+                       (sizeof(tRxBufInfo) * OPLK_MAX_FRAME_SIZE),
+                       0);
     }
 }
 
@@ -383,14 +380,14 @@ void protocol_freeTxRxBuffers(void)
 //------------------------------------------------------------------------------
 tTxBufInfo* protocol_getTxBuff(size_t size_p)
 {
-    PLIST_ENTRY     pTxLink;
-    tTxBufInfo*     pTxBufInfo;
+    PLIST_ENTRY    pTxLink;
+    tTxBufInfo*    pTxBufInfo;
     //DbgPrint("%s\n", __FUNCTION__);
 
     if (!IsListEmpty(&protocolInstance_l.txList))
     {
         pTxLink = NdisInterlockedRemoveHeadList(&protocolInstance_l.txList,
-            &protocolInstance_l.txListLock);
+                                                &protocolInstance_l.txListLock);
         if (pTxLink != NULL)
         {
             //DbgPrint("Allocate Buffer\n");
@@ -417,7 +414,7 @@ tTxBufInfo* protocol_getTxBuff(size_t size_p)
 //------------------------------------------------------------------------------
 void protocol_freeTxBuff(PVOID pTxLink_p)
 {
-    PLIST_ENTRY     pTxLink = NULL;
+    PLIST_ENTRY    pTxLink = NULL;
     DbgPrint("%s\n", __FUNCTION__);
     if (pTxLink_p != NULL)
     {
@@ -426,8 +423,7 @@ void protocol_freeTxBuff(PVOID pTxLink_p)
 
     // Return the buffer to linked list the resources will be freed later
     NdisInterlockedInsertTailList(&protocolInstance_l.txList, pTxLink,
-        &protocolInstance_l.txListLock);
-
+                                  &protocolInstance_l.txListLock);
 }
 
 //------------------------------------------------------------------------------
@@ -439,14 +435,14 @@ void protocol_freeTxBuff(PVOID pTxLink_p)
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
-    PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p)
+                                    PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p)
 {
-    tNdisOidRequest*            pNdisOidReq = NULL;
-    NDIS_STATUS                 status;
+    tNdisOidRequest*   pNdisOidReq = NULL;
+    NDIS_STATUS        status;
 
     // Allocate memory for the new request structure
     pNdisOidReq = NdisAllocateMemoryWithTagPriority(protocolInstance_l.bindingHandle, sizeof(tNdisOidRequest),
-        OPLK_MEM_TAG, LowPoolPriority);
+                                                    OPLK_MEM_TAG, LowPoolPriority);
     DbgPrint("%s()\n", __FUNCTION__);
     if (pNdisOidReq == NULL)
     {
@@ -507,8 +503,6 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
     return status;
 }
 
-
-
 //------------------------------------------------------------------------------
 /**
 \brief
@@ -519,10 +513,10 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
 {
-    PLIST_ENTRY     pTxLink = (PLIST_ENTRY) pTxLink_p;
-    tTxBufInfo*     pTxBufInfo;
-    PNET_BUFFER     netBuffer;
-    ULONG           sendFlags = 0;
+    PLIST_ENTRY    pTxLink = (PLIST_ENTRY) pTxLink_p;
+    tTxBufInfo*    pTxBufInfo;
+    PNET_BUFFER    netBuffer;
+    ULONG          sendFlags = 0;
 
     //DbgPrint("%s\n", __FUNCTION__);
     pTxBufInfo = CONTAINING_RECORD(pTxLink, tTxBufInfo, txLink);
@@ -541,19 +535,19 @@ NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
 
     // Forward the packet to Lower binding
     NdisSendNetBufferLists(protocolInstance_l.bindingHandle,
-        pTxBufInfo->pNbl,
-        NDIS_DEFAULT_PORT_NUMBER,
-        sendFlags);
+                           pTxBufInfo->pNbl,
+                           NDIS_DEFAULT_PORT_NUMBER,
+                           sendFlags);
 
     return NDIS_STATUS_SUCCESS;
-
 }
 
 UCHAR* protocol_getCurrentMac(void)
 {
-    tVEthInstance*       pVethInst = (tVEthInstance*)protocolInstance_l.pVEthInstance;
+    tVEthInstance*   pVethInst = (tVEthInstance*)protocolInstance_l.pVEthInstance;
     return &pVethInst->currentAddress[0];
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -580,14 +574,14 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
                                 NDIS_HANDLE bindContext_p,
                                 PNDIS_BIND_PARAMETERS pBindParameters_p)
 {
-    NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
-    NDIS_OPEN_PARAMETERS              openParameters;
-    UINT                              mediumIndex = 0;
-    NDIS_STRING                       deviceName;
+    NDIS_STATUS             status = NDIS_STATUS_SUCCESS;
+    NDIS_OPEN_PARAMETERS    openParameters;
+    UINT                    mediumIndex = 0;
+    NDIS_STRING             deviceName;
 
-    PNDIS_STRING                      pConfigString;
+    PNDIS_STRING            pConfigString;
     UNREFERENCED_PARAMETER(protocolDriverContext_p);
-//    UNREFERENCED_PARAMETER(bindContext_p);
+    //    UNREFERENCED_PARAMETER(bindContext_p);
     DbgPrint("%s() ---> %s\n", __FUNCTION__, IM_DEFINED_STRING_VERSION);
 
     if (fBinding_l == TRUE)
@@ -635,10 +629,10 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
 
     NDIS_DECLARE_PROTOCOL_OPEN_CONTEXT(tProtocolInstance);
     status = NdisOpenAdapterEx(driverInstance_l.pProtocolHandle,
-                                &protocolInstance_l,
-                                &openParameters,
-                                bindContext_p,
-                                &protocolInstance_l.bindingHandle);
+                               &protocolInstance_l,
+                               &openParameters,
+                               bindContext_p,
+                               &protocolInstance_l.bindingHandle);
 
     if (status == NDIS_STATUS_PENDING)
     {
@@ -705,11 +699,10 @@ Exit:
 //------------------------------------------------------------------------------
 VOID protocolOpenAdapterComplete(NDIS_HANDLE protocolBindingContext_p, NDIS_STATUS status_p)
 {
-    tProtocolInstance* protInstance = (tProtocolInstance*) protocolBindingContext_p;
+    tProtocolInstance*   protInstance = (tProtocolInstance*) protocolBindingContext_p;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     protInstance->adapterInitStatus = status_p;
     NdisSetEvent(&protInstance->adapterEvent);
-
 }
 
 //------------------------------------------------------------------------------
@@ -723,10 +716,10 @@ VOID protocolOpenAdapterComplete(NDIS_HANDLE protocolBindingContext_p, NDIS_STAT
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS protocolUnbindAdapter(NDIS_HANDLE unbindContext_p,
-    NDIS_HANDLE protocolBindingContext_p)
+                                  NDIS_HANDLE protocolBindingContext_p)
 {
-    NDIS_STATUS     Status = NDIS_STATUS_SUCCESS;
-    tVEthInstance*  pVEthInstance = NULL;
+    NDIS_STATUS      Status = NDIS_STATUS_SUCCESS;
+    tVEthInstance*   pVEthInstance = NULL;
     DbgPrint("%s() ---> \n", __FUNCTION__);
 
     if (protocolInstance_l.pVEthInstance != NULL)
@@ -784,10 +777,10 @@ VOID protocolCloseAdapterComplete(NDIS_HANDLE protocolBindingContext_p)
 */
 //------------------------------------------------------------------------------
 VOID protocolRequestComplete(NDIS_HANDLE protocolBindingContext_p,
-    PNDIS_OID_REQUEST ndisRequest_p,
-    NDIS_STATUS status_p)
+                             PNDIS_OID_REQUEST ndisRequest_p,
+                             NDIS_STATUS status_p)
 {
-    tNdisOidRequest*        pNdisOidRequest = NULL;
+    tNdisOidRequest*   pNdisOidRequest = NULL;
 
     pNdisOidRequest = CONTAINING_RECORD(ndisRequest_p, tNdisOidRequest, oidRequest);
 
@@ -820,9 +813,9 @@ VOID protocolRequestComplete(NDIS_HANDLE protocolBindingContext_p,
 //------------------------------------------------------------------------------
 VOID protocolStatus(NDIS_HANDLE protocolBindingContext_p, PNDIS_STATUS_INDICATION statusIndication_p)
 {
-    NDIS_STATUS                generalStatus = statusIndication_p->StatusCode;
-    NDIS_STATUS_INDICATION     newStatusIndication;
-    tVEthInstance*             pVEthinstance = (tVEthInstance*)protocolInstance_l.pVEthInstance;
+    NDIS_STATUS               generalStatus = statusIndication_p->StatusCode;
+    NDIS_STATUS_INDICATION    newStatusIndication;
+    tVEthInstance*            pVEthinstance = (tVEthInstance*)protocolInstance_l.pVEthInstance;
 
     if (pVEthinstance == NULL)
     {
@@ -881,9 +874,9 @@ VOID protocolStatus(NDIS_HANDLE protocolBindingContext_p, PNDIS_STATUS_INDICATIO
 NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
                                PNET_PNP_EVENT_NOTIFICATION pNetPnPEventNotification_p)
 {
-    NDIS_STATUS         status = NDIS_STATUS_SUCCESS;
-    NDIS_EVENT          pPauseEvent;
-        ULONG                               packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
+    NDIS_STATUS    status = NDIS_STATUS_SUCCESS;
+    NDIS_EVENT     pPauseEvent;
+    ULONG          packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     switch (pNetPnPEventNotification_p->NetPnPEvent.NetEvent)
     {
@@ -936,7 +929,6 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
             status = NDIS_STATUS_SUCCESS;
             break;
 
-
         default:
             status = NDIS_STATUS_SUCCESS;
 
@@ -959,19 +951,19 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
 */
 //------------------------------------------------------------------------------
 VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST netBufferLists_p,
-                        NDIS_PORT_NUMBER  portNumber_p, ULONG numberOfNbl_p,
+                        NDIS_PORT_NUMBER portNumber_p, ULONG numberOfNbl_p,
                         ULONG receiveFlags_p)
 {
-    PNET_BUFFER_LIST        currentNbl = NULL;
-    PNET_BUFFER_LIST        returnNbl = NULL;
-    PNET_BUFFER_LIST        lastReturnNbl = NULL;
-    LOCK_STATE              lockState;
-    ULONG                   returnFlags;
-    ULONG                   NewReceiveFlags;
-    BOOLEAN                 bReturnNbl;
-    PMDL                    pMdl;
-    ULONG                   offset = 0;         // CurrentMdlOffset
-    ULONG                   totalLength;
+    PNET_BUFFER_LIST    currentNbl = NULL;
+    PNET_BUFFER_LIST    returnNbl = NULL;
+    PNET_BUFFER_LIST    lastReturnNbl = NULL;
+    LOCK_STATE          lockState;
+    ULONG               returnFlags;
+    ULONG               NewReceiveFlags;
+    BOOLEAN             bReturnNbl;
+    PMDL                pMdl;
+    ULONG               offset = 0;             // CurrentMdlOffset
+    ULONG               totalLength;
 
     UNREFERENCED_PARAMETER(numberOfNbl_p);
     //DbgPrint("%s\n", __FUNCTION__);
@@ -989,19 +981,19 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
         if (NDIS_TEST_RECEIVE_CAN_PEND(receiveFlags_p) == TRUE)
         {
             NdisReturnNetBufferLists(protocolInstance_l.bindingHandle,
-                netBufferLists_p,
-                returnFlags);
+                                     netBufferLists_p,
+                                     returnFlags);
         }
         return;
     }
 
     while (netBufferLists_p != NULL)
     {
-        ULONG                   bytesAvailable = 0;
-        PUCHAR                  pRxDataSrc;
-        PUCHAR                  pRxDataDest;
-        ULONG                   bytesToCopy = 0;
-        tRxBufInfo*             rxBufInfo = NULL;
+        ULONG         bytesAvailable = 0;
+        PUCHAR        pRxDataSrc;
+        PUCHAR        pRxDataDest;
+        ULONG         bytesToCopy = 0;
+        tRxBufInfo*   rxBufInfo = NULL;
 
         currentNbl = netBufferLists_p;
         netBufferLists_p = NET_BUFFER_LIST_NEXT_NBL(netBufferLists_p);
@@ -1028,8 +1020,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
             }
             bytesToCopy = bytesAvailable - offset;
             bytesToCopy = min(bytesToCopy, totalLength);
-            
-           
+
             NdisMoveMemory(pRxDataDest, pRxDataSrc, bytesToCopy);
             pRxDataDest = (PVOID) ((UCHAR*) pRxDataDest + bytesToCopy);
             totalLength -= bytesToCopy;
@@ -1042,7 +1033,8 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
         {
             protocolInstance_l.pfnReceiveCb(rxBufInfo->pData, rxBufInfo->length);
         }
-        protocolInstance_l.receiveHead = (protocolInstance_l.receiveHead + 1) & (protocolInstance_l.receiveBufCount -1);
+
+        protocolInstance_l.receiveHead = (protocolInstance_l.receiveHead + 1) & (protocolInstance_l.receiveBufCount - 1);
 
         if (NDIS_TEST_RECEIVE_CAN_PEND(receiveFlags_p) == TRUE)
         {
@@ -1070,8 +1062,8 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
     if (returnNbl != NULL)
     {
         NdisReturnNetBufferLists(protocolInstance_l.bindingHandle,
-            returnNbl,
-            returnFlags);
+                                 returnNbl,
+                                 returnFlags);
     }
 }
 
@@ -1086,18 +1078,18 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
 */
 //------------------------------------------------------------------------------
 VOID protocolSendNblComplete(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST netBufferLists_p,
-    ULONG sendCompleteFlags_p)
+                             ULONG sendCompleteFlags_p)
 {
-    PNET_BUFFER_LIST        currentNbl;
-    PLIST_ENTRY             pTxLink;
-    tTxBufInfo*             pTxBufInfo;
+    PNET_BUFFER_LIST    currentNbl;
+    PLIST_ENTRY         pTxLink;
+    tTxBufInfo*         pTxBufInfo;
     //DbgPrint("%s\n", __FUNCTION__);
     while (netBufferLists_p)
     {
-        UINT                TotalLength;
-        UINT                BufferLength;
-        PUCHAR              pCopyData = NULL;
-        PUCHAR              protocolResv;
+        UINT      TotalLength;
+        UINT      BufferLength;
+        PUCHAR    pCopyData = NULL;
+        PUCHAR    protocolResv;
         currentNbl = netBufferLists_p;
         netBufferLists_p = NET_BUFFER_LIST_NEXT_NBL(netBufferLists_p);
         NET_BUFFER_LIST_NEXT_NBL(currentNbl) = NULL;
@@ -1118,7 +1110,6 @@ VOID protocolSendNblComplete(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_L
             }
             //DbgPrint("Free\n");
         }
-
     }
 }
 
@@ -1133,21 +1124,21 @@ VOID protocolSendNblComplete(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_L
 //------------------------------------------------------------------------------
 void closeBinding(void)
 {
-    NDIS_STATUS             status;
-    NDIS_EVENT              oidCompleteEvent;
-   // ULONG                   packetFilter = 0;
-   // PVOID                   multicastAddrBuf = NULL;
-   // ULONG                   multicastAddrBufSize = 0;
+    NDIS_STATUS    status;
+    NDIS_EVENT     oidCompleteEvent;
+    // ULONG                   packetFilter = 0;
+    // PVOID                   multicastAddrBuf = NULL;
+    // ULONG                   multicastAddrBufSize = 0;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     // Disable Multicast filter
     protocolInstance_l.bindingState = NdisBindingPausing;
 
     //protocol_sendOidRequest(NdisRequestSetInformation, OID_GEN_CURRENT_PACKET_FILTER, &packetFilter,
-      //             sizeof(packetFilter));
+    //             sizeof(packetFilter));
 
     // Delete multicast list. We have already deleted individual entries before.
-   // protocol_sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
-     //              multicastAddrBufSize);
+    // protocol_sendOidRequest(NdisRequestSetInformation, OID_802_3_MULTICAST_LIST, &multicastAddrBuf,
+    //              multicastAddrBufSize);
 
     NdisAcquireSpinLock(&protocolInstance_l.driverLock);
 
@@ -1177,9 +1168,7 @@ void closeBinding(void)
 
     // Binding closed
     protocolInstance_l.bindingHandle = NULL;
-
 }
-
 
 //------------------------------------------------------------------------------
 /**
@@ -1191,14 +1180,14 @@ void closeBinding(void)
 //------------------------------------------------------------------------------
 NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
 {
-    NDIS_STATUS                     status = NDIS_STATUS_SUCCESS;
-    tVEthInstance*                  pVEthInstance = NULL;
-    NDIS_HANDLE                     adapterConfigHandle;
-    PNDIS_CONFIGURATION_PARAMETER   configParam;
-    NDIS_STRING                     upperBindingStr = NDIS_STRING_CONST("UpperBindings");
-    PWSTR                           devName;
-    LOCK_STATE                      lockState;
-    NDIS_CONFIGURATION_OBJECT       configObject;
+    NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
+    tVEthInstance*                   pVEthInstance = NULL;
+    NDIS_HANDLE                      adapterConfigHandle;
+    PNDIS_CONFIGURATION_PARAMETER    configParam;
+    NDIS_STRING                      upperBindingStr = NDIS_STRING_CONST("UpperBindings");
+    PWSTR                            devName;
+    LOCK_STATE                       lockState;
+    NDIS_CONFIGURATION_OBJECT        configObject;
 
     status = NDIS_STATUS_SUCCESS;
     DbgPrint("%s() ---> \n", __FUNCTION__);
@@ -1229,7 +1218,7 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
     //
     // Read the "UpperBindings" reserved key that contains a list
     // of device names representing our miniport instances corresponding
-    // to this lower binding. The UpperBindings is a 
+    // to this lower binding. The UpperBindings is a
     // MULTI_SZ containing a list of device names. We will loop through
     // this list and initialize the virtual miniports.
     //
@@ -1252,8 +1241,8 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
     //devName = "Oplk Miniport Device";
     while (*devName != L'\0')
     {
-        NDIS_STRING     devString;
-        ULONG           length;
+        NDIS_STRING    devString;
+        ULONG          length;
 
         NdisInitUnicodeString(&devString, devName);
 
@@ -1265,7 +1254,7 @@ NDIS_STATUS bootStrapVEth(PNDIS_STRING instanceName_p)
                 length = sizeof(tVEthInstance) + devString.Length + sizeof(WCHAR);
                 // Allocate a new VEth instance
                 pVEthInstance = NdisAllocateMemoryWithTagPriority(protocolInstance_l.bindingHandle,
-                                            length, OPLK_MEM_TAG, HighPoolPriority);
+                                                                  length, OPLK_MEM_TAG, HighPoolPriority);
                 //DbgPrint("2\n");
                 if (pVEthInstance == NULL)
                 {
@@ -1384,9 +1373,9 @@ void freeVEthInstance(tVEthInstance* pVEthInstance_p)
 //------------------------------------------------------------------------------
 void stopVEth(tVEthInstance* pVEthInstance_p)
 {
-    NDIS_STATUS     status;
-    NDIS_HANDLE     miniportAdapterHandle;
-    BOOLEAN         fMiniportInitCancelled;
+    NDIS_STATUS    status;
+    NDIS_HANDLE    miniportAdapterHandle;
+    BOOLEAN        fMiniportInitCancelled;
 
     NdisAcquireSpinLock(&pVEthInstance_p->miniportLock);
     DbgPrint("%s() ---> \n", __FUNCTION__);
@@ -1406,9 +1395,9 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
     //DbgPrint("2\n");
     if (pVEthInstance_p->miniportInitPending)
     {
-        status = NdisIMCancelInitializeDeviceInstance(
-                 driverInstance_l.pMiniportHandle,
-                 &pVEthInstance_p->cfgDeviceName);
+        status = NdisIMCancelInitializeDeviceInstance
+                 (driverInstance_l.pMiniportHandle,
+                  &pVEthInstance_p->cfgDeviceName);
         if (status != NDIS_STATUS_SUCCESS)
         {
             pVEthInstance_p->miniportInitPending = FALSE;
@@ -1438,12 +1427,5 @@ void stopVEth(tVEthInstance* pVEthInstance_p)
     //DbgPrint("5\n");
 }
 
-
-    ///\}
-
-
-
-
-
-
+///\}
 

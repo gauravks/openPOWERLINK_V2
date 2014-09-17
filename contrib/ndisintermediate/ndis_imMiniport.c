@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ndisDriver.h"
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -60,7 +59,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -76,7 +74,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-NDIS_OID VEthSupportedOids[] =
+NDIS_OID          VEthSupportedOids[] =
 {
     OID_GEN_SUPPORTED_LIST,
     OID_GEN_HARDWARE_STATUS,
@@ -130,7 +128,7 @@ NDIS_OID VEthSupportedOids[] =
     OID_PNP_ENABLE_WAKE_UP
 };
 
-static BOOLEAN         fInitialize = FALSE;
+static BOOLEAN    fInitialize = FALSE;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -150,7 +148,7 @@ static BOOLEAN         fInitialize = FALSE;
 \brief  Miniport initialize routine
 
 This is the Miniport Initialize routine which gets called as a result of our
-call to NdisIMInitializeDeviceInstanceEx. The context parameter which we 
+call to NdisIMInitializeDeviceInstanceEx. The context parameter which we
 pass there is the VEthInstance structure which we retrieve here.
 
 \param  adapterHandle_p     NDIS handle for this miniport
@@ -163,18 +161,18 @@ pass there is the VEthInstance structure which we retrieve here.
 //------------------------------------------------------------------------------
 NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
                                NDIS_HANDLE driverContext_p,
-                               PNDIS_MINIPORT_INIT_PARAMETERS  initParams_p)
+                               PNDIS_MINIPORT_INIT_PARAMETERS initParams_p)
 {
     tVEthInstance*                      pVEthInstance;
     NDIS_STATUS                         status = NDIS_STATUS_FAILURE;
     NDIS_MINIPORT_ADAPTER_ATTRIBUTES    miniportAttributes;
     NDIS_CONFIGURATION_OBJECT           configObject;
-    NDIS_HANDLE                         configHandle;
-    PVOID                               macAddress;
-    UINT                                macLength;
-    NET_IFINDEX                         highLayerIfIndex;
-    NET_IFINDEX                         lowerLayerIfIndex;
-    ULONG                               packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
+    NDIS_HANDLE    configHandle;
+    PVOID          macAddress;
+    UINT           macLength;
+    NET_IFINDEX    highLayerIfIndex;
+    NET_IFINDEX    lowerLayerIfIndex;
+    ULONG          packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
     UNREFERENCED_PARAMETER(driverContext_p);
     DbgPrint("%s() ---> \n", __FUNCTION__);
 
@@ -234,7 +232,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
         ETH_COPY_NETWORK_ADDRESS(pVEthInstance->currentAddress, pVEthInstance->permanentAddress);
     }
 
-    // 
+    //
     status = NDIS_STATUS_SUCCESS;
 
     NdisCloseConfiguration(configHandle);
@@ -263,7 +261,6 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     pVEthInstance->lastLinkStatus = NDIS_STATUS_LINK_STATE;
 
     pVEthInstance->lastLinkState = pVEthInstance->protocolInstance->lastLinkState;
-
 
     miniportAttributes.GeneralAttributes.LookaheadSize = pVEthInstance->protocolInstance->bindParameters.LookaheadSize;
     miniportAttributes.GeneralAttributes.MaxMulticastListSize = pVEthInstance->protocolInstance->bindParameters.MaxMulticastListSize;
@@ -307,7 +304,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     pVEthInstance->miniportInitPending = FALSE;
     DbgPrint("8 \n");
 Exit:
-    
+
     if (status == NDIS_STATUS_SUCCESS)
     {
         //
@@ -332,7 +329,6 @@ Exit:
         // Ignore if the add fails
         //
         status = NDIS_STATUS_SUCCESS;
-
     }
     else
     {
@@ -352,7 +348,6 @@ Exit:
     NdisSetEvent(&pVEthInstance->miniportInitEvent);
 
     return status;
-
 }
 
 //------------------------------------------------------------------------------
@@ -368,9 +363,9 @@ Exit:
 NDIS_STATUS miniportOidRequest(NDIS_HANDLE adapterContext_p,
                                PNDIS_OID_REQUEST ndisRequest_p)
 {
-//    tVEthInstance*          pVEthInstance = (tVEthInstance*) adapterContext_p;
-    NDIS_REQUEST_TYPE       requestType;
-    NDIS_STATUS             status;
+    //    tVEthInstance*          pVEthInstance = (tVEthInstance*) adapterContext_p;
+    NDIS_REQUEST_TYPE    requestType;
+    NDIS_STATUS          status;
 
     requestType = ndisRequest_p->RequestType;
 
@@ -416,8 +411,8 @@ Stop all pending I/O on the VEth and then unlink it from lower miniport.
 //------------------------------------------------------------------------------
 VOID miniportHalt(NDIS_HANDLE adapterContext_p, NDIS_HALT_ACTION haltAction_p)
 {
-    tVEthInstance*          pVEthInstance = (tVEthInstance*) adapterContext_p;
-    NET_IFINDEX             lowerLayerIfIndex;
+    tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
+    NET_IFINDEX      lowerLayerIfIndex;
     DbgPrint("%s() ---> \n", __FUNCTION__);
     pVEthInstance->miniportHalting = TRUE;
 
@@ -448,7 +443,6 @@ VOID miniportHalt(NDIS_HANDLE adapterContext_p, NDIS_HALT_ACTION haltAction_p)
     pVEthInstance->miniportAdapterHandle = NULL;
 
     protocol_freeVEthInstance(pVEthInstance);
-
 }
 
 //------------------------------------------------------------------------------
@@ -497,7 +491,7 @@ VOID miniportShutdown(NDIS_HANDLE adapterContext_p, NDIS_SHUTDOWN_ACTION shutdow
 
 This handler is used to unload the miniport
 
-\param  driverObject_p  Pointer to the system's driver object structure 
+\param  driverObject_p  Pointer to the system's driver object structure
                         for this driver.
 
 */
@@ -529,10 +523,10 @@ will be indicated to the upper binding as well as status indications.
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS miniportPause(NDIS_HANDLE adapterContext_p,
-                          PNDIS_MINIPORT_PAUSE_PARAMETERS  pauseParams_p)
+                          PNDIS_MINIPORT_PAUSE_PARAMETERS pauseParams_p)
 {
-    tVEthInstance*      pVEthInstance = (tVEthInstance*) adapterContext_p;
-    NDIS_STATUS         status = NDIS_STATUS_SUCCESS;
+    tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
+    NDIS_STATUS      status = NDIS_STATUS_SUCCESS;
 
     NdisAcquireSpinLock(&pVEthInstance->pauseLock);
     pVEthInstance->miniportPaused = TRUE;
@@ -556,10 +550,10 @@ upper binding
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS miniportRestart(NDIS_HANDLE adapterContext_p,
-                            PNDIS_MINIPORT_RESTART_PARAMETERS  restartParams_p)
+                            PNDIS_MINIPORT_RESTART_PARAMETERS restartParams_p)
 {
-    tVEthInstance*              pVEthInstance = (tVEthInstance*) adapterContext_p;
-    NDIS_STATUS                 status = NDIS_STATUS_SUCCESS;
+    tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
+    NDIS_STATUS      status = NDIS_STATUS_SUCCESS;
 
     DbgPrint("%s() ---> \n", __FUNCTION__);
     NdisAcquireSpinLock(&pVEthInstance->pauseLock);
@@ -585,21 +579,21 @@ Send NET_BUFFER_LISTs to the Kernel layer of stack for ASync scheduling.
 VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST netBufferLists_p,
                                 NDIS_PORT_NUMBER portNumber_p, ULONG sendFlags_p)
 {
-    tVEthInstance*              pVEthInstance = (tVEthInstance*) adapterContext_p;
-    NDIS_STATUS                 status = NDIS_STATUS_SUCCESS;
-    PNET_BUFFER_LIST            currentNbl = netBufferLists_p;
-    PNET_BUFFER_LIST            returnNbl = NULL;
-    PNET_BUFFER_LIST            lastReturnNbl = NULL;
-    ULONG                       completeFlags = 0;
-    PUCHAR                      pVethTxData;
-    PMDL                        pMdl;
-    ULONG                       totalLength, txLength;
-    ULONG                       offset = 0;         // CurrentMdlOffset
+    tVEthInstance*      pVEthInstance = (tVEthInstance*) adapterContext_p;
+    NDIS_STATUS         status = NDIS_STATUS_SUCCESS;
+    PNET_BUFFER_LIST    currentNbl = netBufferLists_p;
+    PNET_BUFFER_LIST    returnNbl = NULL;
+    PNET_BUFFER_LIST    lastReturnNbl = NULL;
+    ULONG               completeFlags = 0;
+    PUCHAR              pVethTxData;
+    PMDL                pMdl;
+    ULONG               totalLength, txLength;
+    ULONG               offset = 0;                 // CurrentMdlOffset
 
     UNREFERENCED_PARAMETER(portNumber_p);
-    
+
     {
-        PNET_BUFFER_LIST          TempNetBufferList;
+        PNET_BUFFER_LIST    TempNetBufferList;
 
         for (TempNetBufferList = currentNbl;
              TempNetBufferList != NULL;
@@ -692,7 +686,6 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
     */
 Exit:
     return;
-
 }
 
 //------------------------------------------------------------------------------
@@ -703,8 +696,8 @@ NDIS Miniport entry point called whenever protocols are done with
 a packet that we had indicated up and they had queued up for returning later.
 
 \param  adapterContext_p        Pointer to the adapter structure.
-\param  netBufferLists_p        A pointer to a linked list of NET_BUFFER_LIST 
-                                structures that NDIS is returning to the 
+\param  netBufferLists_p        A pointer to a linked list of NET_BUFFER_LIST
+                                structures that NDIS is returning to the
                                 miniport driver.
 \param  returnFlags_p           Return flags.
 
@@ -714,8 +707,6 @@ a packet that we had indicated up and they had queued up for returning later.
 VOID miniportReturnNetBufferLists(NDIS_HANDLE adapterContext_p,
                                   PNET_BUFFER_LIST netBufferLists_p, ULONG returnFlags_p)
 {
-    
-
 }
 
 //------------------------------------------------------------------------------
@@ -738,7 +729,6 @@ any matching packets.
 //------------------------------------------------------------------------------
 VOID miniportCancelSendNetBufferLists(NDIS_HANDLE adapterContext_p, PVOID cancelId_p)
 {
-
 }
 
 //------------------------------------------------------------------------------
@@ -756,13 +746,7 @@ or passed down to the next driver.
 //------------------------------------------------------------------------------
 VOID miniportCancelOidRequest(NDIS_HANDLE adapterContext_p, PVOID requestId_p)
 {
-
 }
+
 ///\}
-
-
-
-
-
-
 

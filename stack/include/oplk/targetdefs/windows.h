@@ -9,6 +9,7 @@ This file contains target specific defintions for Windows.
 
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
+Copyright (c) 2014, Kalycito Infotech Private Limited
 Copyright (c) 2013, SYSTEC electronic GmbH
 All rights reserved.
 
@@ -46,8 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #ifndef _KERNEL_MODE
-#define _WIN32_WINNT 0x0501     // Windows version must be at least Windows XP
-#define WIN32_LEAN_AND_MEAN     // Do not use extended Win32 API functions
+#define _WIN32_WINNT           0x0501   // Windows version must be at least Windows XP
+#define WIN32_LEAN_AND_MEAN             // Do not use extended Win32 API functions
 #include <Windows.h>
 #else
 #include <ntdef.h>
@@ -55,73 +56,73 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include <oplk/basictypes.h>
 
-#define ROM_INIT                // variables will be initialized directly in ROM (means no copy from RAM in startup)
-#define ROM                     // code or variables mapped to ROM (i.e. flash)
-                                // usage: CONST BYTE ROM foo = 0x00;
+#define ROM_INIT                        // variables will be initialized directly in ROM (means no copy from RAM in startup)
+#define ROM                             // code or variables mapped to ROM (i.e. flash)
+                                        // usage: CONST BYTE ROM foo = 0x00;
 
-#define MEM                     // Memory attribute to optimize speed and code of pointer access.
+#define MEM                             // Memory attribute to optimize speed and code of pointer access.
 
 #ifndef CONST
-#define CONST const             // variables mapped to ROM (i.e. flash)
+#define CONST                  const    // variables mapped to ROM (i.e. flash)
 #endif
 
-#define UNUSED_PARAMETER(par) (void)par
+#define UNUSED_PARAMETER(par)    (void)par
 
 // MS Visual C++ compiler supports function inlining
-#define INLINE_FUNCTION_DEF __forceinline
+#define INLINE_FUNCTION_DEF    __forceinline
 
 // QWORD will not be set for windows
 #ifndef QWORD
-#define QWORD unsigned long long int
+#define QWORD                  unsigned long long int
 #endif
 
 // Redefine TRUE/FALSE if necessary
 #ifdef FALSE
 #undef FALSE
 #endif
-#define FALSE 0
+#define FALSE                  0
 #ifdef TRUE
 #undef TRUE
 #endif
-#define TRUE 1
+#define TRUE                   1
 
 #ifndef _KERNEL_MODE
 #ifdef _CONSOLE // use standard printf in console applications
-#define PRINTF(...)                      printf(__VA_ARGS__)
+#define PRINTF(...)    printf(__VA_ARGS__)
 #else           // use trace for output in debug window in Windows applications
-#define PRINTF(...)                      TRACE(__VA_ARGS__)
+#define PRINTF(...)    TRACE(__VA_ARGS__)
 #endif
 #else
-#define PRINTF(...)         DbgPrint(__VA_ARGS__)
+#define PRINTF(...)    DbgPrint(__VA_ARGS__)
 #endif
 
 #ifndef _KERNEL_MODE
 #ifdef ASSERTMSG
 #undef ASSERTMSG
-#define ASSERTMSG(expr, string) \
-    if (!(expr))\
-    { \
+#define ASSERTMSG(expr, string)                                             \
+    if (!(expr))                                                            \
+    {                                                                       \
         MessageBox(NULL, string, "Assertion failed", MB_OK | MB_ICONERROR); \
-        exit(-1); \
+        exit(-1);                                                           \
     }
 #endif
 #endif
 
 #if defined(_DLL)
-#define OPLKDLLEXPORT extern __declspec(dllexport)
+#define OPLKDLLEXPORT    extern __declspec(dllexport)
 #else
 #define OPLKDLLEXPORT
 #endif
 
 #define OPLK_ATOMIC_T    ULONG
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
-            oldval = InterlockedExchange(address, newval);
+    oldval = InterlockedExchange(address, newval);
 
 #ifdef _KERNEL_MODE
-#define OPLK_TAG                    'negO'
-#define OPLK_MALLOC(siz)            ExAllocatePool(NonPagedPool, (siz))
-#define OPLK_FREE(ptr)              ExFreePool(ptr)
-#define OPLK_MEMSET(dst, val, siz)  NdisZeroMemory(dst, siz)
+#define OPLK_TAG                      'negO'
+#define OPLK_MALLOC(siz)              ExAllocatePool(NonPagedPool, (siz))
+#define OPLK_FREE(ptr)                ExFreePool(ptr)
+#define OPLK_MEMSET(dst, val, siz)    NdisZeroMemory(dst, siz)
 #endif
 #endif /* _INC_targetdefs_windows_H_ */
 

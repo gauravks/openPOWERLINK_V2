@@ -63,7 +63,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -77,15 +76,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    HANDLE           pFileHandle;
-    BOOL             fIntialized;
+    HANDLE    pFileHandle;
+    BOOL      fIntialized;
 }tPdoInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
 
-
-tPdoInstance pdoInstance_l;
+tPdoInstance    pdoInstance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -108,24 +106,22 @@ The function initializes the PDO user CAL sync module
 tOplkError pdoucal_initSync(tSyncCb pfnSyncCb_p)
 {
     UNUSED_PARAMETER(pfnSyncCb_p);
-    UINT        errNum = 0;
-    pdoInstance_l.pFileHandle = CreateFile(PLK_DEV_FILE,              // Name of the NT "device" to open
-                               GENERIC_READ | GENERIC_WRITE,  // Access rights requested
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,                           // Share access - NONE
-                               NULL,                           // Security attributes - not used!
-                               OPEN_EXISTING,               // Device must exist to open it.
-                               FILE_ATTRIBUTE_NORMAL,        // Open for overlapped I/O
-                               NULL);
+    UINT    errNum = 0;
+    pdoInstance_l.pFileHandle = CreateFile(PLK_DEV_FILE,                                        // Name of the NT "device" to open
+                                           GENERIC_READ | GENERIC_WRITE,                        // Access rights requested
+                                           FILE_SHARE_READ | FILE_SHARE_WRITE,                  // Share access - NONE
+                                           NULL,                                                // Security attributes - not used!
+                                           OPEN_EXISTING,                                       // Device must exist to open it.
+                                           FILE_ATTRIBUTE_NORMAL,                               // Open for overlapped I/O
+                                           NULL);
 
     if (pdoInstance_l.pFileHandle == INVALID_HANDLE_VALUE)
     {
-
         errNum = GetLastError();
 
         if (!(errNum == ERROR_FILE_NOT_FOUND ||
-            errNum == ERROR_PATH_NOT_FOUND))
+              errNum == ERROR_PATH_NOT_FOUND))
         {
-
             DEBUG_LVL_ERROR_TRACE("%s() createFile failed!  ERROR_FILE_NOT_FOUND = %d\n",
                                   errNum);
             return kErrorNoResource;
@@ -165,7 +161,7 @@ The function waits for a sync event.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_waitSyncEvent(ULONG timeout_p)
 {
-    ULONG bytesReturned;
+    ULONG    bytesReturned;
     //printf("Sync\n");
     if (!pdoInstance_l.fIntialized)
         return kErrorNoResource;
@@ -173,8 +169,7 @@ tOplkError pdoucal_waitSyncEvent(ULONG timeout_p)
     if (!DeviceIoControl(pdoInstance_l.pFileHandle, PLK_CMD_PDO_SYNC,
                          &timeout_p, sizeof(ULONG),
                          0, 0, &bytesReturned, NULL))
-                  return kErrorGeneralError;
-
+        return kErrorGeneralError;
 
     return kErrorOk;
 }
@@ -185,12 +180,5 @@ tOplkError pdoucal_waitSyncEvent(ULONG timeout_p)
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 

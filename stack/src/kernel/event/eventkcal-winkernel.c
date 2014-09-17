@@ -67,7 +67,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -88,26 +87,26 @@ CAL module.
 */
 typedef struct
 {
-    HANDLE                  threadHandle;
-    NDIS_EVENT              kernelWaitEvent;
-    NDIS_EVENT              userWaitEvent;
-    LONG                    userEventCount;
-    LONG                    kernelEventCount;
-    BOOL                    fThreadIsRunning;
-    BOOL                    fInitialized;
-    BYTE                    aUintRxBuffer[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
-    BYTE                    aK2URxBuffer[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    HANDLE        threadHandle;
+    NDIS_EVENT    kernelWaitEvent;
+    NDIS_EVENT    userWaitEvent;
+    LONG          userEventCount;
+    LONG          kernelEventCount;
+    BOOL          fThreadIsRunning;
+    BOOL          fInitialized;
+    BYTE          aUintRxBuffer[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    BYTE          aK2URxBuffer[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
 } tEventkCalInstance;
 // USe NdisEvent for wait queue implementation
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static tEventkCalInstance   instance_l;             ///< Instance variable of kernel event CAL module
+static tEventkCalInstance    instance_l;            ///< Instance variable of kernel event CAL module
 
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-KSTART_ROUTINE eventThread;
+KSTART_ROUTINE               eventThread;
 static void signalUserEvent(void);
 static void signalKernelEvent(void);
 // TODO: Event handling threads
@@ -132,8 +131,8 @@ implementations and calls the appropriate init functions.
 //------------------------------------------------------------------------------
 tOplkError eventkcal_init(void)
 {
-    ULONG               desiredAccess = DELETE | SYNCHRONIZE;
-    OBJECT_ATTRIBUTES   ObjectAttributes;
+    ULONG                desiredAccess = DELETE | SYNCHRONIZE;
+    OBJECT_ATTRIBUTES    ObjectAttributes;
 
     OPLK_MEMSET(&instance_l, 0, sizeof(tEventkCalInstance));
 
@@ -144,16 +143,16 @@ tOplkError eventkcal_init(void)
     instance_l.kernelEventCount = 0;
 
     if (eventkcal_initQueueCircbuf(kEventQueueK2U) != kErrorOk)
-            goto Exit;
+        goto Exit;
 
     if (eventkcal_initQueueCircbuf(kEventQueueU2K) != kErrorOk)
-            goto Exit;
+        goto Exit;
 
     if (eventkcal_initQueueCircbuf(kEventQueueKInt) != kErrorOk)
-            goto Exit;
+        goto Exit;
 
     if (eventkcal_initQueueCircbuf(kEventQueueUInt) != kErrorOk)
-            goto Exit;
+        goto Exit;
 
     eventkcal_setSignalingCircbuf(kEventQueueK2U, signalUserEvent);
 
@@ -180,7 +179,6 @@ Exit:
     eventkcal_exitQueueCircbuf(kEventQueueUInt);
 
     return kErrorNoResource;
-
 }
 
 //------------------------------------------------------------------------------
@@ -199,14 +197,14 @@ functions of the queue implementations for each used queue.
 //------------------------------------------------------------------------------
 tOplkError eventkcal_exit(void)
 {
-    UINT                i = 0;
+    UINT    i = 0;
 
     instance_l.fInitialized = FALSE;
 
     NdisSetEvent(&instance_l.kernelWaitEvent);
     NdisSetEvent(&instance_l.userWaitEvent);
 
-    while(instance_l.fThreadIsRunning)
+    while (instance_l.fThreadIsRunning)
     {
         NdisMSleep(10);
         if (i++ > 1000)
@@ -245,7 +243,7 @@ queue post function is called.
 //------------------------------------------------------------------------------
 tOplkError eventkcal_postUserEvent(tEvent* pEvent_p)
 {
-    tOplkError      ret = kErrorOk;
+    tOplkError    ret = kErrorOk;
 
     if (instance_l.fInitialized)
         ret = eventkcal_postEventCircbuf(kEventQueueK2U, pEvent_p);
@@ -274,7 +272,7 @@ queue post function is called.
 //------------------------------------------------------------------------------
 tOplkError eventkcal_postKernelEvent(tEvent* pEvent_p)
 {
-    tOplkError      ret = kErrorOk;
+    tOplkError    ret = kErrorOk;
 
     if (instance_l.fInitialized)
         ret = eventkcal_postEventCircbuf(kEventQueueKInt, pEvent_p);
@@ -311,18 +309,18 @@ This function posts a event from the user layer to a queue.
 //------------------------------------------------------------------------------
 void eventkcal_postEventFromUser(void* pEvent_p)
 {
-    tOplkError      ret = kErrorOk;
-    tEvent          event;
-    char*           pArg = NULL;
+    tOplkError    ret = kErrorOk;
+    tEvent        event;
+    char*         pArg = NULL;
 
     if (!instance_l.fInitialized)
-        return;//Error
+        return; //Error
 
     OPLK_MEMCPY(&event, pEvent_p, sizeof(tEvent));
 
     if (event.eventArgSize != 0)
     {
-        pArg = (char*) ((UCHAR*) pEvent_p + sizeof(tEvent));
+        pArg =    (char*)((UCHAR*) pEvent_p + sizeof(tEvent));
         //OPLK_MEMCPY(pArg, , event.eventArgSize); // TODO: check the arithmetic
         event.pEventArg = pArg;
     }
@@ -363,7 +361,7 @@ void eventkcal_postEventFromUser(void* pEvent_p)
     }
 
     //if (event.eventArgSize != 0)
-      //  OPLK_FREE((ULONG)pArg); // check if we need to modify memory routines for windows kernel
+    //  OPLK_FREE((ULONG)pArg); // check if we need to modify memory routines for windows kernel
 
     return;
 }
@@ -383,13 +381,13 @@ This function waits for events to the user.
 //------------------------------------------------------------------------------
 void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
 {
-    tOplkError          error;
-    BOOL                fRet;
-    size_t              readSize;
-    UINT32              timeout = 500;
+    tOplkError    error;
+    BOOL          fRet;
+    size_t        readSize;
+    UINT32        timeout = 500;
 
     if (!instance_l.fInitialized)
-        return;//Error
+        return; //Error
 
     fRet = NdisWaitEvent(&instance_l.userWaitEvent, timeout);
     //DbgPrint("%s\n", __func__);
@@ -397,7 +395,7 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     {
         TRACE("%s() timeout!\n", __func__);
         NdisResetEvent(&instance_l.userWaitEvent);
-        return;// TODO: error values
+        return; // TODO: error values
     }
 
     if (!instance_l.fInitialized)
@@ -407,10 +405,10 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     if (eventkcal_getEventCountCircbuf(kEventQueueK2U) > 0)
     {
         //DbgPrint("1\n");
-            NdisInterlockedDecrement(&instance_l.userEventCount);
+        NdisInterlockedDecrement(&instance_l.userEventCount);
 
         error = eventkcal_getEventCircbuf(kEventQueueK2U, instance_l.aK2URxBuffer, &readSize);
-        if(error != kErrorOk)
+        if (error != kErrorOk)
         {
             DEBUG_LVL_ERROR_TRACE("%s() Error reading K2U events %d!\n", __func__, error);
             return; //TODO: error
@@ -423,31 +421,27 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
         }
         OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
         *pSize_p = readSize;
-       // DbgPrint("3\n");
+        // DbgPrint("3\n");
         return;
     }
     else if (eventkcal_getEventCountCircbuf(kEventQueueUInt) > 0)
     {
-            NdisInterlockedDecrement(&instance_l.userEventCount);
+        NdisInterlockedDecrement(&instance_l.userEventCount);
 
-            error = eventkcal_getEventCircbuf(kEventQueueUInt, instance_l.aUintRxBuffer, &readSize);
-            if(error != kErrorOk)
-            {
-                DEBUG_LVL_ERROR_TRACE ("%s() Error reading UINT events %d!\n", __func__, error);
-                return; //TODO: error
-            }
+        error = eventkcal_getEventCircbuf(kEventQueueUInt, instance_l.aUintRxBuffer, &readSize);
+        if (error != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("%s() Error reading UINT events %d!\n", __func__, error);
+            return;     //TODO: error
+        }
 
-            //TRACE("%s() copy user event to user: %d Bytes\n", __func__, readSize);
-            OPLK_MEMCPY(pEvent_p, instance_l.aUintRxBuffer, readSize);
-            *pSize_p = readSize;
+        //TRACE("%s() copy user event to user: %d Bytes\n", __func__, readSize);
+        OPLK_MEMCPY(pEvent_p, instance_l.aUintRxBuffer, readSize);
+        *pSize_p = readSize;
     }
     else
     {
-
     }
-
-
-
 }
 
 //============================================================================//
@@ -477,18 +471,18 @@ static void eventThread(void* arg)
     KeSetPriorityThread(thread, HIGH_PRIORITY); //todo: Shall we increase the base priority also??
     instance_l.fThreadIsRunning = TRUE;
 
-    while(instance_l.fInitialized)
+    while (instance_l.fInitialized)
     {
         //DbgPrint("Kernel Event Thread\n");
         fRet = NdisWaitEvent(&instance_l.kernelWaitEvent, timeout);
 
         //DbgPrint("Kernel Event\n");
-        if(!instance_l.fInitialized)
+        if (!instance_l.fInitialized)
             break;
 
         NdisResetEvent(&instance_l.kernelWaitEvent);
         //if(fRet)
-           // continue;
+        // continue;
         if (instance_l.kernelEventCount <= 0)
             continue;
         //DbgPrint("Kernel Event %x\n",fRet);
@@ -506,8 +500,6 @@ static void eventThread(void* arg)
             eventkcal_processEventCircbuf(kEventQueueU2K);
             NdisInterlockedDecrement(&instance_l.kernelEventCount);
         }
-
-        
     }
 
     DbgPrint("%s() Exit\n", __func__);
@@ -545,10 +537,4 @@ void signalKernelEvent(void)
 }
 
 ///\}
-
-
-
-
-
-
 

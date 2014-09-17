@@ -7,7 +7,7 @@
 This file contains the main part of the Windows kernel module implementation of
 the openPOWERLINK kernel stack.
 
-\ingroup module_driver_win_kernel
+\ingroup module_driver_ndisim
 *******************************************************************************/
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Kalycito Infotech Private Limited
@@ -44,8 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <oplk/oplk.h>
 
-
-
 #include <kernel/eventk.h>
 #include <kernel/eventkcal.h>
 #include <errhndkcal.h>
@@ -60,13 +58,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_MEM_TAG     'klpO'
-#define DRIVER_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
-#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 4, 32)
+#define PLK_MEM_TAG                      'klpO'
+#define DRIVER_STRING_VERSION(ver, rev, rel)    "V" # ver "." # rev "." # rel
+#define DRIVER_DEFINED_STRING_VERSION    PLK_STRING_VERSION(1, 4, 32)
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
-NDIS_HANDLE     heartbeatTimer_g;
+NDIS_HANDLE    heartbeatTimer_g;
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
@@ -88,39 +86,39 @@ typedef struct
     // Lock to rundown threads that are dispatching I/Os on a file handle
     // while the cleanup for that handle is in progress.
     //
-    IO_REMOVE_LOCK  driverAccessLock;
+    IO_REMOVE_LOCK    driverAccessLock;
 } tFileContext;
 
 typedef struct
 {
-    PDEVICE_OBJECT      pAppDeviceObject;
-    NDIS_HANDLE         pAppDeviceHandle;
-    NDIS_HANDLE         driverHandle;
-    LIST_ENTRY          eventQueue;
-    NDIS_SPIN_LOCK      eventQueueLock;
-    LIST_ENTRY          pdoSyncQueue;
-    NDIS_SPIN_LOCK      pdoSyncLock;
-    BOOL                fInitialized;
+    PDEVICE_OBJECT    pAppDeviceObject;
+    NDIS_HANDLE       pAppDeviceHandle;
+    NDIS_HANDLE       driverHandle;
+    LIST_ENTRY        eventQueue;
+    NDIS_SPIN_LOCK    eventQueueLock;
+    LIST_ENTRY        pdoSyncQueue;
+    NDIS_SPIN_LOCK    pdoSyncLock;
+    BOOL              fInitialized;
 }tPlkDriverInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-tPlkDriverInstance plkDriverInstance_l;
+tPlkDriverInstance    plkDriverInstance_l;
 
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
+DRIVER_DISPATCH       powerlinkCreate;
+DRIVER_DISPATCH       powerlinkCleanup;
+DRIVER_DISPATCH       powerlinkClose;
+DRIVER_DISPATCH       powerlinkIoctl;
 static void registerAppIntf(NDIS_HANDLE driverHandle_p);
 static void deRegisterAppIntf(void);
-DRIVER_DISPATCH powerlinkCreate;
-DRIVER_DISPATCH powerlinkCleanup;
-DRIVER_DISPATCH powerlinkClose;
-DRIVER_DISPATCH powerlinkIoctl;
 static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
-    void* unusedParameter2_p, void* unusedParameter3_p);
+                                void* unusedParameter2_p, void* unusedParameter3_p);
 void startHeartbeatTimer(LONG timeInMs_p);
 void stopHeartbeatTimer(void);
-static void pdoSyncHandler(void);
+
 //------------------------------------------------------------------------------
 //  Kernel module specific data structures
 //------------------------------------------------------------------------------
@@ -143,12 +141,12 @@ The function implements openPOWERLINK kernel module initialization function.
 //------------------------------------------------------------------------------
 NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath_p)
 {
-    NDIS_STATUS ndisStatus;
+    NDIS_STATUS    ndisStatus;
 
     DbgPrint("Initialize Driver %s", DRIVER_DEFINED_STRING_VERSION);
     ndisStatus = ndis_initDriver(driverObject_p, registryPath_p);
 
-    if(ndisStatus != NDIS_STATUS_SUCCESS)
+    if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
         DbgPrint("%s() Failed to initialize driver 0x%X\n", __FUNCTION__, ndisStatus);
     }
@@ -163,6 +161,7 @@ void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p)
 {
     *ppfnSyncCb_p = pdoSyncHandler;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -171,11 +170,11 @@ void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p)
 
 static void registerAppIntf(NDIS_HANDLE driverHandle_p)
 {
-    NDIS_STATUS                     status = NDIS_STATUS_SUCCESS;
-    UNICODE_STRING                  deviceName;
-    UNICODE_STRING                  deviceLinkUnicodeString;
-    NDIS_DEVICE_OBJECT_ATTRIBUTES   deviceObjectAttributes;
-    PDRIVER_DISPATCH                dispatchTable[IRP_MJ_MAXIMUM_FUNCTION+1];
+    NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
+    UNICODE_STRING                   deviceName;
+    UNICODE_STRING                   deviceLinkUnicodeString;
+    NDIS_DEVICE_OBJECT_ATTRIBUTES    deviceObjectAttributes;
+    PDRIVER_DISPATCH                 dispatchTable[IRP_MJ_MAXIMUM_FUNCTION + 1];
 
     DbgPrint(" %s \n", __FUNCTION__);
     plkDriverInstance_l.driverHandle = driverHandle_p;
@@ -211,10 +210,8 @@ static void registerAppIntf(NDIS_HANDLE driverHandle_p)
     NdisInitializeListHead(&plkDriverInstance_l.eventQueue);
     NdisInitializeListHead(&plkDriverInstance_l.pdoSyncQueue);
 
-
     NdisAllocateSpinLock(&plkDriverInstance_l.eventQueueLock);
     NdisAllocateSpinLock(&plkDriverInstance_l.pdoSyncLock);
-
 }
 
 static void deRegisterAppIntf(void)
@@ -228,12 +225,12 @@ static void deRegisterAppIntf(void)
     //    ctrlCmd.cmd = kCtrlShutdown;
     //    app_executeCmd(&ctrlCmd);
 
-
     if (plkDriverInstance_l.pAppDeviceHandle != NULL)
     {
         NdisDeregisterDeviceEx(plkDriverInstance_l.pAppDeviceHandle);
     }
 }
+
 //------------------------------------------------------------------------------
 /**
 \brief  openPOWERLINK driver create function
@@ -245,10 +242,10 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
-    NDIS_TIMER_CHARACTERISTICS        timerChars;
-    tFileContext*                     pFileContext;
-    PIO_STACK_LOCATION                irpStack;
-    NDIS_STATUS                       status;
+    NDIS_TIMER_CHARACTERISTICS    timerChars;
+    tFileContext*                 pFileContext;
+    PIO_STACK_LOCATION            irpStack;
+    NDIS_STATUS                   status;
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkCreate ...\n");
 
@@ -271,7 +268,8 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         plkDriverInstance_l.fInitialized = TRUE;
         NdisZeroMemory(&timerChars, sizeof(timerChars));
 
-        {C_ASSERT(NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1 <= sizeof(timerChars)); }
+        {C_ASSERT(NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1 <= sizeof(timerChars));
+        }
         timerChars.Header.Type = NDIS_OBJECT_TYPE_TIMER_CHARACTERISTICS;
         timerChars.Header.Size = NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1;
         timerChars.Header.Revision = NDIS_TIMER_CHARACTERISTICS_REVISION_1;
@@ -297,7 +295,6 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
         startHeartbeatTimer(20);
     }
-    
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkCreate - OK\n");
 
@@ -319,10 +316,8 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
-
-    PIRP        pIrp;
-    PLIST_ENTRY pListEntry;
-
+    PIRP           pIrp;
+    PLIST_ENTRY    pListEntry;
 
     // remove all the Pending IRPs and complete them
     if (&plkDriverInstance_l.pdoSyncQueue != NULL)
@@ -333,16 +328,13 @@ NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
                                                        &plkDriverInstance_l.pdoSyncLock);
             pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
 
-
             if (pIrp)
             {
                 pIrp->IoStatus.Status = STATUS_CANCELLED;
                 pIrp->IoStatus.Information = 0;
                 IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-
             }
         }
-
     }
 
     return STATUS_SUCCESS;
@@ -359,10 +351,10 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
-    tFileContext*                     pFileContext;
-    PIO_STACK_LOCATION                irpStack;
-    UINT16                            status;
-    tCtrlCmd                          ctrlCmd;
+    tFileContext*         pFileContext;
+    PIO_STACK_LOCATION    irpStack;
+    UINT16                status;
+    tCtrlCmd              ctrlCmd;
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkClose...\n");
 
     irpStack = IoGetCurrentIrpStackLocation(pIrp_p);
@@ -375,7 +367,6 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         stopHeartbeatTimer();
         plkDriverInstance_l.fInitialized = FALSE;
     }
-
 
     ctrlk_exit();
 
@@ -406,24 +397,25 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
-    PIO_STACK_LOCATION  irpStack;
-    NTSTATUS            status = STATUS_SUCCESS;
-    ULONG               inlen,outlen;
-    void*               pInBuffer;
-    void*               pOutBuffer;
-    tFileContext*       pFileContext;
-    tOplkError          oplRet;
+    PIO_STACK_LOCATION    irpStack;
+    NTSTATUS              status = STATUS_SUCCESS;
+    ULONG                 inlen, outlen;
+    void*                 pInBuffer;
+    void*                 pOutBuffer;
+    tFileContext*         pFileContext;
+    tOplkError            oplRet;
     //DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkIoctl...\n");
     UNREFERENCED_PARAMETER(pDeviceObject_p);
 
     irpStack = IoGetCurrentIrpStackLocation(pIrp_p);
-    
+
     pFileContext = irpStack->FileObject->FsContext;
 
     // Acquire the IRP remove lock
     status = IoAcquireRemoveLock(&pFileContext->driverAccessLock, pIrp_p);
 
-    if (!NT_SUCCESS(status)) {
+    if (!NT_SUCCESS(status))
+    {
         //
         // Lock is in a removed state. That means we have already received
         // cleaned up request for this handle.
@@ -440,7 +432,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     {
         case PLK_CMD_CTRL_EXECUTE_CMD:
         {
-            tCtrlCmd* pCtrlCmd = (tCtrlCmd*) pIrp_p->AssociatedIrp.SystemBuffer;
+            tCtrlCmd*   pCtrlCmd = (tCtrlCmd*) pIrp_p->AssociatedIrp.SystemBuffer;
             DEBUG_LVL_ALWAYS_TRACE("Execute command\n");
             //          pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
             //          pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
@@ -451,9 +443,9 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_CTRL_STORE_INITPARAM:
         {
-            tCtrlInitParam* pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
+            tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
             DEBUG_LVL_ALWAYS_TRACE("Store command\n");
-            
+
             app_storeInitParam(pCtrlInitCmd);
 
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
@@ -461,7 +453,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_CTRL_READ_INITPARAM:
         {
-            tCtrlInitParam* pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
+            tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
             DEBUG_LVL_ALWAYS_TRACE("Read Init param command\n");
 
             app_readInitParam(pCtrlInitCmd);
@@ -470,7 +462,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_CTRL_GET_STATUS:
         {
-            UINT16*  pStatus = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
+            UINT16*   pStatus = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
             //DEBUG_LVL_ALWAYS_TRACE("Status\n");
             app_getStatus(pStatus);
 
@@ -479,9 +471,9 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_CTRL_GET_HEARTBEAT:
         {
-            UINT16*  pHeartBeat = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
-           // DEBUG_LVL_ALWAYS_TRACE("Hearbeat\n");
-            
+            UINT16*   pHeartBeat = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
+            // DEBUG_LVL_ALWAYS_TRACE("Hearbeat\n");
+
             app_getHeartbeat(pHeartBeat);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
@@ -489,17 +481,17 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_POST_EVENT:
         {
             //UINT8* pEvent;
-           // DEBUG_LVL_ALWAYS_TRACE("Post Event\n");
+            // DEBUG_LVL_ALWAYS_TRACE("Post Event\n");
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
             //pEvent = NdisAllocateMemoryWithTagPriority(plkDriverInstance_l.driverHandle,
-                                                      // )
+            // )
             eventkcal_postEventFromUser(pInBuffer);
 
             break;
         }
         case PLK_CMD_GET_EVENT:
         {
-            size_t     eventSize = 0;
+            size_t    eventSize = 0;
             //DEBUG_LVL_ALWAYS_TRACE("get event\n");
             pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
 
@@ -528,24 +520,23 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_DLLCAL_ASYNCSEND:
         {
-             DEBUG_LVL_ALWAYS_TRACE("Send Async\n");
-             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-             app_sendAsyncFrame(pInBuffer);
-             break;
+            DEBUG_LVL_ALWAYS_TRACE("Send Async\n");
+            pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            app_sendAsyncFrame(pInBuffer);
+            break;
         }
         case PLK_CMD_ERRHND_WRITE:
         {
-            tErrHndIoctl* pWriteObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
+            tErrHndIoctl*   pWriteObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
             //DEBUG_LVL_ALWAYS_TRACE("Write Object\n");
             app_writeErrorObject(pWriteObject);
             pIrp_p->IoStatus.Information = 0;
             break;
         }
 
-
         case PLK_CMD_ERRHND_READ:
         {
-            tErrHndIoctl* pReadObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
+            tErrHndIoctl*   pReadObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
             DEBUG_LVL_ALWAYS_TRACE("Read Object\n");
             app_readErrorObject(pReadObject);
             pIrp_p->IoStatus.Information = sizeof(tErrHndIoctl);
@@ -579,34 +570,34 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_PDO_GET_MEM:
         {
-             tPdoMem*    pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-             DEBUG_LVL_ALWAYS_TRACE("Allocate PDO mem %d\n", pPdoMem->memSize);
-             oplRet = pdokcal_mapMem(&pPdoMem->pPdoAddr, pPdoMem->memSize);
+            tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DEBUG_LVL_ALWAYS_TRACE("Allocate PDO mem %d\n", pPdoMem->memSize);
+            oplRet = pdokcal_mapMem(&pPdoMem->pPdoAddr, pPdoMem->memSize);
 
-             if (oplRet != kErrorOk)
-             {
-                 pIrp_p->IoStatus.Information = 0;
-             }
-             else
-             {
-                 DbgPrint("Pdo Address %x\n", pPdoMem->pPdoAddr);
-                 pIrp_p->IoStatus.Information = sizeof(tPdoMem);
-             }
-             status = STATUS_SUCCESS;
-             break;
+            if (oplRet != kErrorOk)
+            {
+                pIrp_p->IoStatus.Information = 0;
+            }
+            else
+            {
+                DbgPrint("Pdo Address %x\n", pPdoMem->pPdoAddr);
+                pIrp_p->IoStatus.Information = sizeof(tPdoMem);
+            }
+            status = STATUS_SUCCESS;
+            break;
         }
         case PLK_CMD_PDO_FREE_MEM:
         {
-             tPdoMem*    pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-             if (pPdoMem == NULL)
-             {
-                 DbgPrint("FREE Memory Buffer NUll\n");
-             }
-             DEBUG_LVL_ALWAYS_TRACE("Free PDO mem\n");
-             pdokcal_unMapMem(pPdoMem->pPdoAddr, pPdoMem->memSize);
-             status = STATUS_SUCCESS;
-             pIrp_p->IoStatus.Information = 0;
-             break;
+            tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            if (pPdoMem == NULL)
+            {
+                DbgPrint("FREE Memory Buffer NUll\n");
+            }
+            DEBUG_LVL_ALWAYS_TRACE("Free PDO mem\n");
+            pdokcal_unMapMem(pPdoMem->pPdoAddr, pPdoMem->memSize);
+            status = STATUS_SUCCESS;
+            pIrp_p->IoStatus.Information = 0;
+            break;
         }
         default:
             DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
@@ -640,7 +631,7 @@ The function starts the timer used for updating the heartbeat counter.
 //------------------------------------------------------------------------------
 void startHeartbeatTimer(LONG timeInMs_p)
 {
-    LARGE_INTEGER   dueTime;
+    LARGE_INTEGER    dueTime;
     dueTime.QuadPart = -(timeInMs_p * 10000);
     NdisSetTimerObject(heartbeatTimer_g, dueTime, timeInMs_p, NULL);
 }
@@ -672,7 +663,7 @@ heartbeat counter.
 */
 //------------------------------------------------------------------------------
 static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
-                         void* unusedParameter2_p, void* unusedParameter3_p)
+                                void* unusedParameter2_p, void* unusedParameter3_p)
 {
     UNUSED_PARAMETER(unusedParameter1_p);
     UNUSED_PARAMETER(functionContext_p);
@@ -684,15 +675,14 @@ static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_
 
 static void pdoSyncHandler(void)
 {
-    PIRP                    pIrp = NULL;
-    PLIST_ENTRY             pListEntry = NULL;
-    PIO_STACK_LOCATION      irpStack;
-    NTSTATUS                status = STATUS_SUCCESS;
+    PIRP                  pIrp = NULL;
+    PLIST_ENTRY           pListEntry = NULL;
+    PIO_STACK_LOCATION    irpStack;
+    NTSTATUS              status = STATUS_SUCCESS;
 
     DbgPrint("%s\n", __FUNCTION__);
     if (IsListEmpty(&plkDriverInstance_l.pdoSyncQueue))
     {
-
         // If list is Empty no Event Irps are Pended to driver
         // Do Nothin
         return;
@@ -701,7 +691,8 @@ static void pdoSyncHandler(void)
     {
         // Remove the Queued IRp
         //
-        pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue, &plkDriverInstance_l.pdoSyncLock);
+        pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue,
+                                                   &plkDriverInstance_l.pdoSyncLock);
         pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
 
         // Check If the Queued Irp is Not cancelled
@@ -722,5 +713,6 @@ static void pdoSyncHandler(void)
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
     }
 }
+
 ///\}
 

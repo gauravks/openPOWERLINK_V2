@@ -51,7 +51,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ndisintermediate/ndis-intf.h>
 #include <ndis.h>
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -59,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PDO_TAG             'odpO'
+#define PDO_TAG    'odpO'
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -67,7 +66,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -82,15 +80,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    NDIS_EVENT             syncWaitEvent;
-    BOOL                    fInitialized;
-    NDIS_SPIN_LOCK          syncLock;
-//    VOIDFUNCPTR             pfnSyncCb;
+    NDIS_EVENT        syncWaitEvent;
+    BOOL              fInitialized;
+    NDIS_SPIN_LOCK    syncLock;
+    //    VOIDFUNCPTR             pfnSyncCb;
 } tPdokCalSyncInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static tPdokCalSyncInstance*        instance_l;
+static tPdokCalSyncInstance*   instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -114,14 +112,14 @@ tOplkError pdokcal_initSync(void)
 {
     //OPLK_MEMSET(&instance_l, 0, sizeof(tPdokCalSyncInstance));
     DbgPrint("%s\n", __func__);
-    NDIS_HANDLE adapterHandle = ndis_getAdapterHandle();
+    NDIS_HANDLE    adapterHandle = ndis_getAdapterHandle();
     instance_l = NdisAllocateMemoryWithTagPriority(adapterHandle, sizeof(tPdokCalSyncInstance),
                                                    PDO_TAG, NormalPoolPriority);
 
     //instance_l.syncWaitEvent = (PNDIS_EVENT)OPLK_MALLOC(sizeof(NDIS_EVENT));
     if (instance_l == NULL)
         return kErrorNoResource;
-    
+
     NdisAllocateSpinLock(&instance_l->syncLock);
     NdisInitializeEvent(&instance_l->syncWaitEvent);
 
@@ -147,7 +145,7 @@ void pdokcal_exitSync(void)
         NdisFreeMemory(instance_l, 0, 0);
 
     NdisFreeSpinLock(&instance_l->syncLock);
-//    instance_l.pfnSyncCb = NULL;
+    //    instance_l.pfnSyncCb = NULL;
     instance_l->fInitialized = FALSE;
 }
 
@@ -167,20 +165,20 @@ tOplkError pdokcal_sendSyncEvent(void)
     //DbgPrint("%s\n", __func__);
     if ((instance_l != NULL) && (instance_l->fInitialized == TRUE))
     {
-       // DbgPrint("Set PDO event\n");
+        // DbgPrint("Set PDO event\n");
         //NdisAcquireSpinLock(&instance_l.syncLock);
         NdisSetEvent(&instance_l->syncWaitEvent);
         //NdisReleaseSpinLock(&instance_l.syncLock);
     }
 
-/*    if (instance_l.pfnSyncCb != NULL)
-    {
-        instance_l.pfnSyncCb();
-    }
-    else
-    {
-        DbgPrint("Sync is NUll\n");
-    }*/
+    /*    if (instance_l.pfnSyncCb != NULL)
+        {
+            instance_l.pfnSyncCb();
+        }
+        else
+        {
+            DbgPrint("Sync is NUll\n");
+        }*/
     return kErrorOk;
 }
 
@@ -197,22 +195,21 @@ The function waits for a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_waitSyncEvent(void)
 {
-    int                        timeout = 1000;
-    BOOLEAN                    fRet;
-//    NDIS_EVENT          syncWaitEvent;
+    int        timeout = 1000;
+    BOOLEAN    fRet;
+    //    NDIS_EVENT          syncWaitEvent;
 
     if (!instance_l->fInitialized)
     {
         return kErrorNoResource;
     }
 
-   // NdisAcquireSpinLock(&instance_l.syncLock);
+    // NdisAcquireSpinLock(&instance_l.syncLock);
     //NdisInitializeEvent(&syncWaitEvent);
 
-//    instance_l.syncWaitEvent = &syncWaitEvent;
+    //    instance_l.syncWaitEvent = &syncWaitEvent;
 
-
-//    NdisReleaseSpinLock(&instance_l.syncLock);
+    //    NdisReleaseSpinLock(&instance_l.syncLock);
     fRet = NdisWaitEvent(&instance_l->syncWaitEvent, timeout);
 
     if (fRet)
@@ -226,8 +223,6 @@ tOplkError pdokcal_waitSyncEvent(void)
         return kErrorRetry;
     }
 
-    
-    
     return kErrorOk;
 }
 
@@ -249,12 +244,12 @@ tOplkError pdokcal_controlSync(BOOL fEnable_p)
     UNUSED_PARAMETER(fEnable_p);
     return kErrorOk;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
 /// \name Private Functions
 /// \{
-
 
 ///\}
 

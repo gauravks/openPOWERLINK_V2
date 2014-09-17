@@ -53,18 +53,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define TIMER_COUNT           2              /* max 2 timers selectable */
-#define TIMER_MIN_VAL_SINGLE  500000         /* min 500us */
-#define TIMER_MIN_VAL_CYCLE   1000000        /* min 1000us */
-#define TIMER_MEM_TAG         'TirH'
-
+#define TIMER_COUNT             2               /* max 2 timers selectable */
+#define TIMER_MIN_VAL_SINGLE    500000          /* min 500us */
+#define TIMER_MIN_VAL_CYCLE     1000000         /* min 1000us */
+#define TIMER_MEM_TAG           'TirH'
 
 #define TIMERHDL_MASK           0x0FFFFFFF
 #define TIMERHDL_SHIFT          28
-#define HDL_TO_IDX(Hdl)         ((Hdl >> TIMERHDL_SHIFT) - 1)
-#define HDL_INIT(Idx)           ((Idx + 1) << TIMERHDL_SHIFT)
-#define HDL_INC(Hdl)            (((Hdl + 1) & TIMERHDL_MASK) \
-                                | (Hdl & ~TIMERHDL_MASK))
+#define HDL_TO_IDX(Hdl)    ((Hdl >> TIMERHDL_SHIFT) - 1)
+#define HDL_INIT(Idx)      ((Idx + 1) << TIMERHDL_SHIFT)
+#define HDL_INC(Hdl)       (((Hdl + 1) & TIMERHDL_MASK) \
+                            | (Hdl & ~TIMERHDL_MASK))
 
 //------------------------------------------------------------------------------
 // module global vars
@@ -73,7 +72,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -93,11 +91,11 @@ The structure contains all necessary information for a high-resolution timer.
 */
 typedef struct
 {
-    tTimerEventArg      eventArg;               ///<
-    tTimerkCallback     pfnCallback;            ///<
-    NDIS_HANDLE         timerObjHandle;         ///< Ndis Timer object handle
-    LARGE_INTEGER       dueTime;                ///< For continuous timers, otherwise 0
-    BOOL                fContinuously;          ///< Determines if it is a continuous or one-shot timer
+    tTimerEventArg     eventArg;                ///<
+    tTimerkCallback    pfnCallback;             ///<
+    NDIS_HANDLE        timerObjHandle;          ///< Ndis Timer object handle
+    LARGE_INTEGER      dueTime;                 ///< For continuous timers, otherwise 0
+    BOOL               fContinuously;           ///< Determines if it is a continuous or one-shot timer
 } tHresTimerInfo;
 
 /**
@@ -107,8 +105,8 @@ The structure defines a high-resolution timer module instance.
 */
 typedef struct
 {
-    tHresTimerInfo      aTimerInfo[TIMER_COUNT];
-    BOOLEAN             fInitialized;
+    tHresTimerInfo    aTimerInfo[TIMER_COUNT];
+    BOOLEAN           fInitialized;
 } tHresTimerInstance;
 //------------------------------------------------------------------------------
 // local vars
@@ -118,7 +116,7 @@ static tHresTimerInstance    hresTimerInstance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-NDIS_TIMER_FUNCTION timerDpc;
+NDIS_TIMER_FUNCTION          timerDpc;
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -154,12 +152,12 @@ The function adds an instance of the high-resolution timer module.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_addInstance(void)
 {
-    NDIS_TIMER_CHARACTERISTICS        timerChars;
-    NDIS_STATUS                       status = NDIS_STATUS_SUCCESS;
-    NDIS_HANDLE                       adapterHandle = ndis_getAdapterHandle();
-    UINT                              index;
-    DbgPrint("%s\n",__func__);
-    OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof (hresTimerInstance_l));
+    NDIS_TIMER_CHARACTERISTICS    timerChars;
+    NDIS_STATUS                   status = NDIS_STATUS_SUCCESS;
+    NDIS_HANDLE                   adapterHandle = ndis_getAdapterHandle();
+    UINT    index;
+    DbgPrint("%s\n", __func__);
+    OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof(hresTimerInstance_l));
     // TODO: get adapter handle here
 
     for (index = 0; index < TIMER_COUNT; index++)
@@ -175,13 +173,12 @@ tOplkError hrestimer_addInstance(void)
         timerChars.FunctionContext = &hresTimerInstance_l.aTimerInfo[index];
         timerChars.AllocationTag = TIMER_MEM_TAG;
 
-        status = NdisAllocateTimerObject(
-                                        adapterHandle,  //TODO: Need to get this adapter handle from driver
-                                        &timerChars,
-                                        &hresTimerInstance_l.aTimerInfo[index].timerObjHandle);
+        status = NdisAllocateTimerObject(adapterHandle,                              //TODO: Need to get this adapter handle from driver
+                                         &timerChars,
+                                         &hresTimerInstance_l.aTimerInfo[index].timerObjHandle);
         if (status != NDIS_STATUS_SUCCESS)
         {
-            DEBUG_LVL_ERROR_TRACE("%s() Timer Creation Failed %x\n",__func__, status);
+            DEBUG_LVL_ERROR_TRACE("%s() Timer Creation Failed %x\n", __func__, status);
             return kErrorNoResource;
         }
     }
@@ -202,8 +199,8 @@ The function deletes an instance of the high-resolution timer module.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_delInstance(void)
 {
-    tHresTimerInfo*         pTimerInfo;
-    UINT                    index;
+    tHresTimerInfo*   pTimerInfo;
+    UINT              index;
     DbgPrint("%s\n", __func__);
 
     if (!hresTimerInstance_l.fInitialized)
@@ -253,26 +250,26 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
                                  tTimerkCallback pfnCallback_p, ULONG argument_p,
                                  BOOL fContinue_p)
 {
-    tOplkError              ret = kErrorOk;
-    UINT                    index;
-    tHresTimerInfo*         pTimerInfo;
-    LONGLONG                relTime;
-    LARGE_INTEGER           period;
+    tOplkError        ret = kErrorOk;
+    UINT              index;
+    tHresTimerInfo*   pTimerInfo;
+    LONGLONG          relTime;
+    LARGE_INTEGER     period;
     //DbgPrint("%s\n %x %llx", __func__, fContinue_p, time_p);
-    if(pTimerHdl_p == NULL)
+    if (pTimerHdl_p == NULL)
         return kErrorTimerInvalidHandle;
 
     if (*pTimerHdl_p == 0)
-    {   // no timer created yet
+    {                                               // no timer created yet
         // search free timer info structure
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[0];
         for (index = 0; index < TIMER_COUNT; index++, pTimerInfo++)
         {
             if (pTimerInfo->eventArg.timerHdl == 0)
-                break;      // free structure found
+                break;                              // free structure found
         }
         if (index >= TIMER_COUNT)
-            return kErrorTimerNoTimerCreated;     // no free structure found
+            return kErrorTimerNoTimerCreated;       // no free structure found
 
         pTimerInfo->eventArg.timerHdl = HDL_INIT(index);
     }
@@ -280,7 +277,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     {
         index = HDL_TO_IDX(*pTimerHdl_p);
         if (index >= TIMER_COUNT)
-            return kErrorTimerInvalidHandle;      // invalid handle
+            return kErrorTimerInvalidHandle;        // invalid handle
 
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
     }
@@ -307,7 +304,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     pTimerInfo->pfnCallback   = pfnCallback_p;
     pTimerInfo->fContinuously = fContinue_p;
 
-    relTime = time_p/100LL;
+    relTime = time_p / 100LL;
     pTimerInfo->dueTime.QuadPart = -(relTime);
     NdisSetTimerObject(pTimerInfo->timerObjHandle, pTimerInfo->dueTime, 0, pTimerInfo);
 
@@ -330,28 +327,28 @@ by its timer handle. After deleting, the handle is reset to zero.
 //------------------------------------------------------------------------------
 tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
 {
-    tOplkError              ret = kErrorOk;
-    UINT                    index;
-    tHresTimerInfo*         pTimerInfo;
+    tOplkError        ret = kErrorOk;
+    UINT              index;
+    tHresTimerInfo*   pTimerInfo;
 
     if (pTimerHdl_p == NULL)
         return kErrorTimerInvalidHandle;
 
     if (*pTimerHdl_p == 0)
     {
-        return ret;      // no timer created yet
+        return ret;         // no timer created yet
     }
     else
     {
         index = HDL_TO_IDX(*pTimerHdl_p);
         if (index >= TIMER_COUNT)
-        {   // invalid handle
+        {                   // invalid handle
             return kErrorTimerInvalidHandle;
         }
 
         pTimerInfo = &hresTimerInstance_l.aTimerInfo[index];
         if (pTimerInfo->eventArg.timerHdl != *pTimerHdl_p)
-        {   // invalid handle
+        {                   // invalid handle
             return ret;
         }
     }
@@ -362,6 +359,7 @@ tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
     DbgPrint("%s\n", __func__);
     return kErrorOk;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -371,9 +369,9 @@ tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
 void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedParameter2_p,
               PVOID unusedParameter3_p)
 {
-    tHresTimerInfo*         pTimerInfo = (tHresTimerInfo*) functionContext_p;
-    tTimerHdl               orgTimerHdl;
-    UINT                    index;
+    tHresTimerInfo*   pTimerInfo = (tHresTimerInfo*) functionContext_p;
+    tTimerHdl         orgTimerHdl;
+    UINT              index;
     //DbgPrint("Timer Interrupt\n");
     UNREFERENCED_PARAMETER(unusedParameter1_p);
     UNREFERENCED_PARAMETER(unusedParameter2_p);
@@ -389,7 +387,6 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
     if (pTimerInfo->pfnCallback != NULL)
         pTimerInfo->pfnCallback(&pTimerInfo->eventArg);
 
-
     if (orgTimerHdl != pTimerInfo->eventArg.timerHdl)
     {
         /* modified timer has already been restarted */
@@ -403,14 +400,7 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
 
 Exit:
     return;
-
 }
 
 ///\}
-
-
-
-
-
-
 

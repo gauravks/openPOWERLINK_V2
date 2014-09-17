@@ -48,7 +48,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "circbuf-arch.h"
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -65,7 +64,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -80,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /** \brief Architecture specific part of circular buffer instance */
 typedef struct
 {
-    NDIS_SPIN_LOCK          spinlock;       ///< spinlock used for locking
+    NDIS_SPIN_LOCK    spinlock;             ///< spinlock used for locking
 } tCircBufArchInstance;
 
 //------------------------------------------------------------------------------
@@ -110,12 +108,12 @@ The function allocates the memory needed for the circular buffer instance.
 //------------------------------------------------------------------------------
 tCircBufInstance* circbuf_createInstance(UINT8 id_p)
 {
-    tCircBufInstance*           pInstance;
-    tCircBufArchInstance*       pArch;
+    tCircBufInstance*       pInstance;
+    tCircBufArchInstance*   pArch;
 
     if ((pInstance = OPLK_MALLOC(sizeof(tCircBufInstance) +
-                                     sizeof(tCircBufArchInstance))) == NULL)
-            return NULL;
+                                 sizeof(tCircBufArchInstance))) == NULL)
+        return NULL;
 
     OPLK_MEMSET(pInstance, 0, sizeof(tCircBufInstance) + sizeof(tCircBufArchInstance));
     pInstance->pCircBufArchInstance = (BYTE*)pInstance + sizeof(tCircBufInstance);
@@ -140,7 +138,7 @@ The function frees the allocated memory used by the circular buffer instance.
 //------------------------------------------------------------------------------
 void circbuf_freeInstance(tCircBufInstance* pInstance_p)
 {
-    tCircBufArchInstance* pArchInstance =
+    tCircBufArchInstance*   pArchInstance =
         (tCircBufArchInstance*) pInstance_p->pCircBufArchInstance;
     NdisFreeSpinLock(&pArchInstance->spinlock);
     OPLK_FREE(pInstance_p);
@@ -240,8 +238,8 @@ The function enters a locked section of the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_lock(tCircBufInstance* pInstance_p)
 {
-    tCircBufArchInstance* pArchInstance =
-                                  (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
+    tCircBufArchInstance*   pArchInstance =
+        (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
     NdisAcquireSpinLock(&pArchInstance->spinlock);
 }
 
@@ -258,22 +256,16 @@ The function leaves a locked section of the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_unlock(tCircBufInstance* pInstance_p)
 {
-    tCircBufArchInstance* pArchInstance =
-                              (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
+    tCircBufArchInstance*   pArchInstance =
+        (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
     NdisReleaseSpinLock(&pArchInstance->spinlock);
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 

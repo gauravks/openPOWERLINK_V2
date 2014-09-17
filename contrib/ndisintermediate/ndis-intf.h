@@ -8,7 +8,7 @@ This file contains the set for routines exported from the NDIS driver.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, {DEVELOPER_NAME}
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _INC_ndis_intf_H_
 #define _INC_ndis_intf_H_
 
-
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
@@ -50,16 +49,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // typedef
 //------------------------------------------------------------------------------
 
-
 /**
 \brief TODO:
 
 */
 typedef enum eNdisBindingState
 {
-    NdisBindingPaused,          ///< Lower end binding is in paused state
-    NdisBindingPausing,         ///< Lower end binding is entering into paused state
-    NdisBindingReady,          ///< Lower end binding is running
+    NdisBindingPaused,              ///< Lower end binding is in paused state
+    NdisBindingPausing,             ///< Lower end binding is entering into paused state
+    NdisBindingReady,               ///< Lower end binding is running
     NdisBindingRunning
 }tNdisBindingState;
 
@@ -69,10 +67,10 @@ typedef enum eNdisBindingState
 */
 typedef enum
 {
-    NdisStatusSuccess,          ///< Lower end binding is in paused state
+    NdisStatusSuccess,              ///< Lower end binding is in paused state
     NdisStatusInit,
-    NdisStatusResources,         ///< Lower end binding is entering into paused state
-    NdisStatusTxError,          ///< Lower end binding is running
+    NdisStatusResources,            ///< Lower end binding is entering into paused state
+    NdisStatusTxError,              ///< Lower end binding is running
     NdisStatusRxError,
     NdisStatusInvalidParams
 }tNdisErrorStatus;
@@ -89,13 +87,13 @@ typedef void (*tNdisReceiveCb)(void* pRxData_p, size_t size_p);
 \brief TODO:
 
 */
-typedef void(*tVEthSendCb)(void* pVEthTxData_p, size_t size_p);
+typedef void (*tVEthSendCb)(void* pVEthTxData_p, size_t size_p);
 
 /**
 \brief TODO:
 
 */
-typedef void(*tNdisTransmitCompleteCb)(void* pTxBuffer_p);
+typedef void (*tNdisTransmitCompleteCb)(void* pTxBuffer_p);
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
@@ -105,20 +103,20 @@ extern "C" {
 #endif
 
 tNdisErrorStatus ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p);
-void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p);
-BOOLEAN ndis_checkBindingState(void);
-void ndis_setBindingState(ULONG state_p);
+void             ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p);
+BOOLEAN          ndis_checkBindingState(void);
+void             ndis_setBindingState(ULONG state_p);
 tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p);
-void ndis_freeTxRxBuff(void);
+void             ndis_freeTxRxBuff(void);
 tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_p);
-void ndis_freeTxBuff(void* pTxLink_p);
+void             ndis_freeTxBuff(void* pTxLink_p);
 tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p);
-void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p, tNdisReceiveCb pfnRxCallback_p);
-void ndis_createAppIntf(void);
-void ndis_closeAppIntf(void);
-NDIS_HANDLE ndis_getAdapterHandle(void);
+void             ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p, tNdisReceiveCb pfnRxCallback_p);
+void             ndis_createAppIntf(void);
+void             ndis_closeAppIntf(void);
+NDIS_HANDLE      ndis_getAdapterHandle(void);
+void             ndis_getMacAddress(UCHAR*  pMac_p);
 
-void ndis_getMacAddress(UCHAR*  pMac_p);
 #ifdef __cplusplus
 }
 #endif

@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   /windows-split/drivers/windows/drv_kernelmod_edrv/appintf.c
+\file   drvintf.c
 
-\brief  {BRIEF_DESCRIPTION_OF_THE_FILE}
+\brief  Interface module for application interface to kernel daemon in Windows
 
-{DETAILED_DESCRIPTION_OF_THE_FILE}
+// TODO: Add description
 
-\ingroup {MODULE_GROUP}
+\ingroup module_driver_ndisim
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, {DEVELOPER_NAME}
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <appintf.h>
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -71,7 +70,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -98,8 +96,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================//
 int      app_executeCmd(tCtrlCmd* ctrlCmd_p)
 {
-    tOplkError      ret;
-    UINT16          status;
+    tOplkError    ret;
+    UINT16        status;
 
     ctrlk_executeCmd(ctrlCmd_p->cmd, &ret, &status, NULL);
     ctrlCmd_p->cmd = 0;
@@ -136,22 +134,21 @@ int      app_getHeartbeat(UINT16* heartbeat)
 
 int      app_sendAsyncFrame(unsigned char* pArg_p)
 {
-    tIoctlDllCalAsync*  asyncFrameInfo;
-    tFrameInfo          frameInfo;
+    tIoctlDllCalAsync*    asyncFrameInfo;
+    tFrameInfo            frameInfo;
 
     asyncFrameInfo = (tIoctlDllCalAsync*) pArg_p;
     frameInfo.frameSize = asyncFrameInfo->size;
-    frameInfo.pFrame = (tPlkFrame*) (pArg_p + sizeof(tIoctlDllCalAsync));
+    frameInfo.pFrame =    (tPlkFrame*)(pArg_p + sizeof(tIoctlDllCalAsync));
 
     dllkcal_writeAsyncFrame(&frameInfo, asyncFrameInfo->queue);
 
     return 0;
-
 }
 
 int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p)
 {
-    tErrHndObjects* errorObjects;
+    tErrHndObjects*   errorObjects;
 
     errorObjects = errhndkcal_getMemPtr();
     *((char*) errorObjects + pWriteObject_p->offset) = pWriteObject_p->errVal;
@@ -160,7 +157,7 @@ int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p)
 
 int      app_readErrorObject(tErrHndIoctl* pReadObject_p)
 {
-    tErrHndObjects* errorObjects;
+    tErrHndObjects*   errorObjects;
 
     errorObjects = errhndkcal_getMemPtr();
     pReadObject_p->errVal = *((char*) errorObjects + pReadObject_p->offset);
@@ -173,12 +170,5 @@ int      app_readErrorObject(tErrHndIoctl* pReadObject_p)
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 

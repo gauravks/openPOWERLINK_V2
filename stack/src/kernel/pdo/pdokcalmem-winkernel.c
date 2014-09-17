@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <common/pdo.h>
 #include <kernel/pdokcal.h>
 
-
 #include <ndis.h>
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -63,7 +62,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // global function prototypes
 //------------------------------------------------------------------------------
 
-
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
 //============================================================================//
@@ -77,16 +75,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    PMDL            pMdl;        ///< Memory descriptor list describing the PDO memory.
-    size_t          memSize;     ///< SIze of PDO memory
-    void*           pKernelVa;   ///< Pointer to PDO memory in kernel space.
-    void*           pUserVa;     ///< Pointer to PDO memory mapped in user space.
+    PMDL      pMdl;                 ///< Memory descriptor list describing the PDO memory.
+    size_t    memSize;              ///< SIze of PDO memory
+    void*     pKernelVa;            ///< Pointer to PDO memory in kernel space.
+    void*     pUserVa;              ///< Pointer to PDO memory mapped in user space.
 }tPdoCalInstance;
 
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-tPdoCalInstance     instance_l;
+tPdoCalInstance    instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -152,9 +150,9 @@ tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
     DbgPrint("Allocate Memory %d\n", memSize_p);
     instance_l.pKernelVa = OPLK_MALLOC(memSize_p);
 
-    if(instance_l.pKernelVa == NULL)
+    if (instance_l.pKernelVa == NULL)
     {
-        DEBUG_LVL_ERROR_TRACE ("%s() Unable to allocate PDO memory !\n", __func__);
+        DEBUG_LVL_ERROR_TRACE("%s() Unable to allocate PDO memory !\n", __func__);
         return kErrorNoResource;
     }
 
@@ -183,7 +181,7 @@ transfering the PDOs.
 tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
 {
     DbgPrint("Free Memory %d-%d\n", memSize_p, instance_l.memSize);
-    if(instance_l.pKernelVa != NULL)
+    if (instance_l.pKernelVa != NULL)
     {
         //OPLK_FREE(instance_l.pKernelVa);
     }
@@ -215,13 +213,13 @@ tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
         return kErrorNoResource;
     }
     DbgPrint("1\n", __func__);
-        // Allocate new MDL pointing to PDO memory
+    // Allocate new MDL pointing to PDO memory
     instance_l.pMdl = IoAllocateMdl(instance_l.pKernelVa, instance_l.memSize, FALSE, FALSE,
                                     NULL);
 
-    if(instance_l.pMdl == NULL)
+    if (instance_l.pMdl == NULL)
     {
-        DEBUG_LVL_ERROR_TRACE ("%s() Error allocating MDL !\n", __func__);
+        DEBUG_LVL_ERROR_TRACE("%s() Error allocating MDL !\n", __func__);
         return kErrorNoResource;
     }
     DbgPrint("2\n", __func__);
@@ -229,18 +227,18 @@ tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
     MmBuildMdlForNonPagedPool(instance_l.pMdl);
     // Map the memory in user space and get the address
     DbgPrint("3\n", __func__);
-    instance_l.pUserVa = MmMapLockedPagesSpecifyCache(instance_l.pMdl,     // MDL
-                                                      UserMode,            // Mode
-                                                      MmCached,            // Caching
-                                                      NULL,                // Address
-                                                      FALSE,               // Bugcheck?
+    instance_l.pUserVa = MmMapLockedPagesSpecifyCache(instance_l.pMdl,      // MDL
+                                                      UserMode,             // Mode
+                                                      MmCached,             // Caching
+                                                      NULL,                 // Address
+                                                      FALSE,                // Bugcheck?
                                                       NormalPagePriority); // Priority
 
-    if(instance_l.pUserVa == NULL)
+    if (instance_l.pUserVa == NULL)
     {
         MmUnmapLockedPages(instance_l.pUserVa, instance_l.pMdl);
         IoFreeMdl(instance_l.pMdl);
-        DEBUG_LVL_ERROR_TRACE ("%s() Error mapping MDL !\n", __func__);
+        DEBUG_LVL_ERROR_TRACE("%s() Error mapping MDL !\n", __func__);
         return kErrorNoResource;
     }
     DbgPrint("4\n", __func__);
@@ -265,13 +263,13 @@ tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
 //------------------------------------------------------------------------------
 void pdokcal_unMapMem(BYTE* pMem_p, size_t memSize_p)
 {
-    if(instance_l.pMdl == NULL)
+    if (instance_l.pMdl == NULL)
     {
-        DEBUG_LVL_ERROR_TRACE ("%s() MDL already deleted !\n", __func__);
+        DEBUG_LVL_ERROR_TRACE("%s() MDL already deleted !\n", __func__);
         return;
     }
 
-    if(instance_l.pUserVa != NULL)
+    if (instance_l.pUserVa != NULL)
     {
         MmUnmapLockedPages(instance_l.pUserVa, instance_l.pMdl);
         IoFreeMdl(instance_l.pMdl);
@@ -279,18 +277,12 @@ void pdokcal_unMapMem(BYTE* pMem_p, size_t memSize_p)
 
     pMem_p = NULL;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 

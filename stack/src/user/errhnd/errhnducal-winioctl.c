@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <user/ctrlucal.h>
 #include <common/driver.h>
 
-
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -61,7 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // global function prototypes
 //------------------------------------------------------------------------------
-
 
 //============================================================================//
 //            P R I V A T E   D E F I N I T I O N S                           //
@@ -83,16 +81,16 @@ implementation of the user error handler CAL moduel.
 */
 typedef struct
 {
-    HANDLE                       fileHandle;             ///< POWERLINK driver file handle
-    tErrHndObjects              errorObjects;           ///< Error objects
+    HANDLE            fileHandle;                           ///< POWERLINK driver file handle
+    tErrHndObjects    errorObjects;                         ///< Error objects
 } tErrIoctlInstance;
 
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static tErrIoctlInstance        instance_l;             ///< Error handler instance
-static BOOL                     fInitialized_l = FALSE; ///< Flag determines if module is initialized
-static tErrHndObjects*          pLocalObjects_l;       ///< Pointer to user error objects
+static tErrIoctlInstance    instance_l;                     ///< Error handler instance
+static BOOL                 fInitialized_l = FALSE;         ///< Flag determines if module is initialized
+static tErrHndObjects*      pLocalObjects_l;                ///< Pointer to user error objects
 
 //------------------------------------------------------------------------------
 // local function prototypes
@@ -170,8 +168,8 @@ tOplkError errhnducal_writeErrorObject(UINT index_p, UINT subIndex_p, UINT32* pP
     errObj.errVal = *pParam_p;
 
     if (!DeviceIoControl(instance_l.fileHandle, PLK_CMD_ERRHND_WRITE,
-                        &errObj, sizeof(tErrHndIoctl), 0, 0,
-                        &bytesReturned, NULL))
+                         &errObj, sizeof(tErrHndIoctl), 0, 0,
+                         &bytesReturned, NULL))
         return kErrorGeneralError;
 
     return kErrorOk;
@@ -222,12 +220,5 @@ tOplkError errhnducal_readErrorObject(UINT index_p, UINT subIndex_p, UINT32* pPa
 /// \name Private Functions
 /// \{
 
-
 ///\}
-
-
-
-
-
-
 
