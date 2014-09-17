@@ -37,6 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _INC_appintf_H_
 #define _INC_appintf_H_
 
+#include <common/driver.h>
+#include <common/ctrl.h>
+#include <common/ctrlcal-mem.h>
+#include <kernel/ctrlk.h>
+#include <kernel/ctrlkcal.h>
+#include <kernel/dllkcal.h>
+#include <kernel/pdokcal.h>
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
@@ -65,7 +72,7 @@ int      app_getHeartbeat(UINT16* heartbeat);
 int      app_sendAsyncFrame(unsigned char* pArg_p);
 int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p);
 int      app_readErrorObject(tErrHndIoctl* pReadObject_p);
-
+void     drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p);
 #ifdef __cplusplus
 extern "C" {
 #endif

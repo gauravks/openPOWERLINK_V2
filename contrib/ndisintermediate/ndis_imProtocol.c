@@ -549,6 +549,11 @@ NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)
 
 }
 
+UCHAR* protocol_getCurrentMac(void)
+{
+    tVEthInstance*       pVethInst = (tVEthInstance*)protocolInstance_l.pVEthInstance;
+    return &pVethInst->currentAddress[0];
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -1017,7 +1022,7 @@ VOID protocolReceiveNbl(NDIS_HANDLE protocolBindingContext_p, PNET_BUFFER_LIST n
         {
             pRxDataSrc = NULL;
             NdisQueryMdl(pMdl, &pRxDataSrc, &bytesAvailable, NormalPagePriority);
-            if (pRxDataSrc == NULL)
+            if ((pRxDataSrc == NULL) || (pRxDataDest == NULL))
             {
                 break;
             }

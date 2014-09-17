@@ -212,6 +212,16 @@ NDIS_HANDLE ndis_getAdapterHandle(void)
     return driverInstance_l.pMiniportHandle;
 }
 
+
+void ndis_getMacAddress(UCHAR*  pMac_p)
+{
+    UCHAR*   currentMac;
+    currentMac = protocol_getCurrentMac();
+
+    if (currentMac != NULL)
+    NdisMoveMemory(pMac_p, currentMac, ETH_LENGTH_OF_ADDRESS);
+}
+
 void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p)
 {
     DbgPrint("%s() \n", __FUNCTION__);

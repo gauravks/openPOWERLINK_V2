@@ -174,7 +174,7 @@ tOplkError processSync(void)
 
     if (oplk_waitSyncEvent(100000) != kErrorOk)
         return ret;
-
+    //printf("Sync App\n");
     ret = oplk_exchangeProcessImageOut();
     if (ret != kErrorOk)
         return ret;

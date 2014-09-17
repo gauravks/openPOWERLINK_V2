@@ -117,6 +117,8 @@ void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p, tNdisRece
 void ndis_createAppIntf(void);
 void ndis_closeAppIntf(void);
 NDIS_HANDLE ndis_getAdapterHandle(void);
+
+void ndis_getMacAddress(UCHAR*  pMac_p);
 #ifdef __cplusplus
 }
 #endif

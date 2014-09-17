@@ -44,13 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <oplk/oplk.h>
 
-#include <common/driver.h>
-#include <common/ctrl.h>
-#include <common/ctrlcal-mem.h>
-#include <kernel/ctrlk.h>
-#include <kernel/ctrlkcal.h>
-#include <kernel/dllkcal.h>
-#include <kernel/pdokcal.h>
+
 
 #include <kernel/eventk.h>
 #include <kernel/eventkcal.h>
@@ -68,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #define PLK_MEM_TAG     'klpO'
 #define DRIVER_STRING_VERSION(ver, rev, rel)               "V" #ver "." #rev "." #rel
-#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 4, 13)
+#define DRIVER_DEFINED_STRING_VERSION  PLK_STRING_VERSION  (1, 4, 32)
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -126,6 +120,7 @@ static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_
     void* unusedParameter2_p, void* unusedParameter3_p);
 void startHeartbeatTimer(LONG timeInMs_p);
 void stopHeartbeatTimer(void);
+static void pdoSyncHandler(void);
 //------------------------------------------------------------------------------
 //  Kernel module specific data structures
 //------------------------------------------------------------------------------
@@ -164,6 +159,10 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath
     return ndisStatus;
 }
 
+void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p)
+{
+    *ppfnSyncCb_p = pdoSyncHandler;
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -320,6 +319,32 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
+
+    PIRP        pIrp;
+    PLIST_ENTRY pListEntry;
+
+
+    // remove all the Pending IRPs and complete them
+    if (&plkDriverInstance_l.pdoSyncQueue != NULL)
+    {
+        while (!IsListEmpty(&plkDriverInstance_l.pdoSyncQueue))
+        {
+            pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue,
+                                                       &plkDriverInstance_l.pdoSyncLock);
+            pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
+
+
+            if (pIrp)
+            {
+                pIrp->IoStatus.Status = STATUS_CANCELLED;
+                pIrp->IoStatus.Information = 0;
+                IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+            }
+        }
+
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -533,6 +558,23 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
                 status = NDIS_STATUS_RESOURCES;
             else
                 status = STATUS_SUCCESS;
+            /*if (!pIrp_p->Cancel)
+            {
+                // Mark Irp pending
+                IoMarkIrpPending(pIrp_p);
+                // Insert Irp to eventQueue list
+                NdisInterlockedInsertTailList(&plkDriverInstance_l.pdoSyncQueue,
+                                              &pIrp_p->Tail.Overlay.ListEntry,
+                                              &plkDriverInstance_l.pdoSyncLock);
+            }
+            else
+            {
+                pIrp_p->IoStatus.Information = 0;
+                status = STATUS_CANCELLED;
+                break;
+            }
+
+            status = STATUS_PENDING;*/
             break;
         }
         case PLK_CMD_PDO_GET_MEM:
@@ -638,6 +680,47 @@ static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_
     UNUSED_PARAMETER(unusedParameter3_p);
 
     ctrlk_updateHeartbeat();
+}
+
+static void pdoSyncHandler(void)
+{
+    PIRP                    pIrp = NULL;
+    PLIST_ENTRY             pListEntry = NULL;
+    PIO_STACK_LOCATION      irpStack;
+    NTSTATUS                status = STATUS_SUCCESS;
+
+    DbgPrint("%s\n", __FUNCTION__);
+    if (IsListEmpty(&plkDriverInstance_l.pdoSyncQueue))
+    {
+
+        // If list is Empty no Event Irps are Pended to driver
+        // Do Nothin
+        return;
+    }
+    else
+    {
+        // Remove the Queued IRp
+        //
+        pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue, &plkDriverInstance_l.pdoSyncLock);
+        pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
+
+        // Check If the Queued Irp is Not cancelled
+        // If Irp is Cancelled we wont process it an further
+        //
+        if (pIrp->Cancel)
+        {
+            status = STATUS_CANCELLED;
+            pIrp->IoStatus.Status = status;
+            pIrp->IoStatus.Information = 0;
+            IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+            return;
+        }
+
+        // Set the No of bytes read
+        pIrp->IoStatus.Information = 0;
+        pIrp->IoStatus.Status = status;
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+    }
 }
 ///\}
 

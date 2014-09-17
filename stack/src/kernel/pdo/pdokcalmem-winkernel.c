@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/pdokcal.h>
 
 
+#include <ndis.h>
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -76,10 +77,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    void*       pKernelVa;   ///< Pointer to PDO memory in kernel space.
-    void*       pUserVa;     ///< Pointer to PDO memory mapped in user space.
-    PMDL        pMdl;        ///< Memory descriptor list describing the PDO memory.
-    size_t      memSize;     ///< SIze of PDO memory
+    PMDL            pMdl;        ///< Memory descriptor list describing the PDO memory.
+    size_t          memSize;     ///< SIze of PDO memory
+    void*           pKernelVa;   ///< Pointer to PDO memory in kernel space.
+    void*           pUserVa;     ///< Pointer to PDO memory mapped in user space.
 }tPdoCalInstance;
 
 //------------------------------------------------------------------------------
@@ -110,7 +111,6 @@ For the linux kernel mmap implementation nothing needs to be done.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_openMem(void)
 {
-    // Allocate the memory to be shared with user layer
     return kErrorOk;
 }
 
@@ -160,6 +160,8 @@ tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 
     *ppPdoMem_p = instance_l.pKernelVa;
     instance_l.memSize = memSize_p;
+    DbgPrint("Allocated Memory %d\n", instance_l.memSize);
+
     return kErrorOk;
 }
 
@@ -180,7 +182,7 @@ transfering the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
 {
-    DbgPrint("Free Memory %d\n", memSize_p);
+    DbgPrint("Free Memory %d-%d\n", memSize_p, instance_l.memSize);
     if(instance_l.pKernelVa != NULL)
     {
         //OPLK_FREE(instance_l.pKernelVa);
@@ -205,6 +207,7 @@ tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
 tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
 {
     DbgPrint("%s()\n", __func__);
+
     if (memSize_p > instance_l.memSize)
     {
         DEBUG_LVL_ERROR_TRACE("%s() Higher Memory requested (Kernel-%d User-%d) !\n",

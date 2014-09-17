@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 #ifndef EDRV_MAX_TX_BUFFERS
-#define EDRV_MAX_TX_BUFFERS     42
+#define EDRV_MAX_TX_BUFFERS         42
 #endif
 
 #ifndef EDRV_MAX_TX_QUEUE
@@ -186,6 +186,8 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     // Register Tx and Rx callbacks
     ndis_registerTxRxHandler(edrvTxHandler, edrvRxHandler);
 
+    ndis_getMacAddress(pEdrvInitParam_p->aMacAddr);
+
     ndis_setBindingState(NdisBindingRunning);
     // TODO@gks: Get the MAC address here and assign to init params
     return kErrorOk;
@@ -205,8 +207,10 @@ This function shuts down the Ethernet driver.
 tOplkError edrv_shutdown(void)
 {
     DbgPrint("%s() \n", __func__);
+    ndis_setBindingState(NdisBindingReady);
     ndis_freeTxRxBuff();
     ndis_registerTxRxHandler(NULL, NULL);
+
     return kErrorOk;
 }
 

@@ -8,7 +8,7 @@ This file contains the implementation for kernel PDO CAL synchronization module
 for Windows kernel. The synchronization module is responsible for notifying
 the user layer of presence of new data.
 
-The module uses wait queues to get notification of new data and pass it to the
+The module uses NDIS events to get notification of new data and pass it to the
 user layer by completing pended IOCTLs.
 
 \ingroup module_pdokcal
@@ -44,8 +44,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
+
 #include <oplk/oplkinc.h>
 #include <common/pdo.h>
+
+#include <ndisintermediate/ndis-intf.h>
+#include <ndis.h>
 
 
 //============================================================================//
@@ -55,7 +59,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-
+#define PDO_TAG             'odpO'
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -78,13 +82,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    NDIS_EVENT              syncWaitEvent;
+    NDIS_EVENT             syncWaitEvent;
     BOOL                    fInitialized;
+    NDIS_SPIN_LOCK          syncLock;
+//    VOIDFUNCPTR             pfnSyncCb;
 } tPdokCalSyncInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-tPdokCalSyncInstance        instance_l;
+static tPdokCalSyncInstance*        instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -106,11 +112,23 @@ The function initializes the kernel PDO CAL sync module.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_initSync(void)
 {
-    OPLK_MEMSET(&instance_l, 0, sizeof(tPdokCalSyncInstance));
+    //OPLK_MEMSET(&instance_l, 0, sizeof(tPdokCalSyncInstance));
+    DbgPrint("%s\n", __func__);
+    NDIS_HANDLE adapterHandle = ndis_getAdapterHandle();
+    instance_l = NdisAllocateMemoryWithTagPriority(adapterHandle, sizeof(tPdokCalSyncInstance),
+                                                   PDO_TAG, NormalPoolPriority);
 
-    NdisInitializeEvent(&instance_l.syncWaitEvent);
+    //instance_l.syncWaitEvent = (PNDIS_EVENT)OPLK_MALLOC(sizeof(NDIS_EVENT));
+    if (instance_l == NULL)
+        return kErrorNoResource;
+    
+    NdisAllocateSpinLock(&instance_l->syncLock);
+    NdisInitializeEvent(&instance_l->syncWaitEvent);
 
-    instance_l.fInitialized = TRUE;
+    //drv_getSyncHandler(&instance_l.pfnSyncCb);
+    instance_l->fInitialized = TRUE;
+
+    DbgPrint("Initialization Complete\n");
     return kErrorOk;
 }
 
@@ -125,7 +143,12 @@ The function cleans up the PDO CAL sync module
 //------------------------------------------------------------------------------
 void pdokcal_exitSync(void)
 {
-    instance_l.fInitialized = FALSE;
+    if (instance_l != NULL)
+        NdisFreeMemory(instance_l, 0, 0);
+
+    NdisFreeSpinLock(&instance_l->syncLock);
+//    instance_l.pfnSyncCb = NULL;
+    instance_l->fInitialized = FALSE;
 }
 
 //------------------------------------------------------------------------------
@@ -141,10 +164,23 @@ The function sends a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_sendSyncEvent(void)
 {
-    if (instance_l.fInitialized)
+    //DbgPrint("%s\n", __func__);
+    if ((instance_l != NULL) && (instance_l->fInitialized == TRUE))
     {
-        NdisSetEvent(&instance_l.syncWaitEvent);
+       // DbgPrint("Set PDO event\n");
+        //NdisAcquireSpinLock(&instance_l.syncLock);
+        NdisSetEvent(&instance_l->syncWaitEvent);
+        //NdisReleaseSpinLock(&instance_l.syncLock);
     }
+
+/*    if (instance_l.pfnSyncCb != NULL)
+    {
+        instance_l.pfnSyncCb();
+    }
+    else
+    {
+        DbgPrint("Sync is NUll\n");
+    }*/
     return kErrorOk;
 }
 
@@ -161,19 +197,37 @@ The function waits for a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_waitSyncEvent(void)
 {
-    int                 timeout = 1000;
-    BOOL                fRet;
+    int                        timeout = 1000;
+    BOOLEAN                    fRet;
+//    NDIS_EVENT          syncWaitEvent;
 
-    if(!instance_l.fInitialized)
+    if (!instance_l->fInitialized)
     {
         return kErrorNoResource;
     }
 
-    fRet = NdisWaitEvent(&instance_l.syncWaitEvent, timeout);
+   // NdisAcquireSpinLock(&instance_l.syncLock);
+    //NdisInitializeEvent(&syncWaitEvent);
 
-    if(fRet)
-      return kErrorRetry;
+//    instance_l.syncWaitEvent = &syncWaitEvent;
 
+
+//    NdisReleaseSpinLock(&instance_l.syncLock);
+    fRet = NdisWaitEvent(&instance_l->syncWaitEvent, timeout);
+
+    if (fRet)
+    {
+        //DbgPrint("Error in Sync\n");
+        NdisResetEvent(&instance_l->syncWaitEvent);
+    }
+    else
+    {
+        DbgPrint("Timeout?????\n");
+        return kErrorRetry;
+    }
+
+    
+    
     return kErrorOk;
 }
 

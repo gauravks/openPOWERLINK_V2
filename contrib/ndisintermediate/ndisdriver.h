@@ -71,7 +71,7 @@ typedef struct
 */
 typedef struct
 {
-    NDIS_STATUS                 status;     // Completion status
+    NDIS_STATUS                 status;         // Completion status
     NDIS_EVENT                  waitEvent;      // Used to block for completion.
     NDIS_OID_REQUEST            oidRequest;
 } tNdisOidRequest;
@@ -257,6 +257,7 @@ void protocol_freeTxBuff(PVOID pTxLink_p);
 NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
     PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);
 NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p);
+UCHAR* protocol_getCurrentMac(void);
 
 
 #ifdef __cplusplus
