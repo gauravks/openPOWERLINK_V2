@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/eventkcal.h>
 #include <errhndkcal.h>
 
-#include <appintf.h>
+#include <drvintf.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -94,45 +94,108 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
-int      app_executeCmd(tCtrlCmd* ctrlCmd_p)
+
+//------------------------------------------------------------------------------
+/**
+\brief  Execute a control command from user application
+
+This function parsed the control command from user and passes it to the control
+module for processing. The return value is again passed to user by copying it
+into the common control structure.
+
+\param  ctrlCmd_p       Pointer to control command structure.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
 {
     tOplkError    ret;
     UINT16        status;
 
-    ctrlk_executeCmd(ctrlCmd_p->cmd, &ret, &status, NULL);
-    ctrlCmd_p->cmd = 0;
-    ctrlCmd_p->retVal = ret;
+    ctrlk_executeCmd(pCtrlCmd_p->cmd, &ret, &status, NULL);
+    pCtrlCmd_p->cmd = 0;
+    pCtrlCmd_p->retVal = ret;
     ctrlkcal_setStatus(status);
-
-    return 0;
 }
 
-int      app_readInitParam(tCtrlInitParam* pInitParam_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Read initialization parameters
+
+Read the initialization parameters from the kernel stack.
+
+\param  pInitParam_p       Pointer to initialization parameters structure.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_readInitParam(tCtrlInitParam* pInitParam_p)
 {
     ctrlkcal_readInitParam(pInitParam_p);
-
-    return 0;
 }
 
-int      app_storeInitParam(tCtrlInitParam* pInitParam_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Write initialization parameters
+
+Write the initialization parameters from the user into kernel memory.
+
+\param  pInitParam_p       Pointer to initialization parameters structure.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_storeInitParam(tCtrlInitParam* pInitParam_p)
 {
     ctrlkcal_storeInitParam(pInitParam_p);
-    return 0;
 }
 
-int      app_getStatus(UINT16* status_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Get kernel status
+
+Return the current status of kernel stack.
+
+\param  pStatus_p       Pointer to status variable to return.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_getStatus(UINT16* pStatus_p)
 {
-    *status_p = ctrlkcal_getStatus();
-    return 0;
+    *pStatus_p = ctrlkcal_getStatus();
 }
 
-int      app_getHeartbeat(UINT16* heartbeat)
+//------------------------------------------------------------------------------
+/**
+\brief  Get heartbeat
+
+Return the current heartbeat value in kernel.
+
+\param  pHeartbeat       Pointer to heartbeat variable to return.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_getHeartbeat(UINT16* pHeartbeat)
 {
-    *heartbeat = ctrlk_getHeartbeat();
-    return 0;
+    *pHeartbeat = ctrlk_getHeartbeat();
 }
 
-int      app_sendAsyncFrame(unsigned char* pArg_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Write asynchronous frame
+
+This routines extracts the azynchronous frame from the IOCTL buffer and passes it
+to DLL for processing.
+
+\param  pArg_p       Pointer to IOCTL buffer.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_sendAsyncFrame(unsigned char* pArg_p)
 {
     tIoctlDllCalAsync*    asyncFrameInfo;
     tFrameInfo            frameInfo;
@@ -146,16 +209,37 @@ int      app_sendAsyncFrame(unsigned char* pArg_p)
     return 0;
 }
 
-int      app_writeErrorObject(tErrHndIoctl* pWriteObject_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Write error object
+
+This routines updates the error objects in kernel with the value passed by user.
+
+\param  pWriteObject_p       Pointer to writeobject to update.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_writeErrorObject(tErrHndIoctl* pWriteObject_p)
 {
     tErrHndObjects*   errorObjects;
-
     errorObjects = errhndkcal_getMemPtr();
     *((char*) errorObjects + pWriteObject_p->offset) = pWriteObject_p->errVal;
     return 0;
 }
 
-int      app_readErrorObject(tErrHndIoctl* pReadObject_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Read error object
+
+This routines fetches the error objects in kernel to be passed to user.
+
+\param  pWriteObject_p       Pointer to pReadObject_p to fetch.
+
+\ingroup module_driver_ndisim
+*/
+//------------------------------------------------------------------------------
+void drv_readErrorObject(tErrHndIoctl* pReadObject_p)
 {
     tErrHndObjects*   errorObjects;
 

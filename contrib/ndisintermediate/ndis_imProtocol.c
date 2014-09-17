@@ -70,7 +70,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 #define PROTO_STRING_VERSION(ver, rev, rel)    "V" # ver "." # rev "." # rel
-#define IM_DEFINED_STRING_VERSION    PROTO_STRING_VERSION(1, 0, 1)
+#define IM_DEFINED_STRING_VERSION               PROTO_STRING_VERSION(1, 0, 1)
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
@@ -93,16 +93,20 @@ void        freeVEthInstance(tVEthInstance* pVEthInstance_p);
 void        stopVEth(tVEthInstance* pVEthInstance_p);
 NDIS_STATUS allocateTxRxBuf(ULONG txBufCount, ULONG rxBufCount);
 void        closeBinding(void);
+
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
 
 //------------------------------------------------------------------------------
 /**
-\brief
+\brief Free VEth instance 
 
+Free all resources allocated for the VEth interface and close the binding.
 
+\param  pVEthInstance_p     Pointer to the VEth instance.
 
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void protocol_freeVEthInstance(tVEthInstance* pVEthInstance_p)
@@ -112,10 +116,13 @@ void protocol_freeVEthInstance(tVEthInstance* pVEthInstance_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief
+\brief  Check protocol binding state
 
+Check the current state for protocol binding.
 
+/return Returns TRUE if Ready else FALSE
 
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 BOOLEAN protocol_checkBindingState(void)
@@ -132,10 +139,13 @@ BOOLEAN protocol_checkBindingState(void)
 
 //------------------------------------------------------------------------------
 /**
-\brief
+\brief  Set binding state
 
+Update the binding state of protocol driver.
 
+\param state_p      Value of new state to set.
 
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void protocol_setBindingState(ULONG state_p)
@@ -145,10 +155,15 @@ void protocol_setBindingState(ULONG state_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief
+\brief  Register Tx and Rx handler
 
+Ndis intermediate driver calls the Tx callback from SentNetBufferListsComplete
+handler and Rx callback from the NetBufferListsReceive handler.
 
+\param pfnTxCallback_p      Pointer to Tx complete callback.
+\param pfnRxCallback_p      Pointet to Rx callback.
 
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
@@ -160,12 +175,20 @@ void protocol_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
 
 //------------------------------------------------------------------------------
 /**
-\brief
+\brief Allocate Tx and Rx buffers
+
+This driver uses doubly linked list mechanism provide by LIST_ENTRY structure to
+manage transmit queues wheres Rx is handled using a circular queue.
+
+The buffers, NetBufferList and MDLs for each Tx and Rx buffers are preallocated
+to avoid delays for individual packets the queues are created to be used later.
+For Tx queue the LIST_ENTRY 
 
 \param  txBufCount_p
 \param  rxBufCount_p
 
 
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
@@ -307,7 +330,7 @@ Exit:
 
 \param  ppTxBuf_p
 
-
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void protocol_freeTxRxBuffers(void)
@@ -375,7 +398,7 @@ void protocol_freeTxRxBuffers(void)
 
 \param  ppTxBuf_p
 
-
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 tTxBufInfo* protocol_getTxBuff(size_t size_p)
@@ -409,7 +432,7 @@ tTxBufInfo* protocol_getTxBuff(size_t size_p)
 
 \param  ppTxBuf_p
 
-
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void protocol_freeTxBuff(PVOID pTxLink_p)
@@ -431,7 +454,7 @@ void protocol_freeTxBuff(PVOID pTxLink_p)
 \brief
 
 
-
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oid_p,
@@ -508,7 +531,7 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
 \brief
 
 
-
+\ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p)

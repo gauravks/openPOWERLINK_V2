@@ -43,13 +43,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ntddk.h>
 
 #include <oplk/oplk.h>
-
 #include <kernel/eventk.h>
 #include <kernel/eventkcal.h>
 #include <errhndkcal.h>
 #include <ndisintermediate/ndis-intf.h>
 
-#include <appintf.h>
+#include <drvintf.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -59,8 +58,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 #define PLK_MEM_TAG                      'klpO'
-#define DRIVER_STRING_VERSION(ver, rev, rel)    "V" # ver "." # rev "." # rel
-#define DRIVER_DEFINED_STRING_VERSION    PLK_STRING_VERSION(1, 4, 32)
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
@@ -80,26 +77,19 @@ NDIS_HANDLE    heartbeatTimer_g;
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
-typedef struct
-{
-    //
-    // Lock to rundown threads that are dispatching I/Os on a file handle
-    // while the cleanup for that handle is in progress.
-    //
-    IO_REMOVE_LOCK    driverAccessLock;
-} tFileContext;
+/**
+\brief  Instance for POWERLINK driver
 
+The structure specifies the instance variable of the Windows kernel driver
+*/
 typedef struct
 {
-    PDEVICE_OBJECT    pAppDeviceObject;
-    NDIS_HANDLE       pAppDeviceHandle;
-    NDIS_HANDLE       driverHandle;
-    LIST_ENTRY        eventQueue;
-    NDIS_SPIN_LOCK    eventQueueLock;
-    LIST_ENTRY        pdoSyncQueue;
-    NDIS_SPIN_LOCK    pdoSyncLock;
-    BOOL              fInitialized;
+    PDEVICE_OBJECT    pAppDeviceObject;         ///< IOCTL interface device object
+    NDIS_HANDLE       pAppDeviceHandle;         ///< IOCTL interface device handle
+    NDIS_HANDLE       driverHandle;             ///< Miniport driver handle
+    BOOL              fInitialized;             ///< Initialization status
 }tPlkDriverInstance;
+
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
@@ -134,101 +124,38 @@ void stopHeartbeatTimer(void);
 /**
 \brief  Driver initialization routine
 
-The function implements openPOWERLINK kernel module initialization function.
+The function implements openPOWERLINK Windows kernel driver initialization function.
+OS calls this routine on the driver registration.
 
-\ingroup module_driver_windows_kernel
+\param driverObject_p       Pointer to the system's driver object structure
+                            for this driver.
+\param registryPath_p       System's registry path for this driver.
+
+\return This routine returns a NTSTATUS error code.
+\retval STATUS_SUCCESS If no error occurs
+
+\ingroup module_driver_ndisim
 */
 //------------------------------------------------------------------------------
 NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath_p)
 {
     NDIS_STATUS    ndisStatus;
 
-    DbgPrint("Initialize Driver %s", DRIVER_DEFINED_STRING_VERSION);
+    DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry ...\n");
     ndisStatus = ndis_initDriver(driverObject_p, registryPath_p);
 
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
-        DbgPrint("%s() Failed to initialize driver 0x%X\n", __FUNCTION__, ndisStatus);
+        DEBUG_LVL_ERROR_TRACE("%s() Failed to initialize driver 0x%X\n", __FUNCTION__,
+                              ndisStatus);
     }
 
     // register application interface handlers
     ndis_registerAppIntf(registerAppIntf, deRegisterAppIntf);
     plkDriverInstance_l.fInitialized = FALSE;
+
+    DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry - OK\n");
     return ndisStatus;
-}
-
-void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p)
-{
-    *ppfnSyncCb_p = pdoSyncHandler;
-}
-
-//============================================================================//
-//            P R I V A T E   F U N C T I O N S                               //
-//============================================================================//
-/// \name Private Functions
-/// \{
-
-static void registerAppIntf(NDIS_HANDLE driverHandle_p)
-{
-    NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
-    UNICODE_STRING                   deviceName;
-    UNICODE_STRING                   deviceLinkUnicodeString;
-    NDIS_DEVICE_OBJECT_ATTRIBUTES    deviceObjectAttributes;
-    PDRIVER_DISPATCH                 dispatchTable[IRP_MJ_MAXIMUM_FUNCTION + 1];
-
-    DbgPrint(" %s \n", __FUNCTION__);
-    plkDriverInstance_l.driverHandle = driverHandle_p;
-    NdisZeroMemory(dispatchTable, (IRP_MJ_MAXIMUM_FUNCTION + 1) * sizeof(PDRIVER_DISPATCH));
-
-    dispatchTable[IRP_MJ_CREATE] = powerlinkCreate;
-    dispatchTable[IRP_MJ_CLEANUP] = powerlinkCleanup;
-    dispatchTable[IRP_MJ_CLOSE] = powerlinkClose;
-    dispatchTable[IRP_MJ_DEVICE_CONTROL] = powerlinkIoctl;
-
-    NdisInitUnicodeString(&deviceName, PLK_DEV_STRING);
-    NdisInitUnicodeString(&deviceLinkUnicodeString, PLK_LINK_NAME);
-
-    NdisZeroMemory(&deviceObjectAttributes, sizeof(NDIS_DEVICE_OBJECT_ATTRIBUTES));
-
-    deviceObjectAttributes.Header.Type = NDIS_OBJECT_TYPE_DEFAULT; // type implicit from the context
-    deviceObjectAttributes.Header.Revision = NDIS_DEVICE_OBJECT_ATTRIBUTES_REVISION_1;
-    deviceObjectAttributes.Header.Size = sizeof(NDIS_DEVICE_OBJECT_ATTRIBUTES);
-    deviceObjectAttributes.DeviceName = &deviceName;
-    deviceObjectAttributes.SymbolicName = &deviceLinkUnicodeString;
-    deviceObjectAttributes.MajorFunctions = &dispatchTable[0];
-    deviceObjectAttributes.ExtensionSize = 0;
-    deviceObjectAttributes.DefaultSDDLString = NULL;
-    deviceObjectAttributes.DeviceClassGuid = 0;
-
-    status = NdisRegisterDeviceEx(driverHandle_p,
-                                  &deviceObjectAttributes,
-                                  &plkDriverInstance_l.pAppDeviceObject,
-                                  &plkDriverInstance_l.pAppDeviceHandle);
-
-    plkDriverInstance_l.pAppDeviceObject->Flags |= DO_BUFFERED_IO;
-
-    NdisInitializeListHead(&plkDriverInstance_l.eventQueue);
-    NdisInitializeListHead(&plkDriverInstance_l.pdoSyncQueue);
-
-    NdisAllocateSpinLock(&plkDriverInstance_l.eventQueueLock);
-    NdisAllocateSpinLock(&plkDriverInstance_l.pdoSyncLock);
-}
-
-static void deRegisterAppIntf(void)
-{
-    //UINT16                            status;
-    //tCtrlCmd                          ctrlCmd;
-
-    NdisFreeSpinLock(&plkDriverInstance_l.eventQueueLock);
-    NdisFreeSpinLock(&plkDriverInstance_l.pdoSyncLock);
-
-    //    ctrlCmd.cmd = kCtrlShutdown;
-    //    app_executeCmd(&ctrlCmd);
-
-    if (plkDriverInstance_l.pAppDeviceHandle != NULL)
-    {
-        NdisDeregisterDeviceEx(plkDriverInstance_l.pAppDeviceHandle);
-    }
 }
 
 //------------------------------------------------------------------------------
@@ -261,7 +188,7 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
     IoInitializeRemoveLock(&pFileContext->driverAccessLock, PLK_MEM_TAG, 0, 0);
 
-    irpStack->FileObject->FsContext = (void*)pFileContext;
+    irpStack->FileObject->FsContext = (void*) pFileContext;
 
     if (!plkDriverInstance_l.fInitialized)
     {
@@ -316,27 +243,6 @@ The function implements openPOWERLINK kernel module open function.
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 {
-    PIRP           pIrp;
-    PLIST_ENTRY    pListEntry;
-
-    // remove all the Pending IRPs and complete them
-    if (&plkDriverInstance_l.pdoSyncQueue != NULL)
-    {
-        while (!IsListEmpty(&plkDriverInstance_l.pdoSyncQueue))
-        {
-            pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue,
-                                                       &plkDriverInstance_l.pdoSyncLock);
-            pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
-
-            if (pIrp)
-            {
-                pIrp->IoStatus.Status = STATUS_CANCELLED;
-                pIrp->IoStatus.Information = 0;
-                IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-            }
-        }
-    }
-
     return STATUS_SUCCESS;
 }
 
@@ -370,12 +276,12 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
     ctrlk_exit();
 
-    app_getStatus(&status);
+    drv_getStatus(&status);
 
     if (status == kCtrlStatusRunning)
     {
         ctrlCmd.cmd = kCtrlShutdown;
-        app_executeCmd(&ctrlCmd);
+        drv_executeCmd(&ctrlCmd);
     }
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkClose - OK\n");
@@ -404,7 +310,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     void*                 pOutBuffer;
     tFileContext*         pFileContext;
     tOplkError            oplRet;
-    //DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkIoctl...\n");
+
     UNREFERENCED_PARAMETER(pDeviceObject_p);
 
     irpStack = IoGetCurrentIrpStackLocation(pIrp_p);
@@ -433,103 +339,63 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_EXECUTE_CMD:
         {
             tCtrlCmd*   pCtrlCmd = (tCtrlCmd*) pIrp_p->AssociatedIrp.SystemBuffer;
-            DEBUG_LVL_ALWAYS_TRACE("Execute command\n");
-            //          pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-            //          pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-
-            app_executeCmd(pCtrlCmd);
+            drv_executeCmd(pCtrlCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlCmd);
             break;
         }
         case PLK_CMD_CTRL_STORE_INITPARAM:
         {
             tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
-            DEBUG_LVL_ALWAYS_TRACE("Store command\n");
-
-            app_storeInitParam(pCtrlInitCmd);
-
+            drv_storeInitParam(pCtrlInitCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
         }
         case PLK_CMD_CTRL_READ_INITPARAM:
         {
             tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
-            DEBUG_LVL_ALWAYS_TRACE("Read Init param command\n");
-
-            app_readInitParam(pCtrlInitCmd);
+            drv_readInitParam(pCtrlInitCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
         }
         case PLK_CMD_CTRL_GET_STATUS:
         {
             UINT16*   pStatus = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
-            //DEBUG_LVL_ALWAYS_TRACE("Status\n");
-            app_getStatus(pStatus);
-
+            drv_getStatus(pStatus);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
         }
         case PLK_CMD_CTRL_GET_HEARTBEAT:
         {
             UINT16*   pHeartBeat = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
-            // DEBUG_LVL_ALWAYS_TRACE("Hearbeat\n");
-
-            app_getHeartbeat(pHeartBeat);
+            drv_getHeartbeat(pHeartBeat);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
         }
         case PLK_CMD_POST_EVENT:
         {
-            //UINT8* pEvent;
-            // DEBUG_LVL_ALWAYS_TRACE("Post Event\n");
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-            //pEvent = NdisAllocateMemoryWithTagPriority(plkDriverInstance_l.driverHandle,
-            // )
             eventkcal_postEventFromUser(pInBuffer);
-
             break;
         }
         case PLK_CMD_GET_EVENT:
         {
             size_t    eventSize = 0;
-            //DEBUG_LVL_ALWAYS_TRACE("get event\n");
             pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-
             eventkcal_getEventForUser(pOutBuffer, &eventSize);
-
-            /*if (!pIrp_p->Cancel)
-            {
-                // Mark Irp pending
-                IoMarkIrpPending(pIrp_p);
-                // Insert Irp to eventQueue list
-                NdisInterlockedInsertTailList(&plkDriverInstance_l.eventQueue,
-                    &pIrp_p->Tail.Overlay.ListEntry,
-                    &plkDriverInstance_l.eventQueueLock);
-            }
-            else
-            {
-                pIrp_p->IoStatus.Information = 0;
-                status = STATUS_CANCELLED;
-                break;
-            }*/
-
-            //DbgPrint("Return Event %d \n", eventSize);
             pIrp_p->IoStatus.Information = eventSize;
-            status = STATUS_SUCCESS;
             break;
         }
         case PLK_CMD_DLLCAL_ASYNCSEND:
         {
             DEBUG_LVL_ALWAYS_TRACE("Send Async\n");
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
-            app_sendAsyncFrame(pInBuffer);
+            drv_sendAsyncFrame(pInBuffer);
             break;
         }
         case PLK_CMD_ERRHND_WRITE:
         {
             tErrHndIoctl*   pWriteObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
-            //DEBUG_LVL_ALWAYS_TRACE("Write Object\n");
-            app_writeErrorObject(pWriteObject);
+            drv_writeErrorObject(pWriteObject);
             pIrp_p->IoStatus.Information = 0;
             break;
         }
@@ -537,41 +403,22 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_ERRHND_READ:
         {
             tErrHndIoctl*   pReadObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
-            DEBUG_LVL_ALWAYS_TRACE("Read Object\n");
-            app_readErrorObject(pReadObject);
+            drv_readErrorObject(pReadObject);
             pIrp_p->IoStatus.Information = sizeof(tErrHndIoctl);
             break;
         }
         case PLK_CMD_PDO_SYNC:
         {
-            //DEBUG_LVL_ALWAYS_TRACE("Sync\n");
             if ((oplRet = pdokcal_waitSyncEvent()) == kErrorRetry)
                 status = NDIS_STATUS_RESOURCES;
             else
                 status = STATUS_SUCCESS;
-            /*if (!pIrp_p->Cancel)
-            {
-                // Mark Irp pending
-                IoMarkIrpPending(pIrp_p);
-                // Insert Irp to eventQueue list
-                NdisInterlockedInsertTailList(&plkDriverInstance_l.pdoSyncQueue,
-                                              &pIrp_p->Tail.Overlay.ListEntry,
-                                              &plkDriverInstance_l.pdoSyncLock);
-            }
-            else
-            {
-                pIrp_p->IoStatus.Information = 0;
-                status = STATUS_CANCELLED;
-                break;
-            }
 
-            status = STATUS_PENDING;*/
             break;
         }
         case PLK_CMD_PDO_GET_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-            DEBUG_LVL_ALWAYS_TRACE("Allocate PDO mem %d\n", pPdoMem->memSize);
             oplRet = pdokcal_mapMem(&pPdoMem->pPdoAddr, pPdoMem->memSize);
 
             if (oplRet != kErrorOk)
@@ -580,20 +427,15 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             }
             else
             {
-                DbgPrint("Pdo Address %x\n", pPdoMem->pPdoAddr);
                 pIrp_p->IoStatus.Information = sizeof(tPdoMem);
             }
+
             status = STATUS_SUCCESS;
             break;
         }
         case PLK_CMD_PDO_FREE_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-            if (pPdoMem == NULL)
-            {
-                DbgPrint("FREE Memory Buffer NUll\n");
-            }
-            DEBUG_LVL_ALWAYS_TRACE("Free PDO mem\n");
             pdokcal_unMapMem(pPdoMem->pPdoAddr, pPdoMem->memSize);
             status = STATUS_SUCCESS;
             pIrp_p->IoStatus.Information = 0;
@@ -601,21 +443,102 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         default:
             DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
-            //ret = -ENOTTY;
             break;
     }
 
     if (status != STATUS_PENDING)
     {
-        //
         // complete the Irp if its not pended
-        //
         pIrp_p->IoStatus.Status = status;
         IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
     }
+
+    // Release lock
     IoReleaseRemoveLock(&pFileContext->driverAccessLock, pIrp_p);
 
     return status;
+}
+//============================================================================//
+//            P R I V A T E   F U N C T I O N S                               //
+//============================================================================//
+/// \name Private Functions
+/// \{
+
+//------------------------------------------------------------------------------
+/**
+\brief Register application interface device
+
+This routine is called from the miniport initialize callback to register IOCTL
+interface to be used to comunicate with user application.
+
+A device object to be used for this purpose is created by NDIS when we call
+NdisMRegisterDevice.
+
+This routine is called whenever a new miniport instance is
+initialized. However, we only create one global device object,
+when the first miniport instance is initialized.
+
+/param  driverHandle_p      Miniport driver handle returned by OS on registration
+
+*/
+//------------------------------------------------------------------------------
+static void registerAppIntf(NDIS_HANDLE driverHandle_p)
+{
+    NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
+    UNICODE_STRING                   deviceName;
+    UNICODE_STRING                   deviceLinkUnicodeString;
+    NDIS_DEVICE_OBJECT_ATTRIBUTES    deviceObjectAttributes;
+    PDRIVER_DISPATCH                 dispatchTable[IRP_MJ_MAXIMUM_FUNCTION + 1];
+
+    DEBUG_LVL_ALWAYS_TRACE("PLK %s()...\n", __func__);
+    plkDriverInstance_l.driverHandle = driverHandle_p;
+    NdisZeroMemory(dispatchTable, (IRP_MJ_MAXIMUM_FUNCTION + 1) * sizeof(PDRIVER_DISPATCH));
+
+    dispatchTable[IRP_MJ_CREATE] = powerlinkCreate;
+    dispatchTable[IRP_MJ_CLEANUP] = powerlinkCleanup;
+    dispatchTable[IRP_MJ_CLOSE] = powerlinkClose;
+    dispatchTable[IRP_MJ_DEVICE_CONTROL] = powerlinkIoctl;
+
+    NdisInitUnicodeString(&deviceName, PLK_DEV_STRING);
+    NdisInitUnicodeString(&deviceLinkUnicodeString, PLK_LINK_NAME);
+
+    NdisZeroMemory(&deviceObjectAttributes, sizeof(NDIS_DEVICE_OBJECT_ATTRIBUTES));
+
+    // type implicit from the context
+    deviceObjectAttributes.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+    deviceObjectAttributes.Header.Revision = NDIS_DEVICE_OBJECT_ATTRIBUTES_REVISION_1;
+    deviceObjectAttributes.Header.Size = sizeof(NDIS_DEVICE_OBJECT_ATTRIBUTES);
+    deviceObjectAttributes.DeviceName = &deviceName;
+    deviceObjectAttributes.SymbolicName = &deviceLinkUnicodeString;
+    deviceObjectAttributes.MajorFunctions = &dispatchTable[0];
+    deviceObjectAttributes.ExtensionSize = 0;
+    deviceObjectAttributes.DefaultSDDLString = NULL;
+    deviceObjectAttributes.DeviceClassGuid = 0;
+
+    status = NdisRegisterDeviceEx(driverHandle_p,
+                                  &deviceObjectAttributes,
+                                  &plkDriverInstance_l.pAppDeviceObject,
+                                  &plkDriverInstance_l.pAppDeviceHandle);
+
+    plkDriverInstance_l.pAppDeviceObject->Flags |= DO_BUFFERED_IO;
+
+    DEBUG_LVL_ALWAYS_TRACE("PLK %s() - OK\n", __func__);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief De-register application interface device
+
+De-register the IOCTL interface registered during initialization,
+
+*/
+//------------------------------------------------------------------------------
+static void deRegisterAppIntf(void)
+{
+    if (plkDriverInstance_l.pAppDeviceHandle != NULL)
+    {
+        NdisDeregisterDeviceEx(plkDriverInstance_l.pAppDeviceHandle);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -652,7 +575,7 @@ void stopHeartbeatTimer(void)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Increase heartbeat
+\brief  Increase heartbeat timer callback
 
 The function implements the timer callback function used to increase the
 heartbeat counter.
@@ -671,47 +594,6 @@ static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_
     UNUSED_PARAMETER(unusedParameter3_p);
 
     ctrlk_updateHeartbeat();
-}
-
-static void pdoSyncHandler(void)
-{
-    PIRP                  pIrp = NULL;
-    PLIST_ENTRY           pListEntry = NULL;
-    PIO_STACK_LOCATION    irpStack;
-    NTSTATUS              status = STATUS_SUCCESS;
-
-    DbgPrint("%s\n", __FUNCTION__);
-    if (IsListEmpty(&plkDriverInstance_l.pdoSyncQueue))
-    {
-        // If list is Empty no Event Irps are Pended to driver
-        // Do Nothin
-        return;
-    }
-    else
-    {
-        // Remove the Queued IRp
-        //
-        pListEntry = NdisInterlockedRemoveHeadList(&plkDriverInstance_l.pdoSyncQueue,
-                                                   &plkDriverInstance_l.pdoSyncLock);
-        pIrp = CONTAINING_RECORD(pListEntry, IRP, Tail.Overlay.ListEntry);
-
-        // Check If the Queued Irp is Not cancelled
-        // If Irp is Cancelled we wont process it an further
-        //
-        if (pIrp->Cancel)
-        {
-            status = STATUS_CANCELLED;
-            pIrp->IoStatus.Status = status;
-            pIrp->IoStatus.Information = 0;
-            IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-            return;
-        }
-
-        // Set the No of bytes read
-        pIrp->IoStatus.Information = 0;
-        pIrp->IoStatus.Status = status;
-        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-    }
 }
 
 ///\}

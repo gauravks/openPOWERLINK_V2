@@ -124,9 +124,6 @@
     <ClCompile Include="..\..\..\..\..\stack\src\common\ami\amix86.c">
       <Filter>Source Files\Architecture Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\appintf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -135,6 +132,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\..\stack\src\common\debugstr.c">
       <Filter>Source Files\Common Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\drvintf.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

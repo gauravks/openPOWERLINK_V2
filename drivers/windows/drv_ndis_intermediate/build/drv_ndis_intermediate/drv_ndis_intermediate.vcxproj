@@ -441,7 +441,7 @@
     <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdokcalsync-winkernel.c" />
     <ClCompile Include="..\..\..\..\..\stack\src\kernel\timer\hrestimer-ndistimer.c" />
     <ClCompile Include="..\..\..\..\..\stack\src\kernel\veth\veth-ndisintemediate.c" />
-    <ClCompile Include="..\..\appintf.c" />
+    <ClCompile Include="..\..\drvintf.c" />
     <ClCompile Include="..\..\main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

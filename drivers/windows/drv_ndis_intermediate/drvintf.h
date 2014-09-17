@@ -1,8 +1,8 @@
 /**
 ********************************************************************************
-\file   drv_ndis_intemediate/appintf.h
+\file   drv_ndis_intemediate/drvintf.h
 
-\brief  Application interface header file
+\brief  Driver interface header file
 
 // TODO: Add description here
 *******************************************************************************/
@@ -34,8 +34,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_appintf_H_
-#define _INC_appintf_H_
+#ifndef _INC_drvintf_H_
+#define _INC_drvintf_H_
 
 #include <common/driver.h>
 #include <common/ctrl.h>
@@ -55,24 +55,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
+typedef struct
+{
+    //
+    // Lock to rundown threads that are dispatching I/Os on a file handle
+    // while the cleanup for that handle is in progress.
+    //
+    IO_REMOVE_LOCK    driverAccessLock;
+} tFileContext;
 
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
-
-int  app_mapMemory(struct file* filp, struct vm_area_struct* vma);
-void app_memoryOpen(struct vm_area_struct* vma);
-void app_memoryClose(struct vm_area_struct* vma);
-
-int  app_executeCmd(tCtrlCmd* ctrlCmd_p);
-int  app_readInitParam(tCtrlInitParam* pInitParam_p);
-int  app_storeInitParam(tCtrlInitParam* pInitParam_p);
-int  app_getStatus(UINT16* status_p);
-int  app_getHeartbeat(UINT16* heartbeat);
-int  app_sendAsyncFrame(unsigned char* pArg_p);
-int  app_writeErrorObject(tErrHndIoctl* pWriteObject_p);
-int  app_readErrorObject(tErrHndIoctl* pReadObject_p);
-void drv_getSyncHandler(VOIDFUNCPTR* ppfnSyncCb_p);
+void  drv_executeCmd(tCtrlCmd* ctrlCmd_p);
+void  drv_readInitParam(tCtrlInitParam* pInitParam_p);
+void  drv_storeInitParam(tCtrlInitParam* pInitParam_p);
+void  drv_getStatus(UINT16* status_p);
+void  drv_getHeartbeat(UINT16* heartbeat);
+void  drv_sendAsyncFrame(unsigned char* pArg_p);
+void  drv_writeErrorObject(tErrHndIoctl* pWriteObject_p);
+void  drv_readErrorObject(tErrHndIoctl* pReadObject_p);
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -81,4 +83,4 @@ extern "C" {
 }
 #endif
 
-#endif /* _INC_appintf_H_ */
+#endif /* _INC_drvintf_H_ */

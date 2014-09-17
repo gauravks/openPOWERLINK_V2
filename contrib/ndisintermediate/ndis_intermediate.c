@@ -110,14 +110,12 @@ routines to OS using NdisXRegisterXXXDriver.
 NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pRegistryPath_p)
 {
     NDIS_STATUS                            ndisStatus = NDIS_STATUS_SUCCESS;
-    //    tNdisErrorStatus                        status = NdisStatusSuccess;
     NDIS_PROTOCOL_DRIVER_CHARACTERISTICS   protocolChars;
     NDIS_MINIPORT_DRIVER_CHARACTERISTICS   miniportChars;
     NDIS_HANDLE                            miniportDriverContext = NULL;
     NDIS_HANDLE                            protocolDriverContext = NULL;
     NDIS_STRING                            ndisDriverName;
 
-    DbgPrint("Driver Enrtry\n");
     NdisZeroMemory(&driverInstance_l, sizeof(tNdisDriverInstance));
 
     NdisZeroMemory(&miniportChars, sizeof(NDIS_MINIPORT_DRIVER_CHARACTERISTICS));
@@ -141,10 +139,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
     miniportChars.ShutdownHandlerEx = miniportShutdown;
     miniportChars.CancelOidRequestHandler = miniportCancelOidRequest;
 
-    //
-    // We will disable the check for hang timeout so we do not
-    // need a check for hang handler!
-    //
+    // Disable the check for hang timeout so no need for a check for hang handler!
     miniportChars.CheckForHangHandlerEx = NULL;
 
     miniportChars.ReturnNetBufferListsHandler = miniportReturnNetBufferLists;
@@ -202,15 +197,37 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
     // Create association between protocol and miniport driver
     NdisIMAssociateMiniport(driverInstance_l.pMiniportHandle, driverInstance_l.pProtocolHandle);
 
-    DbgPrint("Driver Enrtry->%x\n", ndisStatus);
     return ndisStatus;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Get miniport driver handle
+
+Get miniport driver handle returned by OS during miniport registration for this
+driver.
+
+\return The function returns miniport adapter handle.
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
 NDIS_HANDLE ndis_getAdapterHandle(void)
 {
     return driverInstance_l.pMiniportHandle;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Get Mac address for the device
+
+Get MAC address of the ethernet controller.
+
+\param pMac_p       Pointer to MAC address.
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
 void ndis_getMacAddress(UCHAR*  pMac_p)
 {
     UCHAR*   currentMac;
@@ -220,20 +237,32 @@ void ndis_getMacAddress(UCHAR*  pMac_p)
         NdisMoveMemory(pMac_p, currentMac, ETH_LENGTH_OF_ADDRESS);
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Register application interface routines
+
+Register routines for IOCTL interface registration and de-registration. NDIS
+driver calls the registration routine from miniport initialization callback,
+and de-registration from miniport halt callback.
+
+\param pMac_p       Pointer to MAC address.
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
 void ndis_registerAppIntf(tAppIntfRegister pAppIntfRegCb_p, tAppIntfDeRegister pAppIntfDeregCb_p)
 {
-    DbgPrint("%s() \n", __FUNCTION__);
     driverInstance_l.pfnAppIntfRegCb = pAppIntfRegCb_p;
     driverInstance_l.pfnAppIntfDeregisterCb = pAppIntfDeregCb_p;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Check lower bing state Tx buffer
+\brief  Check driver binding state
 
-Check the status of the miniport binding.
+Check the current state of lower edge binding of protocol.
 
-\return Returns TRUE if running else FALSE
+\return Returns TRUE if ready else FALSE
 
 \ingroup module_ndis
 */
@@ -245,11 +274,11 @@ BOOLEAN ndis_checkBindingState(void)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Set binding to Active
+\brief  Set binding state for the protocol driver
 
-Check the status of the miniport binding.
+Set the status of the protocol binding.
 
-\return Returns TRUE if running else FALSE
+\param state_p  State to set
 
 \ingroup module_ndis
 */
@@ -261,22 +290,29 @@ void ndis_setBindingState(ULONG state_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Allocate Tx and Rx buffer
+\brief  Allocate Tx and Rx buffers
 
-This routines allocates Tx and Rx buffers for receive queue and transmit queue
-and sets up queue mechanism.
+This routines invokes the specific Tx and Rx buffers allocation routine of the
+NDIS driver to initialize receive queue and transmit queue.
 
 \param  txBuffCount_p       Tx buffer count.
 \param  rxBuffCount_p       Rx buffer count.
 
-\return Returns tNdisErrorStatus error code
+\return Returns tNdisErrorStatus error code.
+\retval NdisStatusSuccess If buffers allocated successfully.
+\retval NdisStatusResources If some error occurred in allocation.
 
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 tNdisErrorStatus ndis_allocateTxRxBuff(UINT txBuffCount_p, UINT rxBuffCount_p)
 {
-    protocol_allocateTxRxBuf(txBuffCount_p, rxBuffCount_p);
+    NDIS_STATUS status;
+    status = protocol_allocateTxRxBuf(txBuffCount_p, rxBuffCount_p);
+
+    if (status != NDIS_STATUS_SUCCESS)
+        return NdisStatusResources;
+
     return NdisStatusSuccess;
 }
 
@@ -298,7 +334,7 @@ void ndis_freeTxRxBuff(void)
 /**
 \brief  Get Tx buffer
 
-This routines allocate a Tx buffer to be shared with the caller.
+This routines gets a Tx buffer to be shared with the caller from the NDIS driver.
 
 \param  pData_p      Pointer to buffer.
 \param  size_p       Size of the buffer.
@@ -313,16 +349,13 @@ tNdisErrorStatus ndis_getTxBuff(void** ppData_p, size_t size_p, void** ppTxLink_
 {
     tTxBufInfo*   pTxBuffInfo = protocol_getTxBuff(size_p);
 
-    if (pTxBuffInfo != NULL)
+    if (pTxBuffInfo == NULL)
     {
-        *ppData_p = pTxBuffInfo->pData;
-        *ppTxLink_p = (void*) &pTxBuffInfo->txLink;
-    }
-    else
-    {
-        DbgPrint("Why the fuck its Null Here\n");
         return NdisStatusResources;
     }
+
+    *ppData_p = pTxBuffInfo->pData;
+    *ppTxLink_p = (void*) &pTxBuffInfo->txLink;
 
     return NdisStatusSuccess;
 }
@@ -349,7 +382,9 @@ void ndis_freeTxBuff(void* pTxLink_p)
 
 Send a packet
 
-\param  pTxLink_p      Pointer to LIST_ENTRY of the Txbuffer
+\param  pData_p      Pointer to data buffer.
+\param  size_p       Size of the packet to send.
+\param  pTxLink_p    Pointer to link list entry for the Tx buffer.
 
 \return Returns tNdisErrorStatus error code
 
@@ -360,20 +395,18 @@ tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
 {
     NDIS_STATUS    ndisStatus;
 
-    // DbgPrint("%s\n", __FUNCTION__);
     if (pData_p == NULL || pTxLink_p == NULL)
     {
         return NdisStatusInvalidParams;
     }
-    //DbgPrint("1\n", __FUNCTION__);
+
     ndisStatus = protocol_sendPacket(pData_p, size_p, pTxLink_p);
 
-    //DbgPrint("2\n", __FUNCTION__);
     if (ndisStatus != NDIS_STATUS_SUCCESS)
     {
         return NdisStatusTxError;
     }
-    // DbgPrint("3\n", __FUNCTION__);
+
     return NdisStatusSuccess;
 }
 
@@ -381,13 +414,10 @@ tNdisErrorStatus ndis_sendPacket(void* pData_p, size_t size_p, void* pTxLink_p)
 /**
 \brief  Register Tx and Rx callback
 
-Ndis intermediate driver calls the Tx callback from SentNetBufferListsComplete
-handler and Rx callback from the NetBufferListsReceive handler.
+Register Tx and Rx callbacks to NDIS driver.
 
 \param  pfnTxCallback_p      Pointer to Tx callback routine.
 \param  pfnRxCallback_p      Pointer to Rx callback routine.
-
-\return Returns tNdisErrorStatus error code
 
 \ingroup module_ndis
 */
@@ -402,15 +432,14 @@ void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
 /**
 \brief  Create Application interface device
 
-This routines calls the application specific applicaiton interface routine which
-initializes a IOCTL interface for user applicaition to interact with the driver
+This routines calls the IOCTL interface registration routine which initializes
+a IOCTL interface for user application to interact with the driver.
 
 \ingroup module_ndis
 */
 //------------------------------------------------------------------------------
 void ndis_createAppIntf(void)
 {
-    DbgPrint("%s() \n", __FUNCTION__);
     driverInstance_l.pfnAppIntfRegCb(driverInstance_l.pMiniportHandle);
 }
 
@@ -422,6 +451,7 @@ Close the IOCTL interface created before.
 
 \ingroup module_ndis
 */
+//------------------------------------------------------------------------------
 void ndis_closeAppIntf(void)
 {
     driverInstance_l.pfnAppIntfDeregisterCb();
@@ -432,6 +462,7 @@ void ndis_closeAppIntf(void)
 //============================================================================//
 /// \name Private Functions
 /// \{
+
 //------------------------------------------------------------------------------
 /**
 \brief  Miniport set options routine for NDIS driver
@@ -443,6 +474,8 @@ with NDIS.
 \param  driverContext_p     Specifies a handle to a driver-allocated context area
                             where the driver maintains state and configuration
                             information.
+
+                            NOTE: Nothing to be done in this routine now.
 
 \return The function returns a NDIS_STATUS error code.
 
@@ -466,6 +499,8 @@ with NDIS.
 \param  driverContext_p     Specifies a handle to a driver-allocated context area
                             where the driver maintains state and configuration
                             information.
+
+                            NOTE: Nothing to be done in this routine now.
 
 \return The function returns a NDIS_STATUS error code.
 
