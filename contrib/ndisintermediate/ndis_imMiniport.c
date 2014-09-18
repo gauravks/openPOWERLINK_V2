@@ -173,8 +173,10 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     NET_IFINDEX    highLayerIfIndex;
     NET_IFINDEX    lowerLayerIfIndex;
     ULONG          packetFilter = NDIS_PACKET_TYPE_PROMISCUOUS;
+
     UNREFERENCED_PARAMETER(driverContext_p);
-    DbgPrint("%s() ---> \n", __FUNCTION__);
+
+    DbgPrint("%s()... \n", __FUNCTION__);
 
     if (fInitialize == TRUE)
     {
@@ -185,10 +187,10 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     NdisZeroMemory(&miniportAttributes, sizeof(NDIS_MINIPORT_ADAPTER_ATTRIBUTES));
 
     pVEthInstance->miniportAdapterHandle = adapterHandle_p;
-    ndis_createAppIntf();
+
     // Register IOCTL interface here
-    // TODO@gks:
-    DbgPrint("1 \n");
+    ndis_createAppIntf();
+
     miniportAttributes.RegistrationAttributes.Header.Type = NDIS_OBJECT_TYPE_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES;
     miniportAttributes.RegistrationAttributes.Header.Revision = NDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES_REVISION_1;
     miniportAttributes.RegistrationAttributes.Header.Size = sizeof(NDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES);
@@ -197,7 +199,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     miniportAttributes.RegistrationAttributes.AttributeFlags = NDIS_MINIPORT_ATTRIBUTES_NO_HALT_ON_SUSPEND;
     miniportAttributes.RegistrationAttributes.CheckForHangTimeInSeconds = 0;
     miniportAttributes.RegistrationAttributes.InterfaceType = 0;
-    DbgPrint("2 \n");
+
     NDIS_DECLARE_MINIPORT_ADAPTER_CONTEXT(tVEthInstance);
     status = NdisMSetMiniportAttributes(adapterHandle_p, &miniportAttributes);
 
@@ -205,14 +207,14 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     {
         goto Exit;
     }
-    DbgPrint("3 \n");
+
     // TODO@gks check if we need this for our VETH
     configObject.Header.Type = NDIS_OBJECT_TYPE_CONFIGURATION_OBJECT;
     configObject.Header.Revision = NDIS_CONFIGURATION_OBJECT_REVISION_1;
     configObject.Header.Size = sizeof(NDIS_CONFIGURATION_OBJECT);
     configObject.NdisHandle = pVEthInstance->miniportAdapterHandle;
     configObject.Flags = 0;
-    DbgPrint("4 \n");
+
     status = NdisOpenConfigurationEx(&configObject, &configHandle);
 
     if (status != NDIS_STATUS_SUCCESS)
@@ -221,7 +223,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     }
 
     NdisReadNetworkAddress(&status, &macAddress, &macLength, configHandle);
-    DbgPrint("5 \n");
+
     if ((status == NDIS_STATUS_SUCCESS) && (macLength == ETH_LENGTH_OF_ADDRESS) &&
         (!ETH_IS_MULTICAST(macAddress)))
     {
@@ -236,17 +238,12 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     status = NDIS_STATUS_SUCCESS;
 
     NdisCloseConfiguration(configHandle);
-    DbgPrint("6 \n");
+
     miniportAttributes.GeneralAttributes.Header.Type = NDIS_OBJECT_TYPE_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES;
     miniportAttributes.GeneralAttributes.Header.Revision = NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES_REVISION_1;
     miniportAttributes.GeneralAttributes.Header.Size = sizeof(NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES);
     miniportAttributes.GeneralAttributes.MediaType = NdisMedium802_3;
 
-    // TODO@gks: Implement locking for parameter access by protocol and miniport drivers.
-    if (pVEthInstance->protocolInstance == NULL)
-    {
-        DbgPrint("Protocol Instance Null\n");
-    }
     miniportAttributes.GeneralAttributes.MtuSize = pVEthInstance->protocolInstance->bindParameters.MtuSize;
     miniportAttributes.GeneralAttributes.MaxXmitLinkSpeed = pVEthInstance->protocolInstance->bindParameters.MaxXmitLinkSpeed;
     miniportAttributes.GeneralAttributes.MaxRcvLinkSpeed = pVEthInstance->protocolInstance->bindParameters.MaxRcvLinkSpeed;
@@ -298,11 +295,10 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     miniportAttributes.GeneralAttributes.SupportedOidListLength = sizeof(VEthSupportedOids);
 
     //Release lock
-    DbgPrint("7 \n");
     status = NdisMSetMiniportAttributes(adapterHandle_p, &miniportAttributes);
 
     pVEthInstance->miniportInitPending = FALSE;
-    DbgPrint("8 \n");
+
 Exit:
 
     if (status == NDIS_STATUS_SUCCESS)
@@ -346,7 +342,7 @@ Exit:
                             sizeof(packetFilter));
 
     NdisSetEvent(&pVEthInstance->miniportInitEvent);
-
+    DbgPrint("%s() - OK \n", __FUNCTION__);
     return status;
 }
 
@@ -413,12 +409,14 @@ VOID miniportHalt(NDIS_HANDLE adapterContext_p, NDIS_HALT_ACTION haltAction_p)
 {
     tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
     NET_IFINDEX      lowerLayerIfIndex;
-    DbgPrint("%s() ---> \n", __FUNCTION__);
+
+    DbgPrint("%s()...\n", __FUNCTION__);
+
     pVEthInstance->miniportHalting = TRUE;
 
     while (pVEthInstance->sendRequests)
     {
-        // Qait for completion of ASynchronous sends on VEth
+        // Wait for completion of ASynchronous sends on VEth
         NdisMSleep(20000);
     }
 
@@ -443,6 +441,8 @@ VOID miniportHalt(NDIS_HANDLE adapterContext_p, NDIS_HALT_ACTION haltAction_p)
     pVEthInstance->miniportAdapterHandle = NULL;
 
     protocol_freeVEthInstance(pVEthInstance);
+
+    DbgPrint("%s() - OK\n", __FUNCTION__);
 }
 
 //------------------------------------------------------------------------------
@@ -459,7 +459,6 @@ device object
 //------------------------------------------------------------------------------
 VOID miniportPnPEventNotify(NDIS_HANDLE adapterContext_p, PNET_DEVICE_PNP_EVENT pnPEvent_p)
 {
-    DbgPrint("%s() ---> \n", __FUNCTION__);
     // Not a real device
     UNREFERENCED_PARAMETER(adapterContext_p);
     UNREFERENCED_PARAMETER(pnPEvent_p);
@@ -480,7 +479,6 @@ we need to do about this.
 //------------------------------------------------------------------------------
 VOID miniportShutdown(NDIS_HANDLE adapterContext_p, NDIS_SHUTDOWN_ACTION shutdownAction_P)
 {
-    DbgPrint("%s() ---> \n", __FUNCTION__);
     UNREFERENCED_PARAMETER(adapterContext_p);
     UNREFERENCED_PARAMETER(shutdownAction_P);
 }
@@ -498,7 +496,7 @@ This handler is used to unload the miniport
 //------------------------------------------------------------------------------
 VOID miniportUnload(PDRIVER_OBJECT driverObject_p)
 {
-    DbgPrint("%s() ---> \n", __FUNCTION__);
+    DbgPrint("%s()...\n", __FUNCTION__);
     UNREFERENCED_PARAMETER(driverObject_p);
     if (driverInstance_l.pProtocolHandle != NULL)
     {
@@ -506,7 +504,7 @@ VOID miniportUnload(PDRIVER_OBJECT driverObject_p)
     }
 
     NdisMDeregisterMiniportDriver(driverInstance_l.pMiniportHandle);
-    DbgPrint("%s() <---- \n", __FUNCTION__);
+    DbgPrint("%s() - OK\n", __FUNCTION__);
 }
 
 //------------------------------------------------------------------------------
@@ -528,10 +526,12 @@ NDIS_STATUS miniportPause(NDIS_HANDLE adapterContext_p,
     tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
     NDIS_STATUS      status = NDIS_STATUS_SUCCESS;
 
+    DbgPrint("%s()...\n", __FUNCTION__);
     NdisAcquireSpinLock(&pVEthInstance->pauseLock);
     pVEthInstance->miniportPaused = TRUE;
     NdisReleaseSpinLock(&pVEthInstance->pauseLock);
 
+    DbgPrint("%s() - OK\n", __FUNCTION__);
     return status;
 }
 
@@ -555,11 +555,11 @@ NDIS_STATUS miniportRestart(NDIS_HANDLE adapterContext_p,
     tVEthInstance*   pVEthInstance = (tVEthInstance*) adapterContext_p;
     NDIS_STATUS      status = NDIS_STATUS_SUCCESS;
 
-    DbgPrint("%s() ---> \n", __FUNCTION__);
+    DbgPrint("%s()... \n", __FUNCTION__);
     NdisAcquireSpinLock(&pVEthInstance->pauseLock);
     pVEthInstance->miniportPaused = FALSE;
     NdisReleaseSpinLock(&pVEthInstance->pauseLock);
-
+    DbgPrint("%s() - OK \n", __FUNCTION__);
     return status;
 }
 

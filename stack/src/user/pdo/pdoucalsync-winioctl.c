@@ -162,7 +162,7 @@ The function waits for a sync event.
 tOplkError pdoucal_waitSyncEvent(ULONG timeout_p)
 {
     ULONG    bytesReturned;
-    //printf("Sync\n");
+
     if (!pdoInstance_l.fIntialized)
         return kErrorNoResource;
 

@@ -153,12 +153,10 @@ tOplkError pdoucal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 
     inPdoMem.memSize = memSize_p;
 
-    printf("Allocate PDO memory %d\n", memSize_p);
     if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_GET_MEM,
                          &inPdoMem, sizeof(tPdoMem), &outPdoMem, sizeof(tPdoMem),
                          &bytesReturned, NULL))
     {
-        printf("Error in PDO memory allocation %x\n", GetLastError());
         *ppPdoMem_p = NULL;
         return kErrorNoResource;
     }
@@ -168,11 +166,9 @@ tOplkError pdoucal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
         if (outPdoMem.pPdoAddr != NULL)
         {
             *ppPdoMem_p = outPdoMem.pPdoAddr;
-            printf("Pdo Address %x\n", outPdoMem.pPdoAddr);
         }
         else
         {
-            printf("Allocation of PDO memory Failed\n");
             *ppPdoMem_p = NULL;
             return kErrorNoResource;
         }

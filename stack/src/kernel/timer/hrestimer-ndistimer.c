@@ -156,7 +156,7 @@ tOplkError hrestimer_addInstance(void)
     NDIS_STATUS                   status = NDIS_STATUS_SUCCESS;
     NDIS_HANDLE                   adapterHandle = ndis_getAdapterHandle();
     UINT    index;
-    DbgPrint("%s\n", __func__);
+
     OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof(hresTimerInstance_l));
     // TODO: get adapter handle here
 
@@ -201,7 +201,6 @@ tOplkError hrestimer_delInstance(void)
 {
     tHresTimerInfo*   pTimerInfo;
     UINT              index;
-    DbgPrint("%s\n", __func__);
 
     if (!hresTimerInstance_l.fInitialized)
         return kErrorOk;
@@ -255,7 +254,7 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     tHresTimerInfo*   pTimerInfo;
     LONGLONG          relTime;
     LARGE_INTEGER     period;
-    //DbgPrint("%s\n %x %llx", __func__, fContinue_p, time_p);
+
     if (pTimerHdl_p == NULL)
         return kErrorTimerInvalidHandle;
 
@@ -356,7 +355,7 @@ tOplkError hrestimer_deleteTimer(tTimerHdl* pTimerHdl_p)
     *pTimerHdl_p = 0;
     pTimerInfo->eventArg.timerHdl = 0;
     pTimerInfo->pfnCallback = NULL;
-    DbgPrint("%s\n", __func__);
+
     return kErrorOk;
 }
 
@@ -372,7 +371,7 @@ void timerDpc(PVOID unusedParameter1_p, PVOID functionContext_p, PVOID unusedPar
     tHresTimerInfo*   pTimerInfo = (tHresTimerInfo*) functionContext_p;
     tTimerHdl         orgTimerHdl;
     UINT              index;
-    //DbgPrint("Timer Interrupt\n");
+
     UNREFERENCED_PARAMETER(unusedParameter1_p);
     UNREFERENCED_PARAMETER(unusedParameter2_p);
     UNREFERENCED_PARAMETER(unusedParameter3_p);

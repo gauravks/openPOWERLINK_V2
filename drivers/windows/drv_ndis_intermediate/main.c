@@ -387,7 +387,6 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_DLLCAL_ASYNCSEND:
         {
-            DEBUG_LVL_ALWAYS_TRACE("Send Async\n");
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
             drv_sendAsyncFrame(pInBuffer);
             break;

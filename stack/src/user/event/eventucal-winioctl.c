@@ -336,11 +336,9 @@ static UINT32 eventThread(void* arg_p)
 
     while (!instance_l.fStopThread)
     {
-        //printf("Get Event\n");
         ret = DeviceIoControl(instance_l.rcvfileHandle, PLK_CMD_GET_EVENT,
                               NULL, 0, eventBuf, eventBufSize,
                               &bytesReturned, NULL);
-        //printf("Event\n");
         if (!ret)
         {
             if (DEVICE_CLOSE_IO == GetLastError())
@@ -354,10 +352,9 @@ static UINT32 eventThread(void* arg_p)
 
             break;
         }
-        //printf("Event\n");
+
         if (bytesReturned != 0)
         {
-            //printf("eventBufSize %d\n", eventBufSize);
             /*TRACE ("%s() User: got event type:%d(%s) sink:%d(%s)\n", __func__,
             pEvent->eventType, debugstr_getEventTypeStr(pEvent->eventType),
             pEvent->eventSink, debugstr_getEventSinkStr(pEvent->eventSink));*/
@@ -366,8 +363,8 @@ static UINT32 eventThread(void* arg_p)
 
             ret = eventu_process(pEvent);
         }
-        else
-            TRACE("%s() ret = %d %d\n", __func__, ret, bytesReturned);
+        /*else
+            TRACE("%s() ret = %d %d\n", __func__, ret, bytesReturned);*/
     }
 
     CloseHandle(instance_l.rcvfileHandle);

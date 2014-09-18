@@ -109,7 +109,7 @@ static tEventkCalInstance    instance_l;            ///< Instance variable of ke
 KSTART_ROUTINE               eventThread;
 static void signalUserEvent(void);
 static void signalKernelEvent(void);
-// TODO: Event handling threads
+
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
@@ -314,14 +314,13 @@ void eventkcal_postEventFromUser(void* pEvent_p)
     char*         pArg = NULL;
 
     if (!instance_l.fInitialized)
-        return; //Error
+        return;
 
     OPLK_MEMCPY(&event, pEvent_p, sizeof(tEvent));
 
     if (event.eventArgSize != 0)
     {
         pArg =    (char*)((UCHAR*) pEvent_p + sizeof(tEvent));
-        //OPLK_MEMCPY(pArg, , event.eventArgSize); // TODO: check the arithmetic
         event.pEventArg = pArg;
     }
 
@@ -387,15 +386,14 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     UINT32        timeout = 500;
 
     if (!instance_l.fInitialized)
-        return; //Error
+        return;
 
     fRet = NdisWaitEvent(&instance_l.userWaitEvent, timeout);
-    //DbgPrint("%s\n", __func__);
+
     if (fRet && (instance_l.userEventCount == 0))
     {
-        TRACE("%s() timeout!\n", __func__);
         NdisResetEvent(&instance_l.userWaitEvent);
-        return; // TODO: error values
+        return;
     }
 
     if (!instance_l.fInitialized)
@@ -404,24 +402,21 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
     NdisResetEvent(&instance_l.userWaitEvent);
     if (eventkcal_getEventCountCircbuf(kEventQueueK2U) > 0)
     {
-        //DbgPrint("1\n");
         NdisInterlockedDecrement(&instance_l.userEventCount);
 
         error = eventkcal_getEventCircbuf(kEventQueueK2U, instance_l.aK2URxBuffer, &readSize);
         if (error != kErrorOk)
         {
             DEBUG_LVL_ERROR_TRACE("%s() Error reading K2U events %d!\n", __func__, error);
-            return; //TODO: error
+            return;
         }
-        //DbgPrint("2\n");
+
         if (pEvent_p == NULL)
         {
-            DbgPrint("NULL Check\n");
             return;
         }
         OPLK_MEMCPY(pEvent_p, instance_l.aK2URxBuffer, readSize);
         *pSize_p = readSize;
-        // DbgPrint("3\n");
         return;
     }
     else if (eventkcal_getEventCountCircbuf(kEventQueueUInt) > 0)
@@ -432,7 +427,7 @@ void eventkcal_getEventForUser(void* pEvent_p, size_t* pSize_p)
         if (error != kErrorOk)
         {
             DEBUG_LVL_ERROR_TRACE("%s() Error reading UINT events %d!\n", __func__, error);
-            return;     //TODO: error
+            return;
         }
 
         //TRACE("%s() copy user event to user: %d Bytes\n", __func__, readSize);
@@ -473,36 +468,29 @@ static void eventThread(void* arg)
 
     while (instance_l.fInitialized)
     {
-        //DbgPrint("Kernel Event Thread\n");
         fRet = NdisWaitEvent(&instance_l.kernelWaitEvent, timeout);
-
-        //DbgPrint("Kernel Event\n");
         if (!instance_l.fInitialized)
             break;
 
         NdisResetEvent(&instance_l.kernelWaitEvent);
-        //if(fRet)
-        // continue;
+
         if (instance_l.kernelEventCount <= 0)
             continue;
-        //DbgPrint("Kernel Event %x\n",fRet);
+
         /* first handle all kernel internal events --> higher priority! */
         while (eventkcal_getEventCountCircbuf(kEventQueueKInt) > 0)
         {
-            //DbgPrint("kEventQueueKInt\n");
             eventkcal_processEventCircbuf(kEventQueueKInt);
             NdisInterlockedDecrement(&instance_l.kernelEventCount);
         }
 
         if (eventkcal_getEventCountCircbuf(kEventQueueU2K) > 0)
         {
-            //DbgPrint("kEventQueueU2K\n");
             eventkcal_processEventCircbuf(kEventQueueU2K);
             NdisInterlockedDecrement(&instance_l.kernelEventCount);
         }
     }
 
-    DbgPrint("%s() Exit\n", __func__);
     instance_l.fThreadIsRunning = FALSE;
 }
 
@@ -516,7 +504,6 @@ the circular buffer library as signal callback function
 //------------------------------------------------------------------------------
 void signalUserEvent(void)
 {
-    //DbgPrint("%s()\n", __func__);
     NdisInterlockedIncrement(&instance_l.userEventCount);
     NdisSetEvent(&instance_l.userWaitEvent);
 }
@@ -531,7 +518,6 @@ the circular buffer library as signal callback function
 //------------------------------------------------------------------------------
 void signalKernelEvent(void)
 {
-    //DbgPrint("%s()\n", __func__);
     NdisInterlockedIncrement(&instance_l.kernelEventCount);
     NdisSetEvent(&instance_l.kernelWaitEvent);
 }

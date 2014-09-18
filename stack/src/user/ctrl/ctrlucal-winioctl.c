@@ -264,8 +264,6 @@ UINT16 ctrlucal_getStatus(void)
         return kCtrlStatusUnavailable;
     }
 
-    if (status != kCtrlStatusRunning)
-        printf(" Status %x\n", status);
     return status;
 }
 

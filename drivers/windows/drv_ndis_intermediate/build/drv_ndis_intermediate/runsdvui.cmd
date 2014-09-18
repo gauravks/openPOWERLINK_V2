@@ -1,2 +1,0 @@
-cd /d "J:\Win-Split-PCIe\Integration\openPOWERLINK-Win-v1.0\drivers\windows\drv_ndis_intermediate\build\drv_ndis_intermediate" &msbuild "drv_ndis_intermediate.vcxproj" /t:sdvViewer /p:configuration="Win7 Debug" /p:platform=x64
-exit %errorlevel% 

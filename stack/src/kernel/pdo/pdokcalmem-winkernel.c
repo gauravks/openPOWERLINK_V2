@@ -147,7 +147,6 @@ The function allocates shared memory for the kernel needed to transfer the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 {
-    DbgPrint("Allocate Memory %d\n", memSize_p);
     instance_l.pKernelVa = OPLK_MALLOC(memSize_p);
 
     if (instance_l.pKernelVa == NULL)
@@ -158,8 +157,6 @@ tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
 
     *ppPdoMem_p = instance_l.pKernelVa;
     instance_l.memSize = memSize_p;
-    DbgPrint("Allocated Memory %d\n", instance_l.memSize);
-
     return kErrorOk;
 }
 
@@ -180,7 +177,6 @@ transfering the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
 {
-    DbgPrint("Free Memory %d-%d\n", memSize_p, instance_l.memSize);
     if (instance_l.pKernelVa != NULL)
     {
         //OPLK_FREE(instance_l.pKernelVa);
@@ -204,15 +200,12 @@ tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
 //------------------------------------------------------------------------------
 tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
 {
-    DbgPrint("%s()\n", __func__);
-
     if (memSize_p > instance_l.memSize)
     {
         DEBUG_LVL_ERROR_TRACE("%s() Higher Memory requested (Kernel-%d User-%d) !\n",
                               __func__, instance_l.memSize, memSize_p);
         return kErrorNoResource;
     }
-    DbgPrint("1\n", __func__);
     // Allocate new MDL pointing to PDO memory
     instance_l.pMdl = IoAllocateMdl(instance_l.pKernelVa, instance_l.memSize, FALSE, FALSE,
                                     NULL);
@@ -222,11 +215,11 @@ tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
         DEBUG_LVL_ERROR_TRACE("%s() Error allocating MDL !\n", __func__);
         return kErrorNoResource;
     }
-    DbgPrint("2\n", __func__);
+
     // Update the MDL with physical addresses
     MmBuildMdlForNonPagedPool(instance_l.pMdl);
     // Map the memory in user space and get the address
-    DbgPrint("3\n", __func__);
+
     instance_l.pUserVa = MmMapLockedPagesSpecifyCache(instance_l.pMdl,      // MDL
                                                       UserMode,             // Mode
                                                       MmCached,             // Caching
@@ -241,7 +234,6 @@ tOplkError pdokcal_mapMem(BYTE** pMem_p, size_t memSize_p)
         DEBUG_LVL_ERROR_TRACE("%s() Error mapping MDL !\n", __func__);
         return kErrorNoResource;
     }
-    DbgPrint("4\n", __func__);
 
     *pMem_p = instance_l.pUserVa;
     return kErrorOk;
