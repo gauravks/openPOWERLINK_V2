@@ -31,15 +31,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\contrib\ndisintermediate\ndis_imMiniport.c">
-      <Filter>Source Files\Ndis Intermediate Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\contrib\ndisintermediate\ndis_imProtocol.c">
-      <Filter>Source Files\Ndis Intermediate Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\contrib\ndisintermediate\ndis_intermediate.c">
-      <Filter>Source Files\Ndis Intermediate Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\..\stack\src\kernel\ctrl\ctrlk.c">
       <Filter>Source Files\Kernel Source Files</Filter>
     </ClCompile>
@@ -135,6 +126,15 @@
     </ClCompile>
     <ClCompile Include="..\..\drvintf.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_imMiniport.c">
+      <Filter>Source Files\Ndis Intermediate Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_imProtocol.c">
+      <Filter>Source Files\Ndis Intermediate Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_intermediate.c">
+      <Filter>Source Files\Ndis Intermediate Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

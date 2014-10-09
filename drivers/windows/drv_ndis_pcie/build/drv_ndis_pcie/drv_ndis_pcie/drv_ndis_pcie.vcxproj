@@ -51,13 +51,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BE53555D-B97E-480A-9CAB-29AA58D34D00}</ProjectGuid>
+    <ProjectGuid>{4D54E587-D944-4F05-A14C-E6F4A48948FD}</ProjectGuid>
     <TemplateGuid>{dd38f7fc-d7bd-488b-9242-7d8754cde80d}</TemplateGuid>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <Configuration>Win8.1 Debug</Configuration>
     <Platform Condition="'$(Platform)' == ''">Win32</Platform>
-    <RootNamespace>drv_ndis_intermediate</RootNamespace>
+    <RootNamespace>drv_ndis_pcie</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Debug|Win32'" Label="Configuration">
@@ -184,25 +184,18 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <TargetName>$(TargetName.Replace(' ',''))</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <IntDir>$(TargetName).dir\Release\</IntDir>
-    <TargetName>$(TargetName.Replace(' ',''))</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -210,16 +203,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -227,16 +216,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -244,16 +229,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -261,16 +242,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -278,16 +255,12 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>CONFIG_MN;_X86_=1;i386=1;STD_CALL;NDIS60;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -295,16 +268,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -312,38 +283,29 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
-      <GenerateMapFile>true</GenerateMapFile>
-      <MapExports>true</MapExports>
-      <AssemblyDebug>true</AssemblyDebug>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win7 Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
-      <CallingConvention>Cdecl</CallingConvention>
-      <CompileAs>CompileAsC</CompileAs>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -351,16 +313,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -368,16 +328,14 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8 Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
@@ -385,64 +343,40 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Win8.1 Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\..\..\..\stack\include;..\..\;..\..\proj\mn;..\..\..\..\..\stack\src;..\..\..\..\..\stack\include\target;..\..\..\..\..\stack\src\kernel\dll;..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\stack\src\arch\windows;..\..\..\..\..\contrib\ndislib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\..\stack\include;..\..\..\..\..\..\stack\src\kernel\errhnd;..\..\..\proj\mn;..\..\..\;..\..\..\..\..\..\stack\src\common\circbuf;..\..\..\..\..\..\contrib\ndislib\ndispcie;..\..\..\..\..\..\contrib\dualprocshm\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;CONFIG_MN;%(PreprocessorDefinitions);NDIS60</PreprocessorDefinitions>
-      <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <DisableSpecificWarnings>4100;4603;4627;4986;4987;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalOptions>%(AdditionalOptions)  /GS</AdditionalOptions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(DDK_LIB_PATH)\wmilib.lib;$(DDK_LIB_PATH)\ndis.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Inf Include="drv_ndis_intermediate_mp.inf" />
+    <Inf Include="drv_ndis_pcie.inf" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
     <FilesToPackage Include="@(Inf->'%(CopyOutput)')" Condition="'@(Inf)'!=''" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_imMiniport.c" />
-    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_imProtocol.c" />
-    <ClCompile Include="..\..\..\..\..\contrib\ndislib\ndisintermediate\ndis_intermediate.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\arch\winkernel\target-winkernel.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\common\ami\amix86.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\common\circbuf\circbuf-winkernel.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\common\circbuf\circbuffer.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\common\debugstr.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\ctrl\ctrlk.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\ctrl\ctrlkcal-direct.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllk.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkcal-circbuf.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkcal.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkevent.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkfilter.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkframe.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllknode.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\dll\dllkstatemachine.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\edrv\edrv-ndisintermediate.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\edrv\edrvcyclic.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\errhnd\errhndk.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\errhnd\errhndkcal-local.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\event\eventk.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\event\eventkcal-winkernel.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\event\eventkcalintf-circbuf.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\nmt\nmtk.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdok.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdokcal-triplebufshm.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdokcal.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdokcalmem-winkernel.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\pdo\pdokcalsync-winkernel.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\timer\hrestimer-ndistimer.c" />
-    <ClCompile Include="..\..\..\..\..\stack\src\kernel\veth\veth-ndisintemediate.c" />
-    <ClCompile Include="..\..\drvintf.c" />
-    <ClCompile Include="..\..\main.c" />
+    <ClCompile Include="..\..\..\..\..\..\contrib\dualprocshm\src\dualprocshm-intr.c" />
+    <ClCompile Include="..\..\..\..\..\..\contrib\dualprocshm\src\dualprocshm-noos.c" />
+    <ClCompile Include="..\..\..\..\..\..\contrib\dualprocshm\src\dualprocshm-pci.c" />
+    <ClCompile Include="..\..\..\..\..\..\contrib\ndislib\ndispcie\ndis_pcie.c" />
+    <ClCompile Include="..\..\..\..\..\..\contrib\ndislib\ndispcie\ndis_pcieMiniport.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\arch\winkernel\target-winkernel.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\common\ami\amix86.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\common\circbuf\circbuf-noosdual.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\common\circbuf\circbuffer.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\common\debugstr.c" />
+    <ClCompile Include="..\..\..\..\..\..\stack\src\common\memmap\memmap-null.c" />
+    <ClCompile Include="..\..\..\drvintf.c" />
+    <ClCompile Include="..\..\..\main.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
