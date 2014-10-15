@@ -53,7 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 #include <dualprocshm.h>
-#include <ndis-intf.h>
+
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -164,14 +164,17 @@ tDualprocReturn dualprocshm_create(tDualprocConfig* pConfig_p, tDualprocDrvInsta
 
     if (pConfig_p->procInstance == kDualProcFirst)
     {
-    	memset(pDrvInst->pCommMemBase, 0, MAX_COMMON_MEM_SIZE);
+        memset(pDrvInst->pCommMemBase, 0, MAX_COMMON_MEM_SIZE);
     }
+
+    DbgPrint("Common Buff %x\n", pDrvInst->pCommMemBase);
     // get the address to store address mapping table
     pDrvInst->pAddrTableBase = dualprocshm_getDynMapTableAddr();
     if (pConfig_p->procInstance == kDualProcFirst)
     {
          memset(pDrvInst->pAddrTableBase, 0, (MAX_DYNAMIC_BUFF_COUNT * 4));
     }
+
     pDrvInst->iMaxDynBuffEntries = MAX_DYNAMIC_BUFF_COUNT;
     pDrvInst->pDynResTbl = (tDualprocDynResConfig*)aDynResInit;
 
@@ -313,6 +316,7 @@ tDualprocReturn dualprocshm_getMemory(tDualprocDrvInstance pInstance_p, UINT8 id
 {
     tDualProcDrv*   pDrvInst = (tDualProcDrv *) pInstance_p;
     UINT8*          pMemBase;
+    int             iIndex;
 
     if (pInstance_p == NULL || ppAddr_p == NULL || pSize_p == NULL )
         return kDualprocInvalidParameter;
@@ -337,15 +341,16 @@ tDualprocReturn dualprocshm_getMemory(tDualprocDrvInstance pInstance_p, UINT8 id
         pDrvInst->pDynResTbl[id_p].memInst->span = (UINT16)*pSize_p;
 
         // write the address in mapping table
-        pDrvInst->pDynResTbl[id_p].pfnSetDynAddr(pDrvInst, id_p, (UINT32)pMemBase);
+        pDrvInst->pDynResTbl[id_p].pfnSetDynAddr(pDrvInst->pAddrTableBase, id_p, (UINT32)pMemBase);
     }
     else
     {
-        pMemBase = (UINT8 *)pDrvInst->pDynResTbl[id_p].pfnGetDynAddr(pDrvInst, id_p);
+        pMemBase = (UINT8*) pDrvInst->pDynResTbl[id_p].pfnGetDynAddr(pDrvInst->pAddrTableBase, id_p);
 
         if (pMemBase == NULL)
             return kDualprocNoResource;
 
+        DbgPrint(" %s %p-%p\n", __FUNCTION__, pDrvInst->pAddrTableBase, pMemBase);
         pDrvInst->pDynResTbl[id_p].memInst = (tDualprocMemInst*) pMemBase;
         pDrvInst->pDynResTbl[id_p].pBase = pMemBase + sizeof(tDualprocMemInst);
         *pSize_p = (size_t) pDrvInst->pDynResTbl[id_p].memInst->span;

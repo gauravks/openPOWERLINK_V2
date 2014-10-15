@@ -130,7 +130,7 @@ tCircBufError circbuf_alloc(UINT8 id_p, size_t size_p, tCircBufInstance** ppInst
     size_t              alignedSize;
     tCircBufInstance*   pInstance;
     tCircBufError       ret;
-
+    DbgPrint("%s() -->\n", __func__);
     if ((size_p == 0) || (id_p >= NR_OF_CIRC_BUFFERS))
     {
         DEBUG_LVL_ERROR_TRACE("%s() invalid arg!\n", __func__);
@@ -202,7 +202,7 @@ tCircBufError circbuf_connect(UINT8 id_p, tCircBufInstance** ppInstance_p)
 {
     tCircBufError       ret;
     tCircBufInstance*   pInstance;
-
+    DbgPrint("%s() -->\n", __func__);
     if (id_p >= NR_OF_CIRC_BUFFERS)
         return kCircBufInvalidArg;
 
@@ -292,7 +292,7 @@ tCircBufError circbuf_writeData (tCircBufInstance* pInstance_p, const void* pDat
 
     if ((pData_p == NULL) || (size_p == 0))
         return kCircBufOk;
-
+    DbgPrint("%s() -->\n", __func__);
     blockSize     = (size_p + (CIRCBUF_BLOCK_ALIGNMENT-1)) & ~(CIRCBUF_BLOCK_ALIGNMENT-1);
     fullBlockSize = blockSize + sizeof(UINT32);
 
@@ -370,7 +370,7 @@ tCircBufError circbuf_writeMultipleData(tCircBufInstance* pInstance_p,
     size_t              partSize;
     tCircBufHeader*     pHeader = pInstance_p->pCircBufHeader;
     BYTE*               pCircBuf = pInstance_p->pCircBuf;
-
+    DbgPrint("%s() -->\n", __func__);
     if ((pData_p == NULL) || (size_p == 0) || (pData2_p == NULL) || (size2_p == 0))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Invalid pointer or size!\n");
@@ -470,16 +470,21 @@ tCircBufError circbuf_readData(tCircBufInstance* pInstance_p, void* pData_p,
     tCircBufHeader*     pHeader = pInstance_p->pCircBufHeader;
     BYTE*               pCircBuf = pInstance_p->pCircBuf;
 
+    if (pCircBuf == NULL || pInstance_p == NULL)
+    {
+        DbgPrint(" Here Lies all the problem\n");
+    }
     if ((pData_p == NULL) || (size_p == 0))
         return kCircBufOk;
 
-    //DbgPrint("%s() -->\n",__func__);
+    DbgPrint("%s() -->\n",__func__);
     circbuf_lock(pInstance_p);
     if (pHeader->freeSize == pHeader->bufferSize)
     {
         circbuf_unlock(pInstance_p);
         return kCircBufNoReadableData;
     }
+
 
     dataSize = *(UINT32*)(pCircBuf + pHeader->readOffset);
     blockSize = (dataSize + (CIRCBUF_BLOCK_ALIGNMENT - 1)) & ~(CIRCBUF_BLOCK_ALIGNMENT - 1);
@@ -534,6 +539,7 @@ The function returns the available data count
 UINT32 circbuf_getDataCount(tCircBufInstance* pInstance_p)
 {
     tCircBufHeader*     pHeader = pInstance_p->pCircBufHeader;
+    DbgPrint("%s() -->\n", __func__);
     return pHeader->dataCount;
 }
 
@@ -573,6 +579,7 @@ The function sets up signalling for a specified buffer.
 //------------------------------------------------------------------------------
 tCircBufError circBuf_setSignaling(tCircBufInstance* pInstance_p, VOIDFUNCPTR pfnSigCb_p)
 {
+
     pInstance_p->pfnSigCb = pfnSigCb_p;
     return kCircBufOk;
 }

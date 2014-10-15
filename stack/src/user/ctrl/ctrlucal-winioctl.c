@@ -263,7 +263,7 @@ UINT16 ctrlucal_getStatus(void)
         DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
         return kCtrlStatusUnavailable;
     }
-
+    TRACE("Status %x\n", status);
     return status;
 }
 

@@ -192,6 +192,11 @@ SET(EVENT_UCAL_WINDOWSIOCTL_SOURCES
     ${USER_SOURCE_DIR}/event/eventucal-winioctl.c
     )
 
+SET(EVENT_UCAL_WINDOWSPCIE_SOURCES
+    ${USER_SOURCE_DIR}/event/eventucalintf-circbuf.c
+    ${USER_SOURCE_DIR}/event/eventucal-winpcie.c
+    )
+
 ################################################################################
 # User PDO CAL sources
 SET(PDO_UCAL_LOCAL_SOURCES
@@ -404,6 +409,11 @@ SET(CIRCBUF_POSIX_SOURCES
 SET(CIRCBUF_WINDOWS_SOURCES
     ${COMMON_SOURCE_DIR}/circbuf/circbuffer.c
     ${COMMON_SOURCE_DIR}/circbuf/circbuf-win32.c
+    )
+
+SET(CIRCBUF_WINDOWSPCIE_SOURCES
+    ${COMMON_SOURCE_DIR}/circbuf/circbuffer.c
+    ${COMMON_SOURCE_DIR}/circbuf/circbuf-winpcie.c
     )
 
 SET(CIRCBUF_LINUXKERNEL_SOURCES

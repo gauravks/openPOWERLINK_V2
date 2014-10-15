@@ -88,7 +88,7 @@ milliseconds have elapsed.
 //------------------------------------------------------------------------------
 void target_msleep(UINT32 milliSeconds_p)
 {
-    NdisMSleep(milliSeconds_p);
+    NdisMSleep(milliSeconds_p * 1000);
 }
 
 //------------------------------------------------------------------------------

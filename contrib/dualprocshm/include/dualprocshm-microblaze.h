@@ -43,28 +43,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 #include <xil_types.h>
 #include <xil_cache.h>
-#include "xintc_l.h"
+#include <xintc_l.h>
 #include <xil_io.h>
 #include <xparameters.h>
+#include <oplk/section-microblaze.h>
 
 /// Memory
-#define DUALPROCSHM_MALLOC(size)            malloc(size)
-#define DUALPROCSHM_FREE(ptr)               free(ptr)
+#define DUALPROCSHM_MALLOC(size)    malloc(size)
+#define DUALPROCSHM_FREE(ptr)       free(ptr)
 
 /// Sleep
-#define DUALPROCSHM_USLEEP(x)               usleep((unsigned int)x)
+#define DUALPROCSHM_USLEEP(x)       usleep((unsigned int)x)
 
 /// IO operations
-#define DPSHM_READ8(base)                   Xil_In8((UINT32)base);
-#define DPSHM_WRITE8(base,val)              Xil_Out8((UINT32)base,val);
-#define DPSHM_READ16(base)                  Xil_In16((UINT32)base);
-#define DPSHM_WRITE16(base,val)             Xil_Out16((UINT32)base,val);
+#define DPSHM_READ8(base)           Xil_In8((UINT32)base);
+#define DPSHM_WRITE8(base, val)     Xil_Out8((UINT32)base, val);
+#define DPSHM_READ16(base)          Xil_In16((UINT32)base);
+#define DPSHM_WRITE16(base, val)    Xil_Out16((UINT32)base, val);
 
 /// Cache hadling
-#define DUALPROCSHM_FLUSH_DCACHE_RANGE(base,range) \
-                    microblaze_flush_dcache_range((UINT32)base, range);
+#define DUALPROCSHM_FLUSH_DCACHE_RANGE(base, range) \
+    microblaze_flush_dcache_range((UINT32)base, range);
 
-#define DUALPROCSHM_INVALIDATE_DCACHE_RANGE(base,range) \
-                    microblaze_invalidate_dcache_range((UINT32)base, range);
+#define DUALPROCSHM_INVALIDATE_DCACHE_RANGE(base, range) \
+    microblaze_invalidate_dcache_range((UINT32)base, range);
 
 #endif /* _INC_dualprocshm_microblaze_H_ */

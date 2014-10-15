@@ -189,7 +189,7 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     {
         drv_initDualProcDrv();
         plkDriverInstance_l.fInitialized = TRUE;
-        NdisZeroMemory(&timerChars, sizeof(timerChars));
+        //NdisZeroMemory(&timerChars, sizeof(timerChars));
 
        /* if (ctrlk_init() != kErrorOk)
         {
@@ -251,13 +251,7 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 //    ctrlk_exit();
     drv_exitDualProcDrv();
 
-    drv_getStatus(&status);
-
-    if (status == kCtrlStatusRunning)
-    {
-        ctrlCmd.cmd = kCtrlShutdown;
-        drv_executeCmd(&ctrlCmd);
-    }
+//    drv_getStatus(&status);
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkClose - OK\n");
 
@@ -314,6 +308,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_EXECUTE_CMD:
         {
             tCtrlCmd*   pCtrlCmd = (tCtrlCmd*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 1\n", __func__);
             drv_executeCmd(pCtrlCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlCmd);
             break;
@@ -321,6 +316,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_STORE_INITPARAM:
         {
             tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 2\n", __func__);
             drv_storeInitParam(pCtrlInitCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
@@ -328,6 +324,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_READ_INITPARAM:
         {
             tCtrlInitParam*   pCtrlInitCmd = (tCtrlInitParam*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 3\n", __func__);
             drv_readInitParam(pCtrlInitCmd);
             pIrp_p->IoStatus.Information = sizeof(tCtrlInitParam);
             break;
@@ -335,6 +332,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_GET_STATUS:
         {
             UINT16*   pStatus = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 4\n", __func__);
             drv_getStatus(pStatus);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
@@ -342,6 +340,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_CTRL_GET_HEARTBEAT:
         {
             UINT16*   pHeartBeat = (UINT16*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 5\n", __func__);
             drv_getHeartbeat(pHeartBeat);
             pIrp_p->IoStatus.Information = sizeof(UINT16);
             break;
@@ -349,6 +348,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_POST_EVENT:
         {
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 6\n", __func__);
             drv_postEvent(pInBuffer);
             break;
         }
@@ -356,6 +356,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         {
             size_t    eventSize = 0;
             pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 7\n", __func__);
             drv_getEvent(pOutBuffer, &eventSize);
             pIrp_p->IoStatus.Information = eventSize;
             break;
@@ -363,12 +364,14 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_DLLCAL_ASYNCSEND:
         {
             pInBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 8\n", __func__);
             drv_sendAsyncFrame(pInBuffer);
             break;
         }
         case PLK_CMD_ERRHND_WRITE:
         {
             tErrHndIoctl*   pWriteObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 9\n", __func__);
             drv_writeErrorObject(pWriteObject);
             pIrp_p->IoStatus.Information = 0;
             break;
@@ -377,6 +380,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_ERRHND_READ:
         {
             tErrHndIoctl*   pReadObject = (tErrHndIoctl*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 10\n", __func__);
             drv_readErrorObject(pReadObject);
             pIrp_p->IoStatus.Information = sizeof(tErrHndIoctl);
             break;
@@ -386,6 +390,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             //if ((oplRet = pdokcal_waitSyncEvent()) == kErrorRetry)
              //   status = NDIS_STATUS_RESOURCES;
             //else
+                                 DbgPrint("%s 11\n", __func__);
                 status = STATUS_SUCCESS;
 
             break;
@@ -393,6 +398,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_PDO_GET_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 12\n", __func__);
             oplRet = drv_getPdoMem((UINT8**)&pPdoMem->pPdoAddr, pPdoMem->memSize);
             
             if (oplRet != kErrorOk)
@@ -409,6 +415,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_PDO_FREE_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            DbgPrint("%s 13\n", __func__);
             drv_freePdoMem(pPdoMem->pPdoAddr, pPdoMem->memSize);
             status = STATUS_SUCCESS;
             pIrp_p->IoStatus.Information = 0;

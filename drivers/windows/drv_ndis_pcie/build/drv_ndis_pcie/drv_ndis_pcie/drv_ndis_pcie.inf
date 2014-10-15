@@ -43,10 +43,10 @@ HKR, Ndi\Interfaces,                            UpperRange,             0, "ndis
 HKR, Ndi\Interfaces,                            LowerRange,             0, "ethernet"
 
 ;[MSI.reg]
-;HKR, "Interrupt Management", 0x00000010
-;HKR, "Interrupt Management\MessageSignaledInterruptProperties", 0x00000010
-;HKR, "Interrupt Management\MessageSignaledInterruptProperties", MSISupported, 0x00010001, 1
-;HKR, "Interrupt Management\MessageSignaledInterruptProperties", MessageNumberLimit, 0x00010001, 1
+HKR, "Interrupt Management", 0x00000010
+HKR, "Interrupt Management\MessageSignaledInterruptProperties", 0x00000010
+HKR, "Interrupt Management\MessageSignaledInterruptProperties", MSISupported, 0x00010001, 1
+HKR, "Interrupt Management\MessageSignaledInterruptProperties", MessageNumberLimit, 0x00010001, 1
 
 [oplk.CopyFiles]
 drv_ndis_pcie.sys,,,2

@@ -143,6 +143,7 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
     UINT16              cmd = pCtrlCmd_p->cmd;
     int                 timeout;
 
+    PRINTF("Execute Command %x....", cmd);
     if (dualprocshm_writeDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, ctrlCmd),
         sizeof(tCtrlCmd), (UINT8 *) pCtrlCmd_p) != kDualprocSuccessful)
         return;
@@ -159,9 +160,24 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
 
     if (cmd == kCtrlInitStack && pCtrlCmd_p->retVal == kErrorOk)
     {
-        initEvent();
-        initErrHndl();
-        initDllQueues();
+        ret = initEvent();
+        if (ret != kErrorOk)
+        {
+            DbgPrint("Event Initialization Failed %x\n", ret);
+            pCtrlCmd_p->retVal = ret;
+        }
+        ret = initErrHndl();
+        if (ret != kErrorOk)
+        {
+            DbgPrint("Error Module Initialization Failed %x\n", ret);
+            pCtrlCmd_p->retVal = ret;
+        }
+        ret = initDllQueues();
+        if (ret != kErrorOk)
+        {
+            DbgPrint("Dll Queues Initialization Failed %x\n", ret);
+            pCtrlCmd_p->retVal = ret;
+        }
     }
 
     if (cmd == kCtrlShutdown && pCtrlCmd_p->retVal == kErrorOk)
@@ -170,6 +186,7 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
         exitErrHndl();
         exitEvent();
     }
+    PRINTF("OK\n");
 }
 
 //------------------------------------------------------------------------------
@@ -227,11 +244,14 @@ Return the current status of kernel stack.
 //------------------------------------------------------------------------------
 void drv_getStatus(UINT16* pStatus_p)
 {
+    PRINTF("Get Status offset %d\n", FIELD_OFFSET(tCtrlBuf, status));
     if (dualprocshm_readDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, status),
         sizeof(UINT16), (UINT8*) pStatus_p) != kDualprocSuccessful)
     {
         DbgPrint("Error Reading Status\n");
     }
+
+    PRINTF("Status %x\n", *pStatus_p);
 
 }
 
@@ -325,7 +345,7 @@ tOplkError drv_initDualProcDrv(void)
     tDualprocReturn dualRet;
     tDualprocConfig dualProcConfig;
 
-    PRINTF(" Initialize Driver interface\n");
+    PRINTF(" Initialize Driver interface...");
     OPLK_MEMSET(&drvInstance_l, 0, sizeof(tDriverInstance));
 
     OPLK_MEMSET(&dualProcConfig, 0, sizeof(tDualprocConfig));
@@ -351,14 +371,14 @@ tOplkError drv_initDualProcDrv(void)
         DEBUG_LVL_ERROR_TRACE("{%s} Error Initializing interrupts %x\n ", __func__, dualRet);
         return kErrorNoResource;
     }
-
+    PRINTF(" OK\n");
     return kErrorOk;
 }
 
 void drv_exitDualProcDrv(void)
 {
     tDualprocReturn dualRet;
-
+    DbgPrint("%s\n", __func__);
     drvInstance_l.fIrqMasterEnable = FALSE;
 
     // disable system irq
@@ -377,7 +397,7 @@ void drv_postEvent(void* pEvent_p)
     tCircBufError       circError;
     tEvent              event;
     char*               pArg = NULL;
-    //TRACE("%s() Event:%d Sink:%d\n", __func__, pEvent_p->eventType, pEvent_p->eventSink);
+
     tCircBufInstance*   pCircBufInstance = drvInstance_l.eventQueueInst[kEventQueueU2K];
 
     OPLK_MEMCPY(&event, pEvent_p, sizeof(tEvent));
@@ -387,7 +407,7 @@ void drv_postEvent(void* pEvent_p)
         pArg = (char*) ((UINT8*) pEvent_p + sizeof(tEvent));
         event.pEventArg = pArg;
     }
-
+    DbgPrint("%s() Event:%x Sink:%x\n", __func__, event.eventType, event.eventSink);
     if (event.eventArgSize == 0)
     {
         circError = circbuf_writeData(pCircBufInstance, &event, sizeof(tEvent));
@@ -408,6 +428,8 @@ void drv_postEvent(void* pEvent_p)
 void drv_getEvent(void* pEvent_p, size_t* pSize_p)
 {
     tCircBufInstance*   pCircBufInstance = drvInstance_l.eventQueueInst[kEventQueueK2U];
+
+    DbgPrint("Get Event\n");
     if (circbuf_getDataCount(pCircBufInstance) > 0)
     {
         circbuf_readData(pCircBufInstance, pEvent_p,
@@ -433,7 +455,7 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
                               __func__, dualRet);
         return kErrorNoResource;
     }
-
+    DbgPrint("%s",__func__);
     pPdoMemInfo->pKernelVa = pMem;
     pPdoMemInfo->memSize = memSize_p;
     // Allocate new MDL pointing to PDO memory
@@ -466,6 +488,7 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
     }
 
     *ppPdoMem_p = pPdoMemInfo->pUserVa;
+    DbgPrint("...OK\n");
     return kErrorOk;
 }
 
@@ -473,7 +496,7 @@ void drv_freePdoMem(UINT8* pPdoMem_p, size_t memSize_p)
 {
     tPdoMemInfo*           pPdoMemInfo = &drvInstance_l.pdoMem;
     tDualprocReturn    dualRet;
-
+    DbgPrint("%s", __func__);
     if (pPdoMemInfo->pMdl == NULL)
     {
         DEBUG_LVL_ERROR_TRACE("%s() MDL already deleted !\n", __func__);
@@ -495,7 +518,7 @@ void drv_freePdoMem(UINT8* pPdoMem_p, size_t memSize_p)
                               __func__, dualRet);
         return;
     }
-
+    DbgPrint("... OK");
     pPdoMem_p = NULL;
 }
 
@@ -558,7 +581,7 @@ static tOplkError initErrHndl(void)
     }
 
     drvInstance_l.pErrorObjects = (tErrHndObjects*) pBase;
-
+    PRINTF("....OK");
     return kErrorOk;
 }
 
@@ -595,7 +618,7 @@ static tOplkError initDllQueues(void)
         TRACE("PLK : Could not allocate CIRCBUF_DLLCAL_TXSYNC circbuffer\n");
         return kErrorNoResource;
     }
-
+#if 0
     circError = circbuf_connect(CIRCBUF_DLLCAL_TXVETH, &drvInstance_l.dllQueueInst[kDllCalQueueTxVeth]);
     
     if (circError != kCircBufOk)
@@ -603,7 +626,7 @@ static tOplkError initDllQueues(void)
         TRACE("PLK : Could not allocate CIRCBUF_DLLCAL_TXVETH circbuffer\n");
         return kErrorNoResource;
     }
-
+#endif
     return kErrorOk;
 
 }
@@ -613,7 +636,9 @@ static void exitDllQueues(void)
     circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxGen]);
     circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxNmt]);
     circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxSync]);
+#if 0
     circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxVeth]);
+#endif
 }
 
 static tOplkError insertDataBlock(tCircBufInstance* pDllCircBuffInst_p,

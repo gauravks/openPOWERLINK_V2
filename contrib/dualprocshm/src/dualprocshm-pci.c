@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <dualprocshm-target.h>
 #include <dualprocshm-pcp.h>
 #include <ndis-intf.h>
-
+#include <common/target.h>
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -96,7 +96,7 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 
     if (*pSize_p > MAX_COMMON_MEM_SIZE )
     {
-//        printk("%s Common memory not available\n",__func__);
+//        printk("%s Common memory not available\n",__FUNCTION__);
         return NULL;
     }
 
@@ -104,11 +104,12 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 
     if(pAddr == NULL)
     {
-    //	printk("%s Memory not found\n",__func__); 	
+    //	printk("%s Memory not found\n",__FUNCTION__); 	
+        return NULL;
     }
 
     *pSize_p = MAX_COMMON_MEM_SIZE - 1;
-    DbgPrint("%s() Addr:%x\n", pAddr);
+    DbgPrint("%s() Addr:%p\n", __FUNCTION__,pAddr);
     return pAddr;
 }
 
@@ -147,7 +148,7 @@ UINT8* dualprocshm_getDynMapTableAddr(void)
     UINT8* pAddr = (UINT8*)ndis_getBar1Addr();
 //printk("Dynamic map tab:%x\n",pAddr);
     pAddr = (UINT8*) (pAddr + MEM_ADDR_TABLE_OFFSET);
-    DbgPrint("%s() Addr:%x\n", pAddr);
+    DbgPrint("%s() Addr:%p\n", __FUNCTION__, pAddr);
     return pAddr;
 }
 
@@ -182,8 +183,8 @@ UINT8* dualprocshm_getIntrMemAddr(void)
 {
     UINT8* pAddr = (UINT8*)ndis_getBar1Addr();
 
-    pAddr = (UINT8*) ((UINT32)pAddr + MEM_INTR_OFFSET);
-    DbgPrint("%s() Addr:%x\n", pAddr);
+    pAddr = (UINT8*) (pAddr + MEM_INTR_OFFSET);
+    DbgPrint("%s() Addr:%p\n", __FUNCTION__,pAddr);
     return pAddr;
 }
 
@@ -220,11 +221,11 @@ void dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 
     if (pBase_p == NULL || pData_p == NULL)
     {
-//        printk("%s Invalid parameters\n",__func__);
+//        printk("%s Invalid parameters\n",__FUNCTION__);
         return;
     }
 
-    DUALPROCSHM_INVALIDATE_DCACHE_RANGE((UINT32)pBase_p,size_p);
+    DUALPROCSHM_INVALIDATE_DCACHE_RANGE(pBase_p,size_p);
 
     DUALPROCSHM_MEMCPY(pData_p, pBase_p, size_p);
 }
@@ -246,13 +247,13 @@ void dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 {
     if (pBase_p == NULL || pData_p == NULL)
     {
-//        printk("%s Invalid parameters\n",__func__);
+//        printk("%s Invalid parameters\n",__FUNCTION__);
         return;
     }
 
     DUALPROCSHM_MEMCPY(pBase_p, pData_p, size_p);
 
-    DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p,size_p);
+    DUALPROCSHM_FLUSH_DCACHE_RANGE(pBase_p,size_p);
 }
 
 //------------------------------------------------------------------------------
@@ -281,11 +282,11 @@ void dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p)
     // spin till the passed token is written into memory
     do{
         //DUALPROCSHM_INVALIDATE_DCACHE_RANGE((UINT32)pBase_p,1);
-        lock = DPSHM_READ8((UINT32)pBase_p);
+        lock = DPSHM_READ8(pBase_p);
 
         if (lock == DEFAULT_LOCK_ID)
         {
-            DPSHM_WRITE8((UINT32)pBase_p,lockToken_p);
+            DPSHM_WRITE8(pBase_p, lockToken_p);
             //DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p,1);
             continue;
         }
@@ -315,7 +316,7 @@ void dualprocshm_targetReleaseLock(UINT8* pBase_p)
 
     DPSHM_WRITE8(pBase_p,defaultlock);
 
-    DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p,sizeof(UINT8));
+    DUALPROCSHM_FLUSH_DCACHE_RANGE(pBase_p,sizeof(UINT8));
 }
 
 //------------------------------------------------------------------------------
@@ -366,11 +367,15 @@ void dualprocshm_enableSyncIrq(BOOL fEnable_p)
 void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase , UINT16 index_p, UINT32 addr_p)
 {
     UINT32          tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
-    UINT32          offset = (UINT32)((ULONG_PTR) addr_p - (ULONG_PTR) ndis_getBar0Addr());
+    UINT32          offset;
 
+    if (addr_p != 0)
+    {
+        offset = (UINT32) (addr_p - (UINT32)ndis_getBar0Addr());
+    }
     DPSHM_WRITE32(pMemTableBase + tableEntryOffs, offset);
     DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32) (pMemTableBase + tableEntryOffs), sizeof(UINT32));
-    DbgPrint("%s() Addr:%x\n", offset);
+    DbgPrint("%s() I %d Addr:%x\n", __FUNCTION__, index_p, offset);
 }
 
 //------------------------------------------------------------------------------
@@ -386,18 +391,29 @@ void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase , UINT16 index_p, UIN
 */
 //------------------------------------------------------------------------------
 // TODO test if UINT32 is correct data specifier to hold address in 64 bit systems
-ULONG_PTR dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
+UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
 {
     UINT32          tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
     UINT32          buffoffset = 0x00;
-    ULONG_PTR       Bar0Addr = (ULONG_PTR) ndis_getBar0Addr();;
-    ULONG_PTR       bufAddr;
-    while (buffoffset == 0x00000000)
+    UINT8*          Bar0Addr = (UINT8*) ndis_getBar0Addr();
+    UINT8*          bufAddr;
+    UINT8*          memAddr = (pMemTableBase + tableEntryOffs);
+    UINT            count = 0;
+    DUALPROCSHM_INVALIDATE_DCACHE_RANGE((pMemTableBase + tableEntryOffs), sizeof(UINT32));
+    buffoffset = DPSHM_READ32(memAddr);
+
+    while (buffoffset == 0)
     {
-        DUALPROCSHM_INVALIDATE_DCACHE_RANGE((pMemTableBase + tableEntryOffs), sizeof(UINT32));
-        buffoffset = DPSHM_READ32(pMemTableBase + tableEntryOffs);
+        if (count == 20)
+        {
+            DbgPrint("Unable to Get Address\n");
+            return NULL;
+        }
+        target_msleep(1000);
+        buffoffset = DPSHM_READ32(memAddr);
+        count++;
     }
     bufAddr = (Bar0Addr + buffoffset);
-    DbgPrint("%s() Addr:%x\n", buffoffset);
+    DbgPrint("%s() I %d Addr:%p-%p-%x-%p\n", __FUNCTION__, index_p, memAddr, pMemTableBase, buffoffset, bufAddr);
     return bufAddr;
 }

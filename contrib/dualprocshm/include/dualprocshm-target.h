@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error "Platform is not supported! Please point the target platform file in dualprocshm-target.h "
 #endif
 
-
+#include <oplk/section-default.h>
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
@@ -130,6 +130,6 @@ void dualprocshm_targetReleaseLock(UINT8* pBase_p);
 void dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p,void* pArg_p);
 void dualprocshm_enableSyncIrq(BOOL fEnable_p);
 void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p);
-ULONG_PTR dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
+UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
 
 #endif /* _INC_dualprocshm_target_H_ */

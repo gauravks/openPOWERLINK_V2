@@ -230,7 +230,14 @@ Close the IOCTL interface created before.
 PULONG ndis_getBar0Addr(void)
 {
     if (vethInstance_l.state == NdisBindingReady)
+    {
+        DbgPrint("%s %p \n", __FUNCTION__, vethInstance_l.virtualAddrBar0);
         return vethInstance_l.virtualAddrBar0;
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -245,7 +252,15 @@ Close the IOCTL interface created before.
 PULONG ndis_getBar1Addr(void)
 {
     if (vethInstance_l.state == NdisBindingReady)
+    {
+        DbgPrint("%s %p \n", __FUNCTION__, vethInstance_l.virtualAddrBar1);
         return vethInstance_l.virtualAddrBar1;
+    }
+    else
+    {
+        return NULL;
+    }
+
 }
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //

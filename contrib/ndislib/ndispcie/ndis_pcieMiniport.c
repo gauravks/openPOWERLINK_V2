@@ -179,7 +179,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     NdisZeroMemory(&miniportAttributes, sizeof(NDIS_MINIPORT_ADAPTER_ATTRIBUTES));
 
     // Register IOCTL interface here
-    //ndis_createAppIntf();
+    ndis_createAppIntf();
 
     NdisZeroMemory(&vethInstance_l, sizeof(tVEthInstance));
 
@@ -259,8 +259,8 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     intrChars.Header.Revision = NDIS_MINIPORT_INTERRUPT_REVISION_1;
     intrChars.Header.Size = sizeof(NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS);;
     intrChars.MsiSyncWithAllMessages = TRUE;
-    intrChars.InterruptDpcHandler = interruptDpc;
-    intrChars.InterruptHandler = interruptHandler;
+    intrChars.MessageInterruptDpcHandler = interruptDpc;
+    intrChars.MessageInterruptHandler = interruptHandler;
     intrChars.EnableMessageInterruptHandler = NULL;
     intrChars.DisableMessageInterruptHandler = NULL;
 
@@ -277,6 +277,7 @@ NDIS_STATUS miniportInitialize(NDIS_HANDLE adapterHandle_p,
     if (intrChars.InterruptType == NDIS_CONNECT_MESSAGE_BASED)
     {
         vethInstance_l.intrMsgInfo = intrChars.MessageInfoTable;
+        DbgPrint("Message Based Interrupt\n");
     }
 
     status = prepareHardware(initParams_p->AllocatedResources);
@@ -429,7 +430,7 @@ VOID miniportUnload(PDRIVER_OBJECT driverObject_p)
     DbgPrint("%s()...\n", __FUNCTION__);
     UNREFERENCED_PARAMETER(driverObject_p);
 
-    //ndis_closeAppIntf();
+    ndis_closeAppIntf();
 
     NdisMDeregisterMiniportDriver(driverInstance_l.pMiniportHandle);
 
@@ -772,8 +773,8 @@ NDIS_STATUS prepareHardware(PNDIS_RESOURCE_LIST resourceList_p)
                             }
 
                             vethInstance_l.lengthBar0 = pResDescriptor->u.Memory.Length;
-                            NdisZeroMappedMemory(vethInstance_l.virtualAddrBar0,
-                                                vethInstance_l.lengthBar0);
+                            //NdisZeroMappedMemory(vethInstance_l.virtualAddrBar0,
+                            //                    vethInstance_l.lengthBar0);
                             DbgPrint("BAR 0 PhyAddr:%x VirtAddr: %x Size %d\n",
                                             vethInstance_l.phyAddrBar0,
                                             vethInstance_l.virtualAddrBar0,
@@ -801,8 +802,8 @@ NDIS_STATUS prepareHardware(PNDIS_RESOURCE_LIST resourceList_p)
                             }
 
                             vethInstance_l.lengthBar1 = pResDescriptor->u.Memory.Length;
-                            NdisZeroMappedMemory(vethInstance_l.virtualAddrBar1,
-                                                vethInstance_l.lengthBar1);
+                            //NdisZeroMappedMemory(vethInstance_l.virtualAddrBar1,
+                            //                    vethInstance_l.lengthBar1);
                             DbgPrint("BAR 1 PhyAddr:%x VirtAddr: %x Size %d\n",
                                                 vethInstance_l.phyAddrBar1,
                                                 vethInstance_l.virtualAddrBar1,
