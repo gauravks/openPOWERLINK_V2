@@ -371,7 +371,7 @@ VOID miniportHalt(NDIS_HANDLE adapterContext_p, NDIS_HALT_ACTION haltAction_p)
     vethInstance_l.miniportHalting = TRUE;
 
     releaseHardware();
-
+    ndis_closeAppIntf();
     vethInstance_l.miniportAdapterHandle = NULL;
 
     DbgPrint("%s() - OK\n", __FUNCTION__);
@@ -429,8 +429,6 @@ VOID miniportUnload(PDRIVER_OBJECT driverObject_p)
 {
     DbgPrint("%s()...\n", __FUNCTION__);
     UNREFERENCED_PARAMETER(driverObject_p);
-
-    ndis_closeAppIntf();
 
     NdisMDeregisterMiniportDriver(driverInstance_l.pMiniportHandle);
 
@@ -889,7 +887,7 @@ BOOLEAN interruptHandler(NDIS_HANDLE  interruptContext_p, ULONG messageId_p,
     UNREFERENCED_PARAMETER(interruptContext_p);
     UNREFERENCED_PARAMETER(messageId_p);
     UNREFERENCED_PARAMETER(targetProcessors_p);
-    DbgPrint("%s()\n", __FUNCTION__);
+    DbgPrint("Interrupt\n");
     *queueDefaultInterruptDpc_p = TRUE;
 
     return TRUE;
@@ -912,7 +910,7 @@ VOID interruptDpc(NDIS_HANDLE  interruptContext_p, ULONG messageId_p,
     UNREFERENCED_PARAMETER(dpcContext_p);
     UNREFERENCED_PARAMETER(reserved1_p);
     UNREFERENCED_PARAMETER(reserved2_p);
-    DbgPrint("%s()\n", __FUNCTION__);
+    DbgPrint("DPC\n");
 }
 
 ///\}

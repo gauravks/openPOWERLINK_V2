@@ -237,10 +237,11 @@ functions of the queue implementations for each used queue.
 tOplkError eventucal_exit(void)
 {
     UINT    i = 0;
-
+    printf("%s\n", __func__);
     if (instance_l.fInitialized)
     {
         instance_l.fStopThread = TRUE;
+        ReleaseSemaphore(instance_l.semUserData, 1, NULL);
         while (instance_l.fStopThread == TRUE)
         {
             target_msleep(10);
@@ -284,6 +285,7 @@ queue post function is called.
 //------------------------------------------------------------------------------
 tOplkError eventucal_postUserEvent(tEvent* pEvent_p)
 {
+    printf("Post User Event Type %x Sink %x\n", pEvent_p->eventType, pEvent_p->eventSink);
     return eventucal_postEventCircbuf(kEventQueueUInt, pEvent_p);
 }
 
@@ -306,6 +308,7 @@ queue post function is called.
 //------------------------------------------------------------------------------
 tOplkError eventucal_postKernelEvent(tEvent* pEvent_p)
 {
+    printf("Post Kernel Event Type %x Sink %x\n", pEvent_p->eventType, pEvent_p->eventSink);
     return postEvent(pEvent_p);
 }
 
@@ -346,12 +349,20 @@ queue post function is called.
 //------------------------------------------------------------------------------
 static tOplkError postEvent(tEvent* pEvent_p)
 {
-    UINT8     eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
-    size_t    eventBufSize = sizeof(tEvent) + pEvent_p->eventArgSize;
-    ULONG     bytesReturned;
+    UINT8      eventBuf[sizeof(tEvent) + MAX_EVENT_ARG_SIZE];
+    size_t     eventBufSize = sizeof(tEvent) + pEvent_p->eventArgSize;
+    ULONG      bytesReturned;
+    tNmtEvent* nmtEvent_p;
+    
 
     OPLK_MEMCPY(eventBuf, pEvent_p, sizeof(tEvent));
-    OPLK_MEMCPY((eventBuf + sizeof(tEvent)), pEvent_p->pEventArg, pEvent_p->eventArgSize);
+    if (pEvent_p->eventArgSize != 0)
+    {
+        OPLK_MEMCPY((eventBuf + sizeof(tEvent)), pEvent_p->pEventArg, pEvent_p->eventArgSize);
+        nmtEvent_p = (tNmtEvent*) pEvent_p->pEventArg;
+        printf("%x\n", *nmtEvent_p);
+    }
+    
 
     if (!DeviceIoControl(instance_l.sendfileHandle, PLK_CMD_POST_EVENT,
                          eventBuf, eventBufSize,
@@ -388,7 +399,7 @@ static UINT32 eventProcess(void* arg_p)
                 if (instance_l.fKernelEvent)
                 {
                     pEvent = (tEvent*) instance_l.eventBuf;
-
+                    printf("Kernel Event\n");
                     if (pEvent->eventArgSize != 0)
                         pEvent->pEventArg = (char*) pEvent + sizeof(tEvent);
                     
@@ -400,6 +411,7 @@ static UINT32 eventProcess(void* arg_p)
                 {
                     if (eventucal_getEventCountCircbuf(kEventQueueUInt) > 0)
                     {
+                        printf("User Event\n");
                         eventucal_processEventCircbuf(kEventQueueUInt);
                     }
                 }
@@ -411,6 +423,8 @@ static UINT32 eventProcess(void* arg_p)
             default:
                 DEBUG_LVL_ERROR_TRACE("%s() Semaphore wait unknown error! Error:%ld\n",
                                       __func__, GetLastError());
+                if (GetLastError() == 6)
+                    instance_l.fStopThread = TRUE;
                 break;
         }
     }
@@ -450,7 +464,7 @@ static UINT32 kernelEventThread(void* arg_p)
 
     while (!instance_l.fStopThread)
     {
-        target_msleep(1000);
+        target_msleep(5000);
         ret = DeviceIoControl(instance_l.rcvfileHandle, PLK_CMD_GET_EVENT,
                               NULL, 0, instance_l.eventBuf, eventBufSize,
                               &bytesReturned, NULL);
@@ -470,6 +484,7 @@ static UINT32 kernelEventThread(void* arg_p)
 
         if (bytesReturned > 0)
         {
+            printf("Signal event %d\n", bytesReturned);
             instance_l.fKernelEvent = TRUE;
             ReleaseSemaphore(instance_l.semUserData, 1, NULL);
             WaitForSingleObject(instance_l.mutexK2U, 5000);
@@ -492,6 +507,7 @@ the circular buffer library as signal callback function
 //------------------------------------------------------------------------------
 void signalUserEvent(void)
 {
+    printf("USer Event\n");
     ReleaseSemaphore(instance_l.semUserData, 1, NULL);
 }
 ///\}

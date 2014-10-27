@@ -124,7 +124,7 @@ tDualprocReturn dualprocshm_initInterrupts(tDualprocDrvInstance pInstance_p)
 {
     tDualProcDrv*   pDrvInst = (tDualProcDrv*) pInstance_p;
 
-    if (pInstance_p == NULL )
+    if (pInstance_p == NULL)
        return kDualprocInvalidParameter;
 
     intrInst_l.intrReg = (tDualProcShmIntrReg*)dualprocshm_getIntrMemAddr();

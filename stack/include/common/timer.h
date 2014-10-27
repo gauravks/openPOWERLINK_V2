@@ -64,6 +64,8 @@ typedef ULONG tTimerHdl;
 The structure defines a timer event argument. It provides information about
 the timer to the sink the event is sent to.
 */
+#pragma pack(push, packing)
+#pragma pack(4)
 typedef struct
 {
     tTimerHdl           timerHdl;       ///< Delivers the handle of the expired timer
@@ -73,5 +75,5 @@ typedef struct
         void*           pValue;         ///< Timer argument supplied as void*
     } argument;                         ///< The timer argument the timer was initialized with.
 } tTimerEventArg;
-
+#pragma pack(pop, packing)
 #endif /* _INC_common_timer_H_ */

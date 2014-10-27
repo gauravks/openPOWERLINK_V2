@@ -155,6 +155,7 @@ tOplkError oplk_init(tOplkApiInitParam* pInitParam_p)
         return ret;
     }
 
+    target_msleep(10000);
     if (memmap_init() != kMemMapOk)
     {
         target_cleanup();

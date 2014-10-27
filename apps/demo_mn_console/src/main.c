@@ -73,7 +73,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
-const BYTE aMacAddr_g[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const BYTE aMacAddr_g[] = { 0x00, 0x12, 0x34, 0x56, 0x78, NODEID};
 static BOOL fGsOff_l;
 
 //------------------------------------------------------------------------------
@@ -157,9 +157,13 @@ int main(int argc, char** argv)
     loopMain();
 
 Exit:
+    printf("ShutDown Powerlink\n");
     shutdownPowerlink();
+    printf("ShutDown APP\n");
     shutdownApp();
+    printf("ShutDown System\n");
     shutdownSystem();
+
 
     return 0;
 }
@@ -336,7 +340,7 @@ static void loopMain(void)
 
         if (oplk_checkKernelStack() == FALSE)
         {
-            //fExit = TRUE;
+            fExit = TRUE;
             PRINTF("Kernel stack has gone! Exiting...\n");
         }
 

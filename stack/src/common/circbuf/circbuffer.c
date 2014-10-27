@@ -130,7 +130,7 @@ tCircBufError circbuf_alloc(UINT8 id_p, size_t size_p, tCircBufInstance** ppInst
     size_t              alignedSize;
     tCircBufInstance*   pInstance;
     tCircBufError       ret;
-    DbgPrint("%s() -->\n", __func__);
+    //DbgPrint("%s() -->\n", __func__);
     if ((size_p == 0) || (id_p >= NR_OF_CIRC_BUFFERS))
     {
         DEBUG_LVL_ERROR_TRACE("%s() invalid arg!\n", __func__);
@@ -202,7 +202,8 @@ tCircBufError circbuf_connect(UINT8 id_p, tCircBufInstance** ppInstance_p)
 {
     tCircBufError       ret;
     tCircBufInstance*   pInstance;
-    DbgPrint("%s() -->\n", __func__);
+    //DbgPrint("%s() -->\n", __func__);
+
     if (id_p >= NR_OF_CIRC_BUFFERS)
         return kCircBufInvalidArg;
 
@@ -215,6 +216,7 @@ tCircBufError circbuf_connect(UINT8 id_p, tCircBufInstance** ppInstance_p)
         return kCircBufNoResource;
     }
 
+    TRACE("Header %x %d\n", pInstance->pCircBufHeader, sizeof(size_t));
     *ppInstance_p = pInstance;
 
     return kCircBufOk;
@@ -292,7 +294,7 @@ tCircBufError circbuf_writeData (tCircBufInstance* pInstance_p, const void* pDat
 
     if ((pData_p == NULL) || (size_p == 0))
         return kCircBufOk;
-    DbgPrint("%s() -->\n", __func__);
+    //DbgPrint("%s() -->\n", __func__);
     blockSize     = (size_p + (CIRCBUF_BLOCK_ALIGNMENT-1)) & ~(CIRCBUF_BLOCK_ALIGNMENT-1);
     fullBlockSize = blockSize + sizeof(UINT32);
 
@@ -306,7 +308,7 @@ tCircBufError circbuf_writeData (tCircBufInstance* pInstance_p, const void* pDat
     if (pHeader->writeOffset + fullBlockSize <= pHeader->bufferSize)
     {
         *(UINT32*)(pCircBuf + pHeader->writeOffset) = size_p;
-
+        //TRACE("Size %p-%d\n", (pCircBuf + pHeader->writeOffset), *(UINT32*) (pCircBuf + pHeader->writeOffset));
         OPLK_MEMCPY(pCircBuf + pHeader->writeOffset + sizeof(UINT32),
                     pData_p, size_p);
         if (pHeader->writeOffset + fullBlockSize == pHeader->bufferSize)
@@ -317,6 +319,7 @@ tCircBufError circbuf_writeData (tCircBufInstance* pInstance_p, const void* pDat
     else
     {
         *(UINT32*)(pCircBuf + pHeader->writeOffset) = size_p;
+        //TRACE("Size %p-%d\n", (pCircBuf + pHeader->writeOffset), *(UINT32*) (pCircBuf + pHeader->writeOffset));
         chunkSize = pHeader->bufferSize - pHeader->writeOffset - sizeof(UINT32);
 
         OPLK_MEMCPY(pCircBuf + pHeader->writeOffset + sizeof(UINT32),
@@ -370,7 +373,7 @@ tCircBufError circbuf_writeMultipleData(tCircBufInstance* pInstance_p,
     size_t              partSize;
     tCircBufHeader*     pHeader = pInstance_p->pCircBufHeader;
     BYTE*               pCircBuf = pInstance_p->pCircBuf;
-    DbgPrint("%s() -->\n", __func__);
+    //DbgPrint("%s() -->\n", __func__);
     if ((pData_p == NULL) || (size_p == 0) || (pData2_p == NULL) || (size2_p == 0))
     {
         DEBUG_LVL_ERROR_TRACE("%s() Invalid pointer or size!\n");
@@ -380,19 +383,21 @@ tCircBufError circbuf_writeMultipleData(tCircBufInstance* pInstance_p,
     blockSize      = (size_p + size2_p + (CIRCBUF_BLOCK_ALIGNMENT - 1)) & ~(CIRCBUF_BLOCK_ALIGNMENT - 1);
     fullBlockSize  = blockSize + sizeof(UINT32);
 
-    //TRACE("%s() size:%d wroff:%d\n", __func__, pHeader->bufferSize, pHeader->writeOffset);
+    //TRACE("%s() base %p size:%d wroff:%d\n", __func__, pCircBuf, pHeader->bufferSize, pHeader->writeOffset);
     //TRACE("%s() ptr1:%p size1:%d ptr2:%p size2:%d\n", __func__, pData_p, size_p, pData2_p, size2_p);
+    //TRACE("Header %p\n", pHeader);
     circbuf_lock(pInstance_p);
     if (fullBlockSize > pHeader->freeSize)
     {
         circbuf_unlock(pInstance_p);
+        TRACE("Error %d-%d\n", fullBlockSize, pHeader->freeSize);
         return kCircBufOutOfMem;
     }
 
     if (pHeader->writeOffset + fullBlockSize <= pHeader->bufferSize)
     {
         *(UINT32*)(pCircBuf + pHeader->writeOffset) = size_p + size2_p;
-
+        TRACE("Size %p-%d\n", (pCircBuf + pHeader->writeOffset), *(UINT32*) (pCircBuf + pHeader->writeOffset));
         OPLK_MEMCPY(pCircBuf + pHeader->writeOffset + sizeof(UINT32),
                     pData_p, size_p);
         OPLK_MEMCPY(pCircBuf + pHeader->writeOffset + sizeof(UINT32) + size_p,
@@ -406,6 +411,7 @@ tCircBufError circbuf_writeMultipleData(tCircBufInstance* pInstance_p,
     {
         // we assume that there is at least size to store the size header
         *(UINT32*)(pCircBuf + pHeader->writeOffset) = size_p + size2_p;
+        TRACE("Size %p-%d\n", (pCircBuf + pHeader->writeOffset), *(UINT32*) (pCircBuf + pHeader->writeOffset));
         chunkSize = pHeader->bufferSize - pHeader->writeOffset - sizeof(UINT32);
         if (size_p <= chunkSize)
         {
@@ -472,12 +478,12 @@ tCircBufError circbuf_readData(tCircBufInstance* pInstance_p, void* pData_p,
 
     if (pCircBuf == NULL || pInstance_p == NULL)
     {
-        DbgPrint(" Here Lies all the problem\n");
+        PRINTF(" Here Lies all the problem\n");
     }
     if ((pData_p == NULL) || (size_p == 0))
         return kCircBufOk;
 
-    DbgPrint("%s() -->\n",__func__);
+    //DbgPrint("%s() -->\n",__func__);
     circbuf_lock(pInstance_p);
     if (pHeader->freeSize == pHeader->bufferSize)
     {
@@ -539,7 +545,7 @@ The function returns the available data count
 UINT32 circbuf_getDataCount(tCircBufInstance* pInstance_p)
 {
     tCircBufHeader*     pHeader = pInstance_p->pCircBufHeader;
-    DbgPrint("%s() -->\n", __func__);
+    //DbgPrint("%s() -->\n", __func__);
     return pHeader->dataCount;
 }
 

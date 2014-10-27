@@ -76,7 +76,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 typedef struct
 {
-    HANDLE    pFileHandle;
+    HANDLE    pGlobalFileHandle;
+    HANDLE    pSyncFileHandle;
     BOOL      fIntialized;
 }tPdoInstance;
 //------------------------------------------------------------------------------
@@ -107,7 +108,8 @@ tOplkError pdoucal_initSync(tSyncCb pfnSyncCb_p)
 {
     UNUSED_PARAMETER(pfnSyncCb_p);
     UINT    errNum = 0;
-    pdoInstance_l.pFileHandle = CreateFile(PLK_DEV_FILE,                                        // Name of the NT "device" to open
+    pdoInstance_l.pGlobalFileHandle = ctrlucal_getFd();
+    pdoInstance_l.pSyncFileHandle = CreateFile(PLK_DEV_FILE,                                        // Name of the NT "device" to open
                                            GENERIC_READ | GENERIC_WRITE,                        // Access rights requested
                                            FILE_SHARE_READ | FILE_SHARE_WRITE,                  // Share access - NONE
                                            NULL,                                                // Security attributes - not used!
@@ -115,7 +117,7 @@ tOplkError pdoucal_initSync(tSyncCb pfnSyncCb_p)
                                            FILE_ATTRIBUTE_NORMAL,                               // Open for overlapped I/O
                                            NULL);
 
-    if (pdoInstance_l.pFileHandle == INVALID_HANDLE_VALUE)
+    if (pdoInstance_l.pSyncFileHandle == INVALID_HANDLE_VALUE)
     {
         errNum = GetLastError();
 
@@ -141,7 +143,12 @@ The function cleans up the PDO user CAL sync module
 //------------------------------------------------------------------------------
 void pdoucal_exitSync(void)
 {
-    CloseHandle(pdoInstance_l.pFileHandle);
+    ULONG    bytesReturned;
+    printf("Exit Sync\n");
+    if (!DeviceIoControl(pdoInstance_l.pGlobalFileHandle, PLK_CMD_CLEAN,
+        0, 0,
+        0, 0, &bytesReturned, NULL))
+    CloseHandle(pdoInstance_l.pSyncFileHandle);
     pdoInstance_l.fIntialized = FALSE;
 }
 
@@ -166,10 +173,14 @@ tOplkError pdoucal_waitSyncEvent(ULONG timeout_p)
     if (!pdoInstance_l.fIntialized)
         return kErrorNoResource;
 
-    if (!DeviceIoControl(pdoInstance_l.pFileHandle, PLK_CMD_PDO_SYNC,
-                         &timeout_p, sizeof(ULONG),
-                         0, 0, &bytesReturned, NULL))
+    if (!DeviceIoControl(pdoInstance_l.pSyncFileHandle, PLK_CMD_PDO_SYNC,
+        &timeout_p, sizeof(ULONG),
+        0, 0, &bytesReturned, NULL))
+    {
+        printf("Error in IOCTL %d\n", GetLastError());
         return kErrorGeneralError;
+    }
+
 
     return kErrorOk;
 }

@@ -101,6 +101,7 @@ typedef struct
     tCircBufInstance*    dllQueueInst[NR_OF_CIRC_BUFFERS];
     tErrHndObjects*      pErrorObjects;
     tPdoMemInfo          pdoMem;
+    BOOL                 fDriverActive;
 }tDriverInstance;
 //------------------------------------------------------------------------------
 // local vars
@@ -160,6 +161,8 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
 
     if (cmd == kCtrlInitStack && pCtrlCmd_p->retVal == kErrorOk)
     {
+        
+        target_msleep(10000);
         ret = initEvent();
         if (ret != kErrorOk)
         {
@@ -204,6 +207,8 @@ void drv_readInitParam(tCtrlInitParam* pInitParam_p)
 {
     tDualprocReturn    dualRet;
 
+    if (!drvInstance_l.fDriverActive)
+        return;
     dualRet = dualprocshm_readDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, initParam),
                                          sizeof(tCtrlInitParam), (UINT8*) pInitParam_p);
 
@@ -227,6 +232,8 @@ Write the initialization parameters from the user into kernel memory.
 //------------------------------------------------------------------------------
 void drv_storeInitParam(tCtrlInitParam* pInitParam_p)
 {
+    if (!drvInstance_l.fDriverActive)
+        return;
     dualprocshm_writeDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, initParam),
                                 sizeof(tCtrlInitParam), (UINT8*) pInitParam_p);
 }
@@ -244,14 +251,16 @@ Return the current status of kernel stack.
 //------------------------------------------------------------------------------
 void drv_getStatus(UINT16* pStatus_p)
 {
-    PRINTF("Get Status offset %d\n", FIELD_OFFSET(tCtrlBuf, status));
+    if (!drvInstance_l.fDriverActive)
+        return;
+    //PRINTF("Get Status offset %d\n", FIELD_OFFSET(tCtrlBuf, status));
     if (dualprocshm_readDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, status),
         sizeof(UINT16), (UINT8*) pStatus_p) != kDualprocSuccessful)
     {
         DbgPrint("Error Reading Status\n");
     }
 
-    PRINTF("Status %x\n", *pStatus_p);
+    //PRINTF("Status %x\n", *pStatus_p);
 
 }
 
@@ -268,6 +277,9 @@ Return the current heartbeat value in kernel.
 //------------------------------------------------------------------------------
 void drv_getHeartbeat(UINT16* pHeartbeat)
 {
+    if (!drvInstance_l.fDriverActive)
+        return;
+
     if (dualprocshm_readDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, heartbeat),
         sizeof(UINT16), (UINT8*) pHeartbeat) != kDualprocSuccessful)
     {
@@ -296,6 +308,9 @@ void drv_sendAsyncFrame(unsigned char* pArg_p)
     frameInfo.frameSize = asyncFrameInfo->size;
     frameInfo.pFrame = (tPlkFrame*) (pArg_p + sizeof(tIoctlDllCalAsync));
 
+    if (!drvInstance_l.fDriverActive)
+        return;
+
     ret = insertDataBlock(drvInstance_l.dllQueueInst[asyncFrameInfo->queue],
                           (UINT8*) frameInfo.pFrame,
                           &(frameInfo.frameSize));
@@ -320,6 +335,8 @@ This routines updates the error objects in kernel with the value passed by user.
 void drv_writeErrorObject(tErrHndIoctl* pWriteObject_p)
 {
     tErrHndObjects*   errorObjects = drvInstance_l.pErrorObjects;
+    if (!drvInstance_l.fDriverActive)
+        return;
     *((UINT32*) ((char*) errorObjects + pWriteObject_p->offset)) = pWriteObject_p->errVal;
 }
 
@@ -337,6 +354,8 @@ This routines fetches the error objects in kernel to be passed to user.
 void drv_readErrorObject(tErrHndIoctl* pReadObject_p)
 {
     tErrHndObjects*   errorObjects = drvInstance_l.pErrorObjects;
+    if (!drvInstance_l.fDriverActive)
+        return;
     pReadObject_p->errVal = *((UINT32*)((char*) errorObjects + pReadObject_p->offset));
 }
 
@@ -371,6 +390,8 @@ tOplkError drv_initDualProcDrv(void)
         DEBUG_LVL_ERROR_TRACE("{%s} Error Initializing interrupts %x\n ", __func__, dualRet);
         return kErrorNoResource;
     }
+
+    drvInstance_l.fDriverActive = TRUE;
     PRINTF(" OK\n");
     return kErrorOk;
 }
@@ -380,7 +401,7 @@ void drv_exitDualProcDrv(void)
     tDualprocReturn dualRet;
     DbgPrint("%s\n", __func__);
     drvInstance_l.fIrqMasterEnable = FALSE;
-
+    drvInstance_l.fDriverActive = FALSE;
     // disable system irq
     dualprocshm_freeInterrupts(drvInstance_l.dualProcDrvInst);
 
@@ -400,6 +421,8 @@ void drv_postEvent(void* pEvent_p)
 
     tCircBufInstance*   pCircBufInstance = drvInstance_l.eventQueueInst[kEventQueueU2K];
 
+    if (!drvInstance_l.fDriverActive)
+        return;
     OPLK_MEMCPY(&event, pEvent_p, sizeof(tEvent));
 
     if (event.eventArgSize != 0)
@@ -407,7 +430,7 @@ void drv_postEvent(void* pEvent_p)
         pArg = (char*) ((UINT8*) pEvent_p + sizeof(tEvent));
         event.pEventArg = pArg;
     }
-    DbgPrint("%s() Event:%x Sink:%x\n", __func__, event.eventType, event.eventSink);
+    DbgPrint("%s() Event:%x Sink:%x Size %d Event%d\n", __func__, event.eventType, event.eventSink, event.eventArgSize, sizeof(tEvent));
     if (event.eventArgSize == 0)
     {
         circError = circbuf_writeData(pCircBufInstance, &event, sizeof(tEvent));
@@ -415,11 +438,12 @@ void drv_postEvent(void* pEvent_p)
     else
     {
         circError = circbuf_writeMultipleData(pCircBufInstance, pEvent_p, sizeof(tEvent),
-                                              event.pEventArg, (ULONG) event.eventArgSize);
+                                              event.pEventArg, event.eventArgSize);
     }
 
     if (circError != kCircBufOk)
     {
+        DbgPrint("Error in Post event %x\n", circError);
         ret = kErrorEventPostError;
     }
 
@@ -428,12 +452,14 @@ void drv_postEvent(void* pEvent_p)
 void drv_getEvent(void* pEvent_p, size_t* pSize_p)
 {
     tCircBufInstance*   pCircBufInstance = drvInstance_l.eventQueueInst[kEventQueueK2U];
+    if (!drvInstance_l.fDriverActive)
+        return;
 
-    DbgPrint("Get Event\n");
     if (circbuf_getDataCount(pCircBufInstance) > 0)
     {
         circbuf_readData(pCircBufInstance, pEvent_p,
                          sizeof(tEvent) + MAX_EVENT_ARG_SIZE, pSize_p);
+        DbgPrint("Get Event %d Type %x Sink %x\n", *pSize_p, ((tEvent*) pEvent_p)->eventType, ((tEvent*) pEvent_p)->eventSink);
     }
     else
     {
@@ -446,6 +472,8 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
     tDualprocReturn         dualRet;
     UINT8*                  pMem;
     tPdoMemInfo*            pPdoMemInfo = &drvInstance_l.pdoMem;
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
 
     dualRet = dualprocshm_getMemory(drvInstance_l.dualProcDrvInst,
                                     DUALPROCSHM_BUFF_ID_PDO, &pMem, &memSize_p, FALSE);
@@ -488,14 +516,14 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
     }
 
     *ppPdoMem_p = pPdoMemInfo->pUserVa;
-    DbgPrint("...OK\n");
+    DbgPrint("PDO mem %p...OK\n", pPdoMemInfo->pUserVa);
     return kErrorOk;
 }
 
 void drv_freePdoMem(UINT8* pPdoMem_p, size_t memSize_p)
 {
     tPdoMemInfo*           pPdoMemInfo = &drvInstance_l.pdoMem;
-    tDualprocReturn    dualRet;
+    tDualprocReturn        dualRet;
     DbgPrint("%s", __func__);
     if (pPdoMemInfo->pMdl == NULL)
     {
@@ -532,6 +560,9 @@ static tOplkError initEvent(void)
 {
     tCircBufError           circError = kCircBufOk;
     PRINTF("%s()\n",__func__);
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
+
     circError = circbuf_connect(CIRCBUF_USER_TO_KERNEL_QUEUE, &drvInstance_l.eventQueueInst[kEventQueueU2K]);
     if (circError != kCircBufOk)
     {
@@ -561,6 +592,9 @@ static tOplkError initErrHndl(void)
     UINT8*               pBase;
     size_t               span;
     PRINTF("%s()\n", __func__);
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
+
     if (drvInstance_l.pErrorObjects != NULL)
         return kErrorInvalidOperation;
 
@@ -598,6 +632,10 @@ static tOplkError initDllQueues(void)
 {
     tCircBufError           circError = kCircBufOk;
     PRINTF("%s()\n", __func__);
+
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
+
     circError = circbuf_connect(CIRCBUF_DLLCAL_TXGEN, &drvInstance_l.dllQueueInst[kDllCalQueueTxGen]);
     if (circError != kCircBufOk)
     {
@@ -647,6 +685,9 @@ static tOplkError insertDataBlock(tCircBufInstance* pDllCircBuffInst_p,
     tOplkError                  ret = kErrorOk;
     tCircBufError               error;
     PRINTF("%s()\n", __func__);
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
+
     if (pDllCircBuffInst_p == NULL)
     {
         ret = kErrorInvalidInstanceParam;

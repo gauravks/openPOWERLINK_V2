@@ -180,14 +180,14 @@ tOplkError nmtu_postNmtEvent(tNmtEvent nmtEvent_p)
 {
     tOplkError  ret;
     tEvent      event;
-
+    printf("%s() NMT %x\n", __func__,nmtEvent_p);
     event.eventSink = kEventSinkNmtk;
     event.netTime.nsec = 0;
     event.netTime.sec = 0;
     event.eventType = kEventTypeNmtEvent;
     event.pEventArg = &nmtEvent_p;
     event.eventArgSize = sizeof(nmtEvent_p);
-
+    printf(" enum Size %d", event.eventArgSize);
     ret = eventu_postEvent(&event);
 
     return ret;
@@ -519,7 +519,7 @@ static BOOL processMnStateChange(tNmtState newNmtState_p, tOplkError* pRet_p)
             ret = obd_readEntry(0x1F89, 0x01, &waitTime, &obdSize);
             if (ret != kErrorOk)
                 break;
-
+            printf("MsNotActive Timer Event %x\n", timerEvent);
             ret = setupNmtTimerEvent(waitTime, timerEvent);
             // potential error is forwarded to event queue which generates error event
             break;
@@ -663,7 +663,7 @@ static tOplkError setupNmtTimerEvent(UINT32 timeout_p, tNmtEvent event_p)
 {
     tOplkError      ret;
     tTimerArg       timerArg;
-
+    printf("%s Event %x\n", __func__, event_p);
     timeout_p = timeout_p / 1000; // convert us into ms
     if (timeout_p == 0)  // timer was below one ms -> set one ms
         timeout_p = 1;

@@ -33,16 +33,16 @@ CopyFiles       = oplk.CopyFiles
 [OPLK.xil_pcie.Services]
 AddService = oplkMiniport, 2, oplk.Service, oplk.EventLog
 
-;[OPLK.xil_pcie.HW]
-;Needs = PciIoSpaceNotRequired
-;AddReg = MSI.reg
+[OPLK.xil_pcie.HW]
+Needs = PciIoSpaceNotRequired
+AddReg = MSI.reg
 
 [oplk.reg]
 HKR, Ndi,                                       Service,                0, "oplkMiniport"
 HKR, Ndi\Interfaces,                            UpperRange,             0, "ndis5"
 HKR, Ndi\Interfaces,                            LowerRange,             0, "ethernet"
 
-;[MSI.reg]
+[MSI.reg]
 HKR, "Interrupt Management", 0x00000010
 HKR, "Interrupt Management\MessageSignaledInterruptProperties", 0x00000010
 HKR, "Interrupt Management\MessageSignaledInterruptProperties", MSISupported, 0x00010001, 1

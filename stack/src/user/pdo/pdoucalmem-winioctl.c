@@ -161,17 +161,10 @@ tOplkError pdoucal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
         return kErrorNoResource;
     }
 
-    if (bytesReturned != 0)
+    if (bytesReturned != 0 && outPdoMem.pPdoAddr != NULL)
     {
-        if (outPdoMem.pPdoAddr != NULL)
-        {
             *ppPdoMem_p = outPdoMem.pPdoAddr;
-        }
-        else
-        {
-            *ppPdoMem_p = NULL;
-            return kErrorNoResource;
-        }
+            printf("PDO mem Address %p\n", outPdoMem.pPdoAddr);
     }
     else
     {

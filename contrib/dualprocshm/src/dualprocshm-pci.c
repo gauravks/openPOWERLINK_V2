@@ -183,6 +183,8 @@ UINT8* dualprocshm_getIntrMemAddr(void)
 {
     UINT8* pAddr = (UINT8*)ndis_getBar1Addr();
 
+    if (pAddr == NULL)
+        return NULL;
     pAddr = (UINT8*) (pAddr + MEM_INTR_OFFSET);
     DbgPrint("%s() Addr:%p\n", __FUNCTION__,pAddr);
     return pAddr;

@@ -189,6 +189,8 @@ typedef enum
 The structure defines an openPOWERLINK event.
 (element order must not be changed!)
 */
+#pragma pack(push, packing)
+#pragma pack(4)
 typedef struct
 {
     tEventType          eventType;              ///< Type of this event
@@ -197,7 +199,7 @@ typedef struct
     UINT                eventArgSize;           ///< Size of the event argument
     void*               pEventArg;              ///< Pointer to event argument
 } tEvent;
-
+#pragma pack(pop, packing)
 /**
 \brief  Structure for OBD error information
 
