@@ -41,7 +41,7 @@ INCLUDE(setmicroblazeboardconfig)
 # U S E R    O P T I O N S
 
 # Assemble path to all boards with Xilinx demos
-SET(BOARD_DIRS ${PROJECT_SOURCE_DIR}/boards/avnet-s6plkeb;${PROJECT_SOURCE_DIR}/boards/avnet-lx150t;${PROJECT_SOURCE_DIR}/boards/xilinx-z702)
+SET(BOARD_DIRS ${PROJECT_SOURCE_DIR}/boards/avnet-s6plkeb;${PROJECT_SOURCE_DIR}/boards/avnet-lx150t;${PROJECT_SOURCE_DIR}/boards/xilinx-z702;${PROJECT_SOURCE_DIR}/boards/xilinx-sp605eb)
 
 # Skip bitstream generation
 OPTION(SKIP_BITSTREAM "Skip bitstream generation to save time." OFF)
