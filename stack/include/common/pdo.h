@@ -58,7 +58,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
-
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 /**
 \brief PDO allocation parameter structure
 
@@ -161,5 +164,7 @@ typedef struct
     ULONG      rxPdoMemSize;                   ///< Size of the RPDO memory
     ULONG      txPdoMemSize;                   ///< Size of the TPDO memory
 } tPdoMemSize;
-
+#ifdef _MSC_VER
+#pragma pack(pop,packing)
+#endif
 #endif /* _INC_common_pdo_H_ */

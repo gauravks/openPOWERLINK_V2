@@ -181,7 +181,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
-
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     UINT8               cmdData;
@@ -280,7 +283,9 @@ typedef struct
     UINT32              prcPResTimeFirstCorrectionNs;   ///< to be commented!
     UINT32              prcPResTimeFirstNegOffsetNs;    ///< to be commented!
 } tNmtMnuInstance;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------

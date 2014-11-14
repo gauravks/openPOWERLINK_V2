@@ -189,6 +189,10 @@ typedef enum
 The structure defines an openPOWERLINK event.
 (element order must not be changed!)
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     tEventType          eventType;              ///< Type of this event
@@ -243,7 +247,9 @@ typedef struct
     tNmtState           nmtState;               ///< NMT state
     tOplkError          oplkError;              ///< openPOWERLINK error code
 } tEventDllError;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 /**
 \brief  Callback function to get informed about sync event
 

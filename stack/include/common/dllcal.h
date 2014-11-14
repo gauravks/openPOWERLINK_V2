@@ -79,6 +79,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     tDllAsndServiceId       serviceId;
@@ -91,7 +95,9 @@ typedef struct
     UINT                    nodeId;
     BYTE                    soaFlag1;
 } tDllCalIssueRequest;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 /**
 \brief enumerator for queue
 

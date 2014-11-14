@@ -161,6 +161,10 @@ typedef enum
 *
 * This structure defines the NMT state change event.
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     tNmtState               newNmtState;        ///< New NMT state
@@ -180,7 +184,9 @@ typedef struct
     UINT16                  errorCode;          ///< POWERLINK error code in case of NMT state NotActive
 } tHeartbeatEvent;
 
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 /**
 * \brief Node events
 *

@@ -128,6 +128,10 @@ typedef enum
 
 The structure contains all information about a POWERLINK frame.
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     UINT            frameSize;                      ///< Size of the frame
@@ -267,5 +271,7 @@ typedef struct
     UINT16          frameSize;                          ///< The size of the received PRes frame.
     UINT8           frameBuf[MAX_PRES_FORWARD_BUFLEN];  ///< The received PRes frame.
 } tDllEventReceivedPres;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 #endif  // #ifndef _INC_oplk_dll_H_
