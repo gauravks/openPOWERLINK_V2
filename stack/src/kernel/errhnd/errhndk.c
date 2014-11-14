@@ -258,7 +258,7 @@ tOplkError errhndk_postError(tEventDllError* pErrEvent_p)
     Event.eventSink = kEventSinkErrk;
     Event.eventType = kEventTypeDllError;
     Event.eventArgSize = sizeof(tEventDllError);
-    Event.pEventArg = pErrEvent_p;
+    Event.pEventArg = (ULONGLONG)pErrEvent_p;
     Ret = eventk_postEvent(&Event);
 
     return Ret;
@@ -912,7 +912,7 @@ static tOplkError postHeartbeatEvent(UINT nodeId_p, tNmtState state_p,
     event.eventSink = kEventSinkNmtMnu;
     event.eventType = kEventTypeHeartbeat;
     event.eventArgSize = sizeof(heartbeatEvent);
-    event.pEventArg = &heartbeatEvent;
+    event.pEventArg = (ULONGLONG)&heartbeatEvent;
     ret = eventk_postEvent(&event);
     return ret;
 }
@@ -937,7 +937,7 @@ static tOplkError postHistoryEntryEvent(tErrHistoryEntry* pHistoryEntry_p)
     event.eventSink = kEventSinkApi;
     event.eventType = kEventTypeHistoryEntry;
     event.eventArgSize = sizeof(*pHistoryEntry_p);
-    event.pEventArg = pHistoryEntry_p;
+    event.pEventArg = (ULONGLONG)pHistoryEntry_p;
     ret = eventk_postEvent(&event);
 
     return ret;
@@ -1061,7 +1061,7 @@ static tOplkError postNmtEvent(tNmtEvent nmtEvent_p)
     nmtEvent = nmtEvent_p;
     event.eventSink = kEventSinkNmtk;
     event.eventType = kEventTypeNmtEvent;
-    event.pEventArg = &nmtEvent;
+    event.pEventArg = (ULONGLONG)&nmtEvent;
     event.eventArgSize = sizeof(nmtEvent);
     ret = eventk_postEvent(&event);
     return ret;

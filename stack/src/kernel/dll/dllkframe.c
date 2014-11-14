@@ -307,7 +307,7 @@ tEdrvReleaseRxBuffer dllkframe_processFrameReceived(tEdrvRxBuffer* pRxBuffer_p)
             event.eventSink = kEventSinkNmtk;
             event.eventType = kEventTypeNmtEvent;
             event.eventArgSize = sizeof(nmtEvent);
-            event.pEventArg = &nmtEvent;
+            event.pEventArg = (ULONGLONG)(INT)&nmtEvent;
             ret = eventk_postEvent(&event);
         }
     }
@@ -373,7 +373,7 @@ void dllkframe_processTransmittedNmtReq(tEdrvTxBuffer* pTxBuffer_p)
             event.eventSink = kEventSinkNmtMnu;
             event.eventType = kEventTypeNmtMnuNmtCmdSent;
             event.eventArgSize = pTxBuffer_p->txFrameSize;
-            event.pEventArg = pTxFrame;
+            event.pEventArg = (ULONGLONG)(UINT)pTxFrame;
             //PRINTF("%s TxB=%p, TxF=%p, s=%u\n", __func__, pTxBuffer_p, event.pEventArg, event.eventArgSize);
             ret = eventk_postEvent(&event);
             if (ret != kErrorOk)
@@ -408,7 +408,7 @@ void dllkframe_processTransmittedNmtReq(tEdrvTxBuffer* pTxBuffer_p)
     event.eventSink = kEventSinkDllk;
     event.eventType = kEventTypeDllkFillTx;
     OPLK_MEMSET(&event.netTime, 0x00, sizeof(event.netTime));
-    event.pEventArg = &priority;
+    event.pEventArg = (ULONGLONG)(UINT)&priority;
     event.eventArgSize = sizeof(priority);
     ret = eventk_postEvent(&event);
     if (ret != kErrorOk)
@@ -480,7 +480,7 @@ void dllkframe_processTransmittedNonPlk(tEdrvTxBuffer* pTxBuffer_p)
     event.eventSink = kEventSinkDllk;
     event.eventType = kEventTypeDllkFillTx;
     OPLK_MEMSET(&event.netTime, 0x00, sizeof(event.netTime));
-    event.pEventArg = &priority;
+    event.pEventArg = (ULONGLONG)(UINT)&priority;
     event.eventArgSize = sizeof(priority);
     ret = eventk_postEvent(&event);
 
@@ -1433,7 +1433,7 @@ tOplkError dllkframe_asyncFrameNotReceived(tDllReqServiceId reqServiceId_p,
 
                 event.eventSink = kEventSinkDlluCal;
                 event.eventType = kEventTypeAsndNotRx;
-                event.pEventArg = (void*)&asndNotRx;
+                event.pEventArg = (ULONGLONG)(UINT)&asndNotRx;
                 event.eventArgSize = sizeof(tDllAsndNotRx);
 
                 // Post event with dummy frame
@@ -1824,7 +1824,7 @@ static tOplkError processReceivedPres(tFrameInfo* pFrameInfo_p, tNmtState nmtSta
         event.eventSink = kEventSinkApi;
         event.eventType = kEventTypeReceivedPres;
         event.eventArgSize = sizeof(presEvent);
-        event.pEventArg = &presEvent;
+        event.pEventArg = (ULONGLONG)&presEvent;
 
         ret = eventk_postEvent(&event);
         pPresFw->numResponse++;
@@ -2611,7 +2611,7 @@ static tOplkError updateNode(tDllkNodeInfo* pIntNodeInfo_p, UINT nodeId_p,
             event.eventSink = kEventSinkNmtMnu;
             event.eventType = kEventTypeHeartbeat;
             event.eventArgSize = sizeof(heartbeatEvent);
-            event.pEventArg = &heartbeatEvent;
+            event.pEventArg = (ULONGLONG)(UINT)&heartbeatEvent;
         }
         else
         {   // CN shall be deleted softly, so remove it now without issuing any error
@@ -2622,7 +2622,7 @@ static tOplkError updateNode(tDllkNodeInfo* pIntNodeInfo_p, UINT nodeId_p,
             event.eventType = kEventTypeDllkDelNode;
             // $$$ d.k. set Event.netTime to current time
             event.eventArgSize = sizeof(nodeOpParam);
-            event.pEventArg = &nodeOpParam;
+            event.pEventArg = (ULONGLONG)(UINT)&nodeOpParam;
         }
 
         if ((ret = eventk_postEvent(&event)) != kErrorOk)
@@ -2800,7 +2800,7 @@ static void handleErrorSignaling(tPlkFrame* pFrame_p, UINT nodeId_p)
         issueReq.service = kDllReqServiceStatus;
         issueReq.nodeId = pIntNodeInfo->nodeId;
         issueReq.soaFlag1 = pIntNodeInfo->soaFlag1;
-        event.pEventArg = &issueReq;
+        event.pEventArg = (ULONGLONG)(UINT)&issueReq;
         event.eventArgSize = sizeof(tDllCalIssueRequest);
         if ((ret = eventk_postEvent(&event)) != kErrorOk)
         {

@@ -310,7 +310,7 @@ tOplkError eventk_postError(tEventSource eventSource_p, tOplkError oplkError_p,
     oplkEvent.eventSink = kEventSinkApi;
     OPLK_MEMSET(&oplkEvent.netTime, 0x00, sizeof(oplkEvent.netTime));
     oplkEvent.eventArgSize = offsetof(tEventError, errorArg) + argSize_p;
-    oplkEvent.pEventArg = &eventError;
+    oplkEvent.pEventArg = (ULONGLONG)&eventError;
 
     ret = eventk_postEvent(&oplkEvent);
 

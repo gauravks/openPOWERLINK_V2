@@ -236,7 +236,7 @@ static tOplkError cbProcessRpdo(tFrameInfo* pFrameInfo_p)
     // limit copied data to size of PDO (because from some CNs the frame is larger than necessary)
     event.eventArgSize = ami_getUint16Le(&pFrameInfo_p->pFrame->data.pres.sizeLe) +
                                          PLK_FRAME_OFFSET_PDO_PAYLOAD; // pFrameInfo_p->frameSize;
-    event.pEventArg = pFrameInfo_p->pFrame;
+    event.pEventArg = (ULONGLONG)pFrameInfo_p->pFrame;
 #endif
     ret = eventk_postEvent(&event);
 #if CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_SYNC != FALSE

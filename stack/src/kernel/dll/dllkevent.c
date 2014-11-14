@@ -224,7 +224,7 @@ static tOplkError controlPdokcalSync(BOOL fEnable_p)
 
     event.eventSink = kEventSinkPdokCal;
     event.eventType = kEventTypePdokControlSync;
-    event.pEventArg = &fEnable;
+    event.pEventArg = (ULONGLONG)&fEnable;
     event.eventArgSize = sizeof(fEnable);
 
     return eventk_postEvent(&event);
@@ -506,7 +506,7 @@ static tOplkError processNmtEvent(tEvent* pEvent_p)
     tNmtEvent*      pNmtEvent;
     tNmtState       NmtState;
 
-    pNmtEvent = (tNmtEvent*)pEvent_p->pEventArg;
+    pNmtEvent = (tNmtEvent*)((UINT)pEvent_p->pEventArg);
 
     switch (*pNmtEvent)
     {

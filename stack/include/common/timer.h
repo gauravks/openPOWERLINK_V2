@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if (TARGET_SYSTEM == _WIN32_)
 typedef ULONG_PTR tTimerHdl;
 #else
-typedef ULONG tTimerHdl;
+typedef ULONGLONG tTimerHdl;
 #endif
 
 /**

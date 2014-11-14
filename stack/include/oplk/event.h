@@ -195,7 +195,9 @@ typedef struct
     tEventSink          eventSink;              ///< Sink of this event
     tNetTime            netTime;                ///< Timestamp of the event
     UINT                eventArgSize;           ///< Size of the event argument
-    void*               pEventArg;              ///< Pointer to event argument
+    // TODO@gks: Change this to support 64 bit system pointers
+    //void*               pEventArg;              ///< Pointer to event argument
+    ULONGLONG           pEventArg;              ///< Pointer to event argument
 } tEvent;
 
 /**

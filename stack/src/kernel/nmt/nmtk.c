@@ -289,7 +289,7 @@ tOplkError nmtk_process(tEvent* pEvent_p)
         nmtStateChange.nmtEvent = nmtEvent;
         event.eventType = kEventTypeNmtStateChange;
         OPLK_MEMSET(&event.netTime, 0x00, sizeof(event.netTime));
-        event.pEventArg = &nmtStateChange;
+        event.pEventArg = (ULONGLONG)&nmtStateChange;
         event.eventArgSize = sizeof(nmtStateChange);
 
         // inform DLLk module about state change

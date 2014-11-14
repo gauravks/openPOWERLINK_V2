@@ -479,7 +479,7 @@ tOplkError dllknode_addNodeIsochronous(tDllkNodeInfo* pIntNodeInfo_p)
             event.eventSink = kEventSinkNmtMnu;
             event.eventType = kEventTypeNmtMnuNodeAdded;
             event.eventArgSize = sizeof(pIntNodeInfo_p->nodeId);
-            event.pEventArg = &pIntNodeInfo_p->nodeId;
+            event.pEventArg = (ULONGLONG)&pIntNodeInfo_p->nodeId;
             ret = eventk_postEvent(&event);
             if (ret != kErrorOk)
                 goto Exit;

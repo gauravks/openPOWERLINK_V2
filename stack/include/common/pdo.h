@@ -84,7 +84,9 @@ typedef struct
     TPDO: 0x00=PRes, MN: CnNodeId=PReq
     */
     UINT                nodeId;
-    void*               pVar;                   ///< Pointer to frame data
+    // TODO@gks: Modify Pointer to ULONGLONG
+    //void*               pVar;                   ///< Pointer to frame data
+    ULONGLONG           pVar;                   ///< Pointer to frame data
     WORD                pdoSize;                ///< Size of this PDO
     BYTE                mappingVersion;         ///< The mapping version of this PDO
     unsigned int        mappObjectCount;        ///< The actual number of used mapped objects
@@ -141,7 +143,7 @@ of receive and transmit PDO buffers.
 typedef struct
 {
     UINT16              valid;                                      ///< Defines whether the memory region is valid
-    size_t              pdoMemSize;                                 ///< Size of the overall PDO memory
+    ULONG               pdoMemSize;                                 ///< Size of the overall PDO memory
     tPdoBufferInfo      rxChannelInfo[D_PDO_RPDOChannels_U16];      ///< Array of RPDO channels
     tPdoBufferInfo      txChannelInfo[D_PDO_TPDOChannels_U16];      ///< Array of TPDO channels
 #ifdef OPLK_LOCK_T
@@ -156,8 +158,8 @@ This structure specifies the sizes of the RPDO and TPDO memory.
 */
 typedef struct
 {
-    size_t      rxPdoMemSize;                   ///< Size of the RPDO memory
-    size_t      txPdoMemSize;                   ///< Size of the TPDO memory
+    ULONG      rxPdoMemSize;                   ///< Size of the RPDO memory
+    ULONG      txPdoMemSize;                   ///< Size of the TPDO memory
 } tPdoMemSize;
 
 #endif /* _INC_common_pdo_H_ */
