@@ -90,6 +90,12 @@ IF(DEFINED CFG_DEMO_BOARD_ZYNQ AND CFG_DEMO_BOARD_ZYNQ)
        )
 ENDIF()
 
+IF(DEFINED CFG_BOARD_SP605EB AND CFG_BOARD_SP605EB)
+    SET(DUALPROCSHM_LIB_SRCS
+        ${DUALPROCSHM_LIB_SRCS}
+        ${PROJECT_SOURCE_DIR}/src/dualprocshm-pcp.c
+       )
+ENDIF()
 ########################################################################
 # Set include paths
 ########################################################################

@@ -45,6 +45,11 @@ ADD_DEFINITIONS(${XIL_${PROC_INST_NAME}_CFLAGS} "-fmessage-length=0 -mcpu=${CFG_
 IF(DEFINED CFG_DEMO_BOARD_ZYNQ AND CFG_DEMO_BOARD_ZYNQ)
     ADD_DEFINITIONS("-D__ZYNQ__ ")
 ENDIF()
+
+IF(DEFINED CFG_BOARD_SP605EB AND CFG_BOARD_SP605EB)
+    ADD_DEFINITIONS("-D__SP605EB__")
+ENDIF()
+
 ################################################################################
 # Set architecture specific installation files
 

@@ -43,11 +43,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <stdint.h>
 
 #if defined(__ZYNQ__)
 
 #include "dualprocshm-zynq.h"
+
+#elif defined(__SP605EB__)
+
+#include "dualprocshm-pcie.h"
 
 #else
 
@@ -153,6 +156,8 @@ void    dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p) SECTION
 void    dualprocshm_targetReleaseLock(UINT8* pBase_p) SECTION_DUALPROCSHM_RELEASE_LOCK;
 void    dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
 void    dualprocshm_enableSyncIrq(BOOL fEnable_p);
+void    dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p);
+UINT8*  dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
 #ifdef __cplusplus
 }
 #endif
