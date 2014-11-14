@@ -398,13 +398,13 @@ UINT eventkcal_getEventCountCircbuf(tEventQueue eventQueue_p)
 {
     if (eventQueue_p > kEventQueueNum)
     {
-        DEBUG_LVL_ERROR_TRACE("%s() Invalid event queue %d!!!\n", __func__, eventQueue_p);
+        //DEBUG_LVL_ERROR_TRACE("%s() Invalid event queue %d!!!\n", __func__, eventQueue_p);
         return 0;
     }
 
     if (instance_l[eventQueue_p] == NULL)
     {
-        DEBUG_LVL_ERROR_TRACE("%s() No event queue instance %d!!!\n", __func__, eventQueue_p);
+        //DEBUG_LVL_ERROR_TRACE("%s() No event queue instance %d!!!\n", __func__, eventQueue_p);
         return 0;
     }
 
