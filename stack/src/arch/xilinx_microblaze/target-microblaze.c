@@ -46,6 +46,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "usleep.h"
 #include "systemtimer.h"
 
+#ifdef CONFIG_PCIE
+#include "pcie-driver.h"
+#endif
 #include <xparameters.h>
 #include <xintc.h>         // interrupt controller
 
@@ -176,6 +179,9 @@ openPOWERLINK stack.
 //------------------------------------------------------------------------------
 tOplkError target_init(void)
 {
+#ifdef CONFIG_PCIE
+    int    status;
+#endif
     // initialize microblaze caches
 #if XPAR_MICROBLAZE_USE_ICACHE
     microblaze_invalidate_icache();
@@ -195,6 +201,16 @@ tOplkError target_init(void)
 
 #ifdef __ZYNQ__
     uart_init();
+#endif
+
+#ifdef CONFIG_PCIE
+    status = pcie_initialize();
+
+    if (status != XST_SUCCESS)
+    {
+        printf("PCIe Initialization Failed\n");
+        return kErrorNoResource;
+    }
 #endif
 
     // enable the interrupt master

@@ -487,6 +487,10 @@ SET(TARGET_MICROBLAZE_OPENMAC_SOURCES
     ${ARCH_SOURCE_DIR}/xilinx_microblaze/openmac-microblaze.c
     )
 
+SET(TARGET_MICROBLAZE_PCIEDRV_SOURCES
+    ${ARCH_SOURCE_DIR}/xilinx_microblaze/pcie-driver.c
+    )
+
 SET(TARGET_XILINX_ARM_SOURCES
     ${ARCH_SOURCE_DIR}/xilinx-zynqarm/target-zynqarm.c
     )

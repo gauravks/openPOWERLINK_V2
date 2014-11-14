@@ -60,6 +60,12 @@ SET(LIB_ARCH_SOURCES
                      ${TARGET_MICROBLAZE_OPENMAC_SOURCES}
    )
 
+IF(DEFINED CFG_PCP_PCIE_ENABLE AND CFG_PCP_PCIE_ENABLE)
+SET(LIB_ARCH_SOURCES
+                     ${LIB_ARCH_SOURCES}
+                     ${TARGET_MICROBLAZE_PCIEDRV_SOURCES}
+   )
+ENDIF()
 ################################################################################
 # Set architecture specific includes
 
@@ -81,6 +87,12 @@ ADD_DEFINITIONS("${XIL_PCP_CFLAGS} -fmessage-length=0 -mcpu=${CFG_PCP_CPU_VERSIO
 
 IF(DEFINED CFG_DEMO_BOARD_ZYNQ AND CFG_DEMO_BOARD_ZYNQ)
 ADD_DEFINITIONS("-D__ZYNQ__")
+IF(DEFINED CFG_BOARD_SP605EB AND CFG_BOARD_SP605EB)
+ADD_DEFINITIONS("-D__SP605EB__")
+ENDIF()
+
+IF(DEFINED CFG_PCP_PCIE_ENABLE AND CFG_PCP_PCIE_ENABLE)
+ADD_DEFINITIONS("-DCONFIG_PCIE")
 ENDIF()
 ################################################################################
 # Deactivate optimization for usleep
