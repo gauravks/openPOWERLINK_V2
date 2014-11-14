@@ -379,6 +379,7 @@ static void shutdownPowerlink(void)
     // small loop to implement timeout waiting for thread to terminate
     for (i = 0; i < 1000; i++)
     {
+        msleep(1);
         if (fGsOff_l)
             break;
     }
