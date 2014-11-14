@@ -49,7 +49,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <io.h>
 #include <targetsection.h>
 
+/// borrowed from alt_remap_uncached.c
+#ifdef NIOS2_MMU_PRESENT
+#define NIOS2_BYPASS_DCACHE_MASK    (0x1 << 29)
+#else
+#define NIOS2_BYPASS_DCACHE_MASK    (0x1 << 31)
+#endif
+
 // Memory
+#define DPSHM_MAKE_NONCACHEABLE(ptr)  \
+    (void*)(((unsigned long)ptr)|NIOS2_BYPASS_DCACHE_MASK)
+
 #define DUALPROCSHM_MALLOC(size)    alt_uncached_malloc(size)
 #define DUALPROCSHM_FREE(ptr)       alt_uncached_free(ptr)
 

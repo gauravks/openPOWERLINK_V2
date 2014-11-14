@@ -94,13 +94,13 @@ entity toplevel is
         --! Ethernet link100 input
         ENET_LINK100        : in    std_logic;
         --! Ethernet MDC
-        ENET_MDC            : out   std_logic;
+        ENET_MDC            : out   std_logic_vector(0 downto 0);
         --! Ethernet MDIO
-        ENET_MDIO           : inout std_logic;
+        ENET_MDIO           : inout std_logic_vector(0 downto 0);
         --! Ethernet Active low Reset
-        ENET_RST_N          : out   std_logic;
+        ENET_RST_N          : out   std_logic_vector(0 downto 0);
         --! Ethernet Rx Clock
-        ENET_RX_CLK         : in    std_logic;
+        ENET_RX_CLK         : in    std_logic_vector(0 downto 0);
         --! Ethernet RX collision
         ENET_RX_COL         : in    std_logic;
         --! Ethernet CRS
@@ -108,15 +108,15 @@ entity toplevel is
         --! Ethernet Rx Data
         ENET_RX_DATA        : in    std_logic_vector (3 downto 0);
         --! Ethernet Rx Data Valid
-        ENET_RX_DV          : in    std_logic;
+        ENET_RX_DV          : in    std_logic_vector(0 downto 0);
         --! Ethernet Rx Error
-        ENET_RX_ER          : in    std_logic;
+        ENET_RX_ER          : in    std_logic_vector(0 downto 0);
         --! Ethernet Tx Clock
-        ENET_TX_CLK         : in    std_logic;
+        ENET_TX_CLK         : in    std_logic_vector(0 downto 0);
         --! Ethernet Tx Data
         ENET_TX_DATA        : out   std_logic_vector(3 downto 0);
         --! Ethernet Tx Enable
-        ENET_TX_EN          : out   std_logic;
+        ENET_TX_EN          : out   std_logic_vector(0 downto 0);
         --! Ethernet Tx Error
         ENET_TX_ER          : out   std_logic;
         --------- FAN ---------
@@ -124,13 +124,13 @@ entity toplevel is
         FAN_CTRL            : inout   std_logic;
         --------- FLASH MEMORY ---------
         --! Flash active low Chip Enable
-        FL_CE_N             : out   std_logic;
+        FL_CE_N             : out   std_logic_vector(0 downto 0);
         --! Flash active low Output Enable
-        FL_OE_N             : out   std_logic;
+        FL_OE_N             : out   std_logic_vector(0 downto 0);
         --! Flash Ready/Busy
         FL_RY               : in    std_logic;
         --! Flash Active low Write Enable
-        FL_WE_N             : out   std_logic;
+        FL_WE_N             : out   std_logic_vector(0 downto 0);
         -- Flash Active low Write
         FL_WP_N             : out   std_logic;
         --! Flash Active low Reset
@@ -223,7 +223,7 @@ entity toplevel is
 
         --------- SSRAM ---------
         --! SSRAM active low ADSC
-        SSRAM_ADSC_N     : out   std_logic;
+        SSRAM_ADSC_N     : out   std_logic_vector(0 downto 0);
         --! SSRAM active low ADSP
         SSRAM_ADSP_N     : out   std_logic;
         --! SSRAM active low ADV
@@ -235,13 +235,13 @@ entity toplevel is
         --! SSRAM GW
         SSRAM_GW_N       : out   std_logic;
         --! SSRAM OE
-        SSRAM_OE_N       : out   std_logic;
+        SSRAM_OE_N       : out   std_logic_vector(0 downto 0);
         --! SSRAM WE
-        SSRAM_WE_N       : out   std_logic;
+        SSRAM_WE_N       : out   std_logic_vector(0 downto 0);
         --! SSRAM-0 Chip Enable
-        SSRAM0_CE_N      : out   std_logic;
+        SSRAM0_CE_N      : out   std_logic_vector(0 downto 0);
         --! SSRAM-1 Chip Enable
-        SSRAM1_CE_N      : out   std_logic;
+        SSRAM1_CE_N      : out   std_logic_vector(0 downto 0);
 
         --------- SW ---------
         SW               : out  std_logic_vector (17 downto 0);
@@ -279,28 +279,8 @@ signal clk150p              : std_logic;
 signal clk150              : std_logic;
 signal pllLocked            : std_logic;
 
-signal flash_reset_n        : std_logic;
+signal flash_reset_n        : std_logic_vector(0 downto 0);
 signal nios_flash_reset_n   : std_logic;
-
--- Temporary signals to match pin configuration
---TODO: use PORT signals and update in pin planner
-signal SSRAM_ADSC_N_tmp         : std_logic_vector(0 downto 0);
-signal SSRAM_WE_N_tmp           : std_logic_vector(0 downto 0);
-signal FL_OE_N_tmp              : std_logic_vector(0 downto 0);
-signal FL_WE_N_tmp              : std_logic_vector(0 downto 0);
-signal SSRAM0_CE_N_tmp          : std_logic_vector(0 downto 0);
-signal SSRAM1_CE_N_tmp          : std_logic_vector(0 downto 0);
-signal FL_CE_N_tmp              : std_logic_vector(0 downto 0);
-signal SSRAM_OE_N_tmp           : std_logic_vector(0 downto 0);
-signal flash_reset_n_tmp        : std_logic_vector(0 downto 0);
-signal ENET_TX_EN_tmp           : std_logic_vector(0 downto 0);                     -- txEnable
-signal ENET_TX_CLK_tmp          : std_logic_vector(0 downto 0)  := (others => 'X');
-signal ENET_RX_ER_tmp           : std_logic_vector(0 downto 0)  := (others => 'X'); -- rxError
-signal ENET_RX_DV_tmp           : std_logic_vector(0 downto 0)  := (others => 'X'); -- rxDataValid
-signal ENET_RX_CLK_tmp          : std_logic_vector(0 downto 0)  := (others => 'X'); -- rxClk
-signal ENET_RST_N_tmp           : std_logic_vector(0 downto 0);                     -- nPhyRst
-signal ENET_MDC_tmp             : std_logic_vector(0 downto 0);                     -- clk
-signal ENET_MDIO_tmp            : std_logic_vector(0 downto 0)  := (others => 'X'); -- dio
 
      --! Heart Beat Module
      component heart_beat
@@ -396,29 +376,8 @@ signal ENET_MDIO_tmp            : std_logic_vector(0 downto 0)  := (others => 'X
 
 begin
 
-    --Out port declaration
-    --TODO: use PORT signals and update in pin planner
-    SSRAM1_CE_N     <= SSRAM1_CE_N_tmp(0);
-    SSRAM_ADSC_N    <= SSRAM_ADSC_N_tmp (0);
-    SSRAM_WE_N      <= SSRAM_WE_N_tmp(0);
-    FL_OE_N         <= FL_OE_N_tmp(0);
-    SSRAM0_CE_N     <= SSRAM0_CE_N_tmp(0);
-    FL_CE_N         <= FL_CE_N_tmp(0);
-    SSRAM_OE_N      <= SSRAM_OE_N_tmp(0);
-    flash_reset_n   <= flash_reset_n_tmp(0);
-    FL_WE_N         <= FL_WE_N_tmp(0);
-
-    ENET_TX_EN      <= ENET_TX_EN_tmp(0);
-    ENET_TX_CLK_tmp(0) <= ENET_TX_CLK;
-    ENET_RX_ER_tmp(0) <= ENET_RX_ER;
-    ENET_RX_DV_tmp(0) <= ENET_RX_DV;
-    ENET_RX_CLK_tmp(0) <= ENET_RX_CLK;
-    ENET_RST_N      <= ENET_RST_N_tmp(0);
-    ENET_MDC        <= ENET_MDC_tmp(0);
-    ENET_MDIO       <= ENET_MDIO_tmp(0);
-
     -- PIN Declarations
-    FL_RESET_N             <= flash_reset_n and nios_flash_reset_n;
+    FL_RESET_N             <= flash_reset_n(0) and nios_flash_reset_n;
     DRAM_CLK               <= clk150p;
     SSRAM_CLK              <= clk150;
     PCIE_WAKE_N            <= cnInactivated;   -- 07/30/2013, pull-high to avoid system reboot after power off
@@ -462,29 +421,29 @@ begin
                 sdram_dqm                                  => DRAM_DQM,
                 sdram_ras_n                                => DRAM_RAS_N,
                 sdram_we_n                                 => DRAM_WE_N,
-                tristate_conduit_bridge_0_out_SSRAM_1_CS_N => SSRAM1_CE_N_tmp,
+                tristate_conduit_bridge_0_out_SSRAM_1_CS_N => SSRAM1_CE_N,
                 tristate_conduit_bridge_0_out_DATA         => FS_DQ,
                 tristate_conduit_bridge_0_out_SSRAM_BE_N   => SSRAM_BE,
-                tristate_conduit_bridge_0_out_CFI_0_WR_N   => FL_WE_N_tmp,
+                tristate_conduit_bridge_0_out_CFI_0_WR_N   => FL_WE_N,
                 tristate_conduit_bridge_0_out_ADDR         => FS_ADDR,
-                tristate_conduit_bridge_0_out_SSRAM_BT_N   => SSRAM_ADSC_N_tmp,
-                tristate_conduit_bridge_0_out_SSRAM_WR_N   => SSRAM_WE_N_tmp,
-                tristate_conduit_bridge_0_out_CFI_0_OE_N   => FL_OE_N_tmp,
-                tristate_conduit_bridge_0_out_SSRAM_0_CS_N => SSRAM0_CE_N_tmp,
-                tristate_conduit_bridge_0_out_CFI_0_CS_N   => FL_CE_N_tmp,
-                tristate_conduit_bridge_0_out_SSRAM_OE_N   => SSRAM_OE_N_tmp,
-                tristate_conduit_bridge_0_out_CFI_0_RST_N  => flash_reset_n_tmp,
+                tristate_conduit_bridge_0_out_SSRAM_BT_N   => SSRAM_ADSC_N,
+                tristate_conduit_bridge_0_out_SSRAM_WR_N   => SSRAM_WE_N,
+                tristate_conduit_bridge_0_out_CFI_0_OE_N   => FL_OE_N,
+                tristate_conduit_bridge_0_out_SSRAM_0_CS_N => SSRAM0_CE_N,
+                tristate_conduit_bridge_0_out_CFI_0_CS_N   => FL_CE_N,
+                tristate_conduit_bridge_0_out_SSRAM_OE_N   => SSRAM_OE_N,
+                tristate_conduit_bridge_0_out_CFI_0_RST_N  => flash_reset_n,
                 flash_reset_n_export                       => nios_flash_reset_n,
-                openmac_mii_txEnable                       => ENET_TX_EN_tmp,
+                openmac_mii_txEnable                       => ENET_TX_EN,
                 openmac_mii_txData                         => ENET_TX_DATA,
-                openmac_mii_txClk                          => ENET_TX_CLK_tmp,
-                openmac_mii_rxError                        => ENET_RX_ER_tmp,
-                openmac_mii_rxDataValid                    => ENET_RX_DV_tmp,
+                openmac_mii_txClk                          => ENET_TX_CLK,
+                openmac_mii_rxError                        => ENET_RX_ER,
+                openmac_mii_rxDataValid                    => ENET_RX_DV,
                 openmac_mii_rxData                         => ENET_RX_DATA,
-                openmac_mii_rxClk                          => ENET_RX_CLK_tmp,
-                openmac_smi_nPhyRst                        => ENET_RST_N_tmp,
-                openmac_smi_clk                            => ENET_MDC_tmp,
-                openmac_smi_dio                            => ENET_MDIO_tmp,
+                openmac_mii_rxClk                          => ENET_RX_CLK,
+                openmac_smi_nPhyRst                        => ENET_RST_N,
+                openmac_smi_clk                            => ENET_MDC,
+                openmac_smi_dio                            => ENET_MDIO,
                 benchmark_pio_export                       => ledRG_b( 7 downto 0)
             );
 

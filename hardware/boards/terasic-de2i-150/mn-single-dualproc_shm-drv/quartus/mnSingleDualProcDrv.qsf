@@ -235,24 +235,16 @@ set_location_assignment PIN_AG25 -to EEP_I2C_SDAT
 set_location_assignment PIN_A12 -to ENET_GTX_CLK
 set_location_assignment PIN_E16 -to ENET_INT_N
 set_location_assignment PIN_F5 -to ENET_LINK100
-set_location_assignment PIN_C16 -to ENET_MDC
-set_location_assignment PIN_C15 -to ENET_MDIO
-set_location_assignment PIN_C14 -to ENET_RST_N
-set_location_assignment PIN_L15 -to ENET_RX_CLK
 set_location_assignment PIN_G15 -to ENET_RX_COL
 set_location_assignment PIN_D6 -to ENET_RX_CRS
 set_location_assignment PIN_F15 -to ENET_RX_DATA[0]
 set_location_assignment PIN_E13 -to ENET_RX_DATA[1]
 set_location_assignment PIN_A5 -to ENET_RX_DATA[2]
 set_location_assignment PIN_B7 -to ENET_RX_DATA[3]
-set_location_assignment PIN_A8 -to ENET_RX_DV
-set_location_assignment PIN_D11 -to ENET_RX_ER
-set_location_assignment PIN_F13 -to ENET_TX_CLK
 set_location_assignment PIN_B12 -to ENET_TX_DATA[0]
 set_location_assignment PIN_E7 -to ENET_TX_DATA[1]
 set_location_assignment PIN_C13 -to ENET_TX_DATA[2]
 set_location_assignment PIN_D15 -to ENET_TX_DATA[3]
-set_location_assignment PIN_D14 -to ENET_TX_EN
 set_location_assignment PIN_D13 -to ENET_TX_ER
 set_location_assignment PIN_AF28 -to FAN_CTRL
 set_location_assignment PIN_AG18 -to FL_RESET_N
@@ -282,10 +274,7 @@ set_location_assignment PIN_AF15 -to FS_ADDR[23]
 set_location_assignment PIN_AG15 -to FS_ADDR[24]
 set_location_assignment PIN_Y17 -to FS_ADDR[25]
 set_location_assignment PIN_AB16 -to FS_ADDR[26]
-set_location_assignment PIN_AG19 -to FL_CE_N
-set_location_assignment PIN_AJ19 -to FL_OE_N
 set_location_assignment PIN_AF19 -to FL_RY
-set_location_assignment PIN_AG17 -to FL_WE_N
 set_location_assignment PIN_AK18 -to FL_WP_N
 set_location_assignment PIN_AK29 -to FS_DQ[0]
 set_location_assignment PIN_AE23 -to FS_DQ[1]
@@ -560,9 +549,6 @@ set_location_assignment PIN_AE18 -to SD_DAT[3]
 set_location_assignment PIN_AJ27 -to SD_WP_N
 set_location_assignment PIN_AK16 -to SMA_CLKIN
 set_location_assignment PIN_AF25 -to SMA_CLKOUT
-set_location_assignment PIN_AJ21 -to SSRAM0_CE_N
-set_location_assignment PIN_AG23 -to SSRAM1_CE_N
-set_location_assignment PIN_AK25 -to SSRAM_ADSC_N
 set_location_assignment PIN_AJ25 -to SSRAM_ADSP_N
 set_location_assignment PIN_AH26 -to SSRAM_ADV_N
 set_location_assignment PIN_AF22 -to SSRAM_BE[0]
@@ -571,8 +557,6 @@ set_location_assignment PIN_AJ22 -to SSRAM_BE[2]
 set_location_assignment PIN_AF21 -to SSRAM_BE[3]
 set_location_assignment PIN_AF24 -to SSRAM_CLK
 set_location_assignment PIN_AK23 -to SSRAM_GW_N
-set_location_assignment PIN_AG24 -to SSRAM_OE_N
-set_location_assignment PIN_AK24 -to SSRAM_WE_N
 set_location_assignment PIN_V28 -to SW[0]
 set_location_assignment PIN_U30 -to SW[1]
 set_location_assignment PIN_V21 -to SW[2]
@@ -667,9 +651,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 set_global_assignment -name ACTIVE_SERIAL_CLOCK FREQ_20MHZ
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK2_50
 set_instance_assignment -name IO_STANDARD "2.5 V" -to CLOCK3_50
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
@@ -735,24 +716,16 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EEP_I2C_SDAT
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_GTX_CLK
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_INT_N
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_LINK100
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_MDC
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_MDIO
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RST_N
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_CLK
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_COL
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_CRS
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DATA[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DATA[1]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DATA[2]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DATA[3]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DV
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_ER
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_CLK
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_DATA[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_DATA[1]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_DATA[2]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_DATA[3]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_EN
 set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_ER
 set_instance_assignment -name IO_STANDARD "2.5 V" -to FAN_CTRL
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FL_RESET_N
@@ -1060,8 +1033,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_DAT[3]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SD_WP_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SMA_CLKIN
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SMA_CLKOUT
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM0_CE_N
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM1_CE_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM_ADSC_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM_ADSP_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM_ADV_N
@@ -1137,7 +1108,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[7]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_SYNC_N
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_VS
 set_instance_assignment -name VIRTUAL_PIN ON -to FS_ADDR[0]
-set_global_assignment -name VHDL_FILE top_level.vhd
+set_global_assignment -name VHDL_FILE toplevel.vhd
 set_global_assignment -name QIP_FILE ../../../../ipcore/altera/components/libcommon.qip
 set_global_assignment -name VERILOG_FILE ../../common/ipcore/global_reset/gen_reset_n.v
 set_global_assignment -name VERILOG_FILE mnSingleDualProcDrv/synthesis/mnSingleDualProcDrv.v -library mnSingleDualProcDrv
@@ -1145,4 +1116,33 @@ set_global_assignment -name QIP_FILE mnSingleDualProcDrv/synthesis/mnSingleDualP
 set_global_assignment -name VHDL_FILE ../../common/ipcore/pll/pll.vhd
 set_global_assignment -name QIP_FILE ../../common/ipcore/pll/pll.qip
 set_global_assignment -name VERILOG_FILE ../../common/ipcore/heartbeat/heart_beat.v
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_location_assignment PIN_C15 -to ENET_MDIO[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_MDIO[0]
+set_location_assignment PIN_D14 -to ENET_TX_EN[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_EN[0]
+set_location_assignment PIN_F13 -to ENET_TX_CLK[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_TX_CLK[0]
+set_location_assignment PIN_D11 -to ENET_RX_ER[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_ER[0]
+set_location_assignment PIN_A8 -to ENET_RX_DV[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_DV[0]
+set_location_assignment PIN_L15 -to ENET_RX_CLK[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RX_CLK[0]
+set_location_assignment PIN_C14 -to ENET_RST_N[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_RST_N[0]
+set_location_assignment PIN_C16 -to ENET_MDC[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET_MDC[0]
+set_location_assignment PIN_AJ21 -to SSRAM0_CE_N[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM0_CE_N[0]
+set_location_assignment PIN_AG23 -to SSRAM1_CE_N[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SSRAM1_CE_N[0]
+set_location_assignment PIN_AG19 -to FL_CE_N[0]
+set_location_assignment PIN_AJ19 -to FL_OE_N[0]
+set_location_assignment PIN_AG17 -to FL_WE_N[0]
+set_location_assignment PIN_AK25 -to SSRAM_ADSC_N[0]
+set_location_assignment PIN_AG24 -to SSRAM_OE_N[0]
+set_location_assignment PIN_AK24 -to SSRAM_WE_N[0]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
