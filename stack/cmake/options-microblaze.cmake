@@ -36,11 +36,14 @@ MESSAGE(STATUS "Adding CMake configuration options for Microblaze")
 SET(CMAKE_MODULE_PATH "${OPLK_BASE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 INCLUDE(geneclipsefilelist)
 INCLUDE(geneclipseincludelist)
-
+INCLUDE(listdir)
 ################################################################################
 # Set Paths
 SET(XIL_HW_LIB_DIR ${OPLK_BASE_DIR}/hardware/lib/${SYSTEM_NAME_DIR}/${SYSTEM_PROCESSOR_DIR})
 SET(XIL_TOOLS_DIR ${TOOLS_DIR}/xilinx-microblaze)
+
+# Get subdirectories (board/demo)
+LIST_SUBDIRECTORIES(HW_BOARD_DEMOS ${XIL_HW_LIB_DIR} 2)
 
 ################################################################################
 # Options for CN libraries
@@ -83,8 +86,11 @@ ELSE ()
 ENDIF ()
 IF (CFG_COMPILE_LIB_MNDRV_DUALPROCSHM)
     # Path to the hardware library folder of your board example
-    SET(CFG_COMPILE_LIB_MN_HW_LIB_DIR ${XIL_HW_LIB_DIR}/xilinx-z702/mn-dual-shmem-gpio
-            CACHE PATH "Path to the hardware library folder for the dual processor MN library")
+    SET(CFG_HW_LIB xilinx-z702/mn-dual-shmem-gpio CACHE STRING
+                        "Subfolder of hardware board demo")
+    SET_PROPERTY(CACHE CFG_HW_LIB PROPERTY STRINGS ${HW_BOARD_DEMOS})
+
+    SET(CFG_COMPILE_LIB_MN_HW_LIB_DIR ${XIL_HW_LIB_DIR}/${CFG_HW_LIB})
 
     ADD_SUBDIRECTORY(proj/generic/liboplkmndrv-dualprocshm)
 ELSE ()
