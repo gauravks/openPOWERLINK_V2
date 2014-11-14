@@ -179,7 +179,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // define target system
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
 
 #define TARGET_SYSTEM   _WIN32_     // WIN32 definition
 #define DEV_SYSTEM      _DEV_WIN32_

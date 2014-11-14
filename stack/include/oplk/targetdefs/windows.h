@@ -9,6 +9,7 @@ This file contains target specific defintions for Windows.
 
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
+Copyright (c) 2014, Kalycito Infotech Private Limited
 Copyright (c) 2013, SYSTEC electronic GmbH
 All rights reserved.
 
@@ -45,10 +46,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
-#define _WIN32_WINNT 0x0501     // Windows version must be at least Windows XP
-#define WIN32_LEAN_AND_MEAN     // Do not use extended Win32 API functions
+#ifndef _KERNEL_MODE
+#define _WIN32_WINNT           0x0501   // Windows version must be at least Windows XP
+#define WIN32_LEAN_AND_MEAN             // Do not use extended Win32 API functions
 #include <Windows.h>
-
+#include <lock.h>
+#else
+#include <ntdef.h>
+#include <ndis.h>
+#endif
 #include <oplk/basictypes.h>
 
 #define ROM_INIT                // variables will be initialized directly in ROM (means no copy from RAM in startup)
@@ -81,12 +87,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #define TRUE 1
 
+#ifndef _KERNEL_MODE
 #ifdef _CONSOLE // use standard printf in console applications
 #define PRINTF(...)                      printf(__VA_ARGS__)
 #else           // use trace for output in debug window in Windows applications
 #define PRINTF(...)                      TRACE(__VA_ARGS__)
 #endif
+#else
+#define PRINTF(...)    DbgPrint(__VA_ARGS__)
+#endif
 
+#ifndef _KERNEL_MODE
 #ifdef ASSERTMSG
 #undef ASSERTMSG
 #define ASSERTMSG(expr, string) \
@@ -95,6 +106,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         MessageBox(NULL, string, "Assertion failed", MB_OK | MB_ICONERROR); \
         exit(-1); \
     }
+#endif
 #endif
 
 #if defined(_DLL)
@@ -120,9 +132,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Target memory barrier function
 #define OPLK_MEMBAR()               ((void)0)
 
+#ifndef _KERNEL_MODE
+
+#define OPLK_ATOMIC_T    UCHAR
+#define OPLK_LOCK_T      LOCK_T
+#define OPLK_ATOMIC_INIT(base) \
+                if (target_initLock(&base->lock) != 0) \
+                return kErrorNoResource
+#define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
+                target_lock(); \
+                oldval = READ_UCHAR(address); \
+                WRITE_UCHAR(address, newval); \
+                target_unlock()
+//#define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
+//                oldval = InterlockedExchange(address, newval)
+#else
 #define OPLK_ATOMIC_T    ULONG
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
             oldval = InterlockedExchange(address, newval);
+#endif
+
+#ifdef _KERNEL_MODE
+#define OPLK_TAG                      'negO'
+#define OPLK_MALLOC(siz)              ExAllocatePool(NonPagedPool, (siz))
+#define OPLK_FREE(ptr)                ExFreePool(ptr)
+#define OPLK_MEMSET(dst, val, siz)    NdisZeroMemory(dst, siz)
+#endif
 
 #endif /* _INC_targetdefs_windows_H_ */
 
