@@ -294,6 +294,17 @@ ${HW_DRIVERS_DIR}/hostinterface/src/hostiflibint-pcp.c \
 "
 
 ################################################################################
+# Dual Processor Shared Memory Interface Sources
+################################################################################
+
+DUALPROCSHM_COMMON_SRCS="\
+${CONTRIB_SOURCE_DIR}/dualprocshm/src/dualprocshm-intr.c \
+${CONTRIB_SOURCE_DIR}/dualprocshm/src/dualprocshm-noos.c \
+"
+DUALPROCSHM_KERNEL_SRCS="\
+${CONTRIB_SOURCE_DIR}/dualprocshm/src/dualprocshm-pcp.c \
+"
+################################################################################
 # Target system specific sources
 ################################################################################
 
@@ -312,6 +323,8 @@ ${ARCH_SOURCE_DIR}/altera_nios2/lock-dualprocnoos.c \
 TARGET_NIOS2_OPENMAC_SOURCES="\
 ${ARCH_SOURCE_DIR}/altera_nios2/openmac-nios2.c \
 "
+
+TARGET_NIOS2_PCIEDRV_SOURCES=""
 
 ################################################################################
 # Architecture specific sources
