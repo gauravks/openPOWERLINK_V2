@@ -106,8 +106,8 @@ BSP_GEN_ARGS="${CFG_DRV_BSP_TYPE} ${BSP_PATH} ${BOARD_PATH}/quartus \
 --cpu-name ${CFG_DRV_CPU_NAME} \
 --set hal.sys_clk_timer ${CFG_DRV_SYS_TIMER_NAME} \
 --default_sections_mapping SSRAM_0 \
+--cmd add_section_mapping .tc_i_mem ${CFG_DRV_TCI_MEM_NAME} \
 "
-#--cmd add_section_mapping .tc_i_mem ${CFG_DRV_TCI_MEM_NAME} \
 
 if [ -z "${DEBUG}" ];
 then
@@ -207,7 +207,6 @@ DRV_GEN_ARGS+="--use-lib-dir ${LIB_STACK_DIR} "
 nios2-app-generate-makefile ${DRV_GEN_ARGS}
 RET=$?
 
-echo "**************************************************************************************************** ${DRV_GEN_ARGS}"
 if [ ${RET} -ne 0 ]; then
     echo "ERROR: Application generation returned with error ${RET}!"
     exit ${RET}

@@ -145,7 +145,7 @@
    {
       datum baseAddress
       {
-         value = "0";
+         value = "134217728";
          type = "String";
       }
    }
@@ -204,11 +204,11 @@
          type = "boolean";
       }
    }
-   element SSRAM_1.uas
+   element SSRAM_0.uas
    {
       datum baseAddress
       {
-         value = "201326592";
+         value = "4194304";
          type = "String";
       }
    }
@@ -220,11 +220,11 @@
          type = "String";
       }
    }
-   element SSRAM_0.uas
+   element SSRAM_1.uas
    {
       datum baseAddress
       {
-         value = "205520896";
+         value = "0";
          type = "String";
       }
    }
@@ -782,33 +782,6 @@
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge_ram_common"
-   end="sdram.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge_ram_common"
-   end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c400000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge_ram_common"
-   end="CFI_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x08000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
    kind="clock"
    version="14.0"
    start="clk_50.clk"
@@ -897,7 +870,7 @@
  </connection>
  <connection kind="avalon" version="14.0" start="openmac_0.dma" end="SSRAM_0.uas">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c400000" />
+  <parameter name="baseAddress" value="0x00400000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -906,7 +879,7 @@
    start="pcie_subsytem.pcie_bar3"
    end="SSRAM_0.uas">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c400000" />
+  <parameter name="baseAddress" value="0x00400000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -966,7 +939,7 @@
    end="SSRAM_0.reset" />
  <connection kind="avalon" version="14.0" start="openmac_0.dma" end="sdram.s1">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="baseAddress" value="0x08000000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -974,15 +947,6 @@
    version="14.0"
    start="pcie_subsytem.pcie_bar3"
    end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcie_subsytem.pcie_bar3"
-   end="sdram.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
@@ -1003,16 +967,7 @@
  </connection>
  <connection kind="avalon" version="14.0" start="openmac_0.dma" end="SSRAM_1.uas">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge_ram_common"
-   end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0c000000" />
+  <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -1021,6 +976,42 @@
    start="pcie_subsytem.sync_irq"
    end="openmac_0.timerIrq">
   <parameter name="irqNumber" value="0" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcp_0.sram_bridge_m0"
+   end="SSRAM_1.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcp_0.sram_bridge_m0"
+   end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00400000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcie_subsytem.pcie_bar3"
+   end="sdram.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x08000000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcp_0.ddr_bridge_m0"
+   end="sdram.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x08000000" />
+  <parameter name="defaultConnection" value="false" />
  </connection>
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
