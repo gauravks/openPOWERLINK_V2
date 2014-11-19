@@ -11,5 +11,8 @@ obj
 generated_app.sh
 flash_programmer.sh
 *.flash
+*.jic
+*.bin
+*.hex
 mem_init
 
