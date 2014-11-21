@@ -5,6 +5,7 @@
 .qsys_edit/
 db/
 incremental_db/
+**/quartus/*/
 ## Files
 *.bak
 *.bsf
@@ -21,8 +22,10 @@ incremental_db/
 *.sopcinfo
 *.summary
 *.pof
+*.cdf
 *.txt
-
+*.o
+*.d
 # Xilinx Platform Studio
 ## Dirs
 __xps/

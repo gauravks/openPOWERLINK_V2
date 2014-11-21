@@ -1,1 +1,7 @@
 .qsys_edit/
+mn_pcp/
+cn_pcp/
+mn_host/
+pcie_sub/
+## Files
+*.sopcinfo
