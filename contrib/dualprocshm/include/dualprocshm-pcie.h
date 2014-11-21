@@ -68,6 +68,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MEM_INTR_OFFSET            MAX_COMMON_MEM_SIZE + MAX_DYNAMIC_BUFF_SIZE
 #define OCM_OFFSET                 0x00004000
 #define SSRAM_OFFSET               0x0C400000
+
+#elif defined(__NIOS2__)
+#include <system.h>
+#define SHARED_MEM_BASE             SSRAM_0_BASE
+#define COMMON_MEM_BASE             PCIE_SUBSYTEM_ONCHIP_MEMORY_BASE
+#define MEM_ADDR_TABLE_BASE         COMMON_MEM_BASE + MAX_COMMON_MEM_SIZE
+#define MEM_INTR_BASE               MEM_ADDR_TABLE_BASE + MAX_DYNAMIC_BUFF_SIZE
+
+#define TARGET_SYNC_IRQ_ID         -1
+#define TARGET_SYNC_IRQ            -1
+
+///< Interrupt controller specific defines
+#define TARGET_IRQ_IC_BASE         -1
+#define TARGET_IRQ_IC_DIST_BASE    -1
+
+#include "dualprocshm-nios2.h"
 #else
 
 #error "unknown target for external PCIe solutions"
