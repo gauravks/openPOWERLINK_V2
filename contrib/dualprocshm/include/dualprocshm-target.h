@@ -56,6 +56,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "dualprocshm-pcie.h"
 
+#elif defined(__DE2i_150__)
+
+#include "dualprocshm-pcie.h"
+
 #else
 
 #error "Platform is not supported! Please point the target platform file in dualprocshm-target.h "

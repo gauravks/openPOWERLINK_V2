@@ -256,6 +256,9 @@ tDualprocReturn dualprocshm_enableIrq(tDualprocDrvInstance pInstance_p,
     DUALPROCSHM_FLUSH_DCACHE_RANGE(&intrInst_l.intrReg->irqEnable,
                                    sizeof(intrInst_l.intrReg->irqEnable));
 
+    //XXX@J Enable host interrupt
+    DPSHM_ENABLE_HOST_SYNC_IRQ();
+
     return kDualprocSuccessful;
 }
 
