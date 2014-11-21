@@ -62,7 +62,7 @@ OPTION(CFG_PCP_MICROBLAZE_HW_MULT "Microblaze has enabled hardware multiplier" O
 MARK_AS_ADVANCED(CFG_PCP_MICROBLAZE_HW_MULT)
 
 # Microblaze has enabled divider
-OPTION(CFG_PCP_MICROBLAZE_HW_DIV "Microblaze has enabled hardware divider" OFF)
+OPTION(CFG_PCP_MICROBLAZE_HW_DIV "Microblaze has enabled hardware divider" ON)
 MARK_AS_ADVANCED(CFG_PCP_MICROBLAZE_HW_DIV)
 
 # Microblaze has enabled pattern compare
