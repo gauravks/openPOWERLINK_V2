@@ -69,9 +69,9 @@ ENDIF()
 ################################################################################
 # Set architecture specific includes
 
-IF(${CFG_MB_UART} STREQUAL "TRUE")
+IF(DEFINED CFG_MB_UART AND CFG_MB_UART)
     INCLUDE_DIRECTORIES(${OPLK_BASE_DIR}/hardware/boards/xilinx-z702/common/drivers/mb_uart/include)
-ENDIF()
+ENDIF(DEFINED CFG_MB_UART AND CFG_MB_UART)
 
 INCLUDE_DIRECTORIES(
                     ${XIL_LIB_BSP_INC}
@@ -87,6 +87,7 @@ ADD_DEFINITIONS("${XIL_PCP_CFLAGS} -fmessage-length=0 -mcpu=${CFG_PCP_CPU_VERSIO
 
 IF(DEFINED CFG_DEMO_BOARD_ZYNQ AND CFG_DEMO_BOARD_ZYNQ)
 ADD_DEFINITIONS("-D__ZYNQ__")
+ENDIF()
 IF(DEFINED CFG_BOARD_SP605EB AND CFG_BOARD_SP605EB)
 ADD_DEFINITIONS("-D__SP605EB__")
 ENDIF()
