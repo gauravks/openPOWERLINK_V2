@@ -441,8 +441,18 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     if (status != STATUS_PENDING)
     {
         // complete the Irp if its not pended
-        pIrp_p->IoStatus.Status = status;
-        IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
+
+        if (!pIrp_p->Cancel)
+        {
+            pIrp_p->IoStatus.Status = status;
+            IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
+        }
+        else
+        {
+            TRACE("IRP cancelled\n");
+        }
+
+
     }
 
     // Release lock
