@@ -59,6 +59,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <string.h>
 
+#include <oplk/benchmark.h>
+
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
 //============================================================================//
@@ -581,8 +583,6 @@ tDualprocReturn dualprocshm_acquireBuffLock(tDualprocDrvInstance pInstance_p, UI
 
     if (pInstance_p == NULL)
         return kDualprocInvalidParameter;
-    // Enter critical region
-    DPSHM_ENABLE_INTR(FALSE);
 
 #if (OPLK_OPTIMIZE == TRUE)
     // Acquire lock only for shared queues
@@ -605,6 +605,10 @@ tDualprocReturn dualprocshm_acquireBuffLock(tDualprocDrvInstance pInstance_p, UI
 #else
     dualprocshm_targetAcquireLock(&pDrvInst->pDynResTbl[id_p].memInst->lock,
                                   pDrvInst->config.procId);
+    // Enter critical region
+    BENCHMARK_MOD_01_SET(3);
+    DPSHM_ENABLE_INTR(FALSE);
+
 #endif
     return kDualprocSuccessful;
 }
@@ -651,6 +655,7 @@ tDualprocReturn dualprocshm_releaseBuffLock(tDualprocDrvInstance pInstance_p, UI
 #endif
     // Exit critical region
     DPSHM_ENABLE_INTR(TRUE);
+    BENCHMARK_MOD_01_RESET(3);
     return kDualprocSuccessful;
 }
 

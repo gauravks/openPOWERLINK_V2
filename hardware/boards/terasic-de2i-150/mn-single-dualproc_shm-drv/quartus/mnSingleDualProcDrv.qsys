@@ -686,8 +686,8 @@
   <parameter name="MAX_BURST_SIZE" value="1" />
   <parameter name="MAX_PENDING_RESPONSES" value="4" />
   <parameter name="LINEWRAPBURSTS" value="0" />
-  <parameter name="PIPELINE_COMMAND" value="0" />
-  <parameter name="PIPELINE_RESPONSE" value="0" />
+  <parameter name="PIPELINE_COMMAND" value="1" />
+  <parameter name="PIPELINE_RESPONSE" value="1" />
   <parameter name="AUTO_CLK_CLOCK_RATE" value="150000000" />
   <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV GX" />
  </module>
@@ -1010,11 +1010,6 @@
    start="SSRAM_1.tcm"
    end="tristate_conduit_pin_sharer_0.tcs2" />
  <connection kind="clock" version="14.0" start="clk_150.clk" end="mm_bridge_0.clk" />
- <connection kind="avalon" version="14.0" start="mm_bridge_0.m0" end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection
    kind="reset"
    version="14.0"
@@ -1130,11 +1125,6 @@
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="avalon" version="14.0" start="mm_bridge_0.m0" end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00400000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection kind="avalon" version="14.0" start="pcp_0.cpu_bridge" end="CFI_0.uas">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x04000000" />
@@ -1143,7 +1133,7 @@
  <connection
    kind="avalon"
    version="14.0"
-   start="openmac_0.dma"
+   start="pcp_0.cpu_bridge"
    end="mm_bridge_0.s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
@@ -1153,15 +1143,25 @@
    kind="avalon"
    version="14.0"
    start="pcie_subsytem.pcie_bar"
-   end="SSRAM_0.uas">
+   end="mm_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="avalon" version="14.0" start="mm_bridge_0.m0" end="SSRAM_0.uas">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x00400000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="avalon" version="14.0" start="mm_bridge_0.m0" end="SSRAM_1.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
    kind="avalon"
    version="14.0"
-   start="pcp_0.cpu_bridge"
+   start="openmac_0.dma"
    end="mm_bridge_0.s0">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
