@@ -16,7 +16,7 @@
    {
       datum _sortIndex
       {
-         value = "9";
+         value = "10";
          type = "int";
       }
    }
@@ -24,7 +24,7 @@
    {
       datum _sortIndex
       {
-         value = "6";
+         value = "7";
          type = "int";
       }
    }
@@ -32,7 +32,7 @@
    {
       datum _sortIndex
       {
-         value = "8";
+         value = "9";
          type = "int";
       }
    }
@@ -74,7 +74,7 @@
    {
       datum _sortIndex
       {
-         value = "12";
+         value = "13";
          type = "int";
       }
       datum sopceditor_expanded
@@ -103,7 +103,15 @@
    {
       datum _sortIndex
       {
-         value = "7";
+         value = "8";
+         type = "int";
+      }
+   }
+   element mm_clock_crossing_bridge_0
+   {
+      datum _sortIndex
+      {
+         value = "5";
          type = "int";
       }
    }
@@ -111,7 +119,7 @@
    {
       datum _sortIndex
       {
-         value = "13";
+         value = "14";
          type = "int";
       }
    }
@@ -173,14 +181,6 @@
          type = "String";
       }
    }
-   element sdram.s1
-   {
-      datum baseAddress
-      {
-         value = "134217728";
-         type = "String";
-      }
-   }
    element flash_reset.s1
    {
       datum baseAddress
@@ -189,11 +189,19 @@
          type = "String";
       }
    }
+   element sdram.s1
+   {
+      datum baseAddress
+      {
+         value = "134217728";
+         type = "String";
+      }
+   }
    element sdram
    {
       datum _sortIndex
       {
-         value = "5";
+         value = "6";
          type = "int";
       }
       datum sopceditor_expanded
@@ -206,7 +214,7 @@
    {
       datum _sortIndex
       {
-         value = "11";
+         value = "12";
          type = "int";
       }
       datum sopceditor_expanded
@@ -219,21 +227,13 @@
    {
       datum _sortIndex
       {
-         value = "10";
+         value = "11";
          type = "int";
       }
       datum sopceditor_expanded
       {
          value = "1";
          type = "boolean";
-      }
-   }
-   element SSRAM_1.uas
-   {
-      datum baseAddress
-      {
-         value = "0";
-         type = "String";
       }
    }
    element CFI_0.uas
@@ -249,6 +249,14 @@
       datum baseAddress
       {
          value = "4194304";
+         type = "String";
+      }
+   }
+   element SSRAM_1.uas
+   {
+      datum baseAddress
+      {
+         value = "0";
          type = "String";
       }
    }
@@ -667,12 +675,12 @@
  <module
    kind="altera_avalon_mm_bridge"
    version="14.0"
-   enabled="0"
+   enabled="1"
    name="mm_bridge_0">
   <parameter name="DATA_WIDTH" value="32" />
   <parameter name="SYMBOL_WIDTH" value="8" />
-  <parameter name="ADDRESS_WIDTH" value="22" />
-  <parameter name="SYSINFO_ADDR_WIDTH" value="22" />
+  <parameter name="ADDRESS_WIDTH" value="23" />
+  <parameter name="SYSINFO_ADDR_WIDTH" value="23" />
   <parameter name="USE_AUTO_ADDRESS_WIDTH" value="0" />
   <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
   <parameter name="MAX_BURST_SIZE" value="1" />
@@ -681,6 +689,26 @@
   <parameter name="PIPELINE_COMMAND" value="0" />
   <parameter name="PIPELINE_RESPONSE" value="0" />
   <parameter name="AUTO_CLK_CLOCK_RATE" value="150000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV GX" />
+ </module>
+ <module
+   kind="altera_avalon_mm_clock_crossing_bridge"
+   version="14.0"
+   enabled="0"
+   name="mm_clock_crossing_bridge_0">
+  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="SYMBOL_WIDTH" value="8" />
+  <parameter name="ADDRESS_WIDTH" value="27" />
+  <parameter name="SYSINFO_ADDR_WIDTH" value="27" />
+  <parameter name="USE_AUTO_ADDRESS_WIDTH" value="0" />
+  <parameter name="ADDRESS_UNITS" value="SYMBOLS" />
+  <parameter name="MAX_BURST_SIZE" value="1" />
+  <parameter name="COMMAND_FIFO_DEPTH" value="4" />
+  <parameter name="RESPONSE_FIFO_DEPTH" value="4" />
+  <parameter name="MASTER_SYNC_DEPTH" value="2" />
+  <parameter name="SLAVE_SYNC_DEPTH" value="2" />
+  <parameter name="AUTO_M0_CLK_CLOCK_RATE" value="150000000" />
+  <parameter name="AUTO_S0_CLK_CLOCK_RATE" value="100000000" />
   <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV GX" />
  </module>
  <connection
@@ -976,25 +1004,6 @@
   <parameter name="baseAddress" value="0x8000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="avalon" version="14.0" start="pcp_0.cpu_bridge" end="CFI_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x04000000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge"
-   end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00400000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection kind="avalon" version="14.0" start="openmac_0.dma" end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00400000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection
    kind="tristate_conduit"
    version="14.0"
@@ -1025,24 +1034,6 @@
    kind="avalon"
    version="14.0"
    start="pcie_subsytem.pcie_bar"
-   end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x00400000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="openmac_0.dma"
-   end="mm_bridge_0.s0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcie_subsytem.pcie_bar"
    end="sdram.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x08000000" />
@@ -1059,51 +1050,123 @@
    start="SSRAM_0.tcm"
    end="tristate_conduit_pin_sharer_0.tcs0" />
  <connection
-   kind="avalon"
-   version="14.0"
-   start="pcie_subsytem.pcie_bar"
-   end="mm_bridge_0.s0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge"
-   end="mm_bridge_0.s0">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcie_subsytem.pcie_bar"
-   end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="avalon"
-   version="14.0"
-   start="pcp_0.cpu_bridge"
-   end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection kind="avalon" version="14.0" start="openmac_0.dma" end="SSRAM_1.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
    kind="clock"
    version="14.0"
    start="clk_100.clk"
    end="openmac_0.dmaClk" />
+ <connection
+   kind="clock"
+   version="14.0"
+   start="clk_150.clk"
+   end="mm_clock_crossing_bridge_0.m0_clk" />
+ <connection
+   kind="clock"
+   version="14.0"
+   start="clk_100.clk"
+   end="mm_clock_crossing_bridge_0.s0_clk" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_50.clk_reset"
+   end="mm_clock_crossing_bridge_0.m0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_100.clk_reset"
+   end="mm_clock_crossing_bridge_0.m0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_150.clk_reset"
+   end="mm_clock_crossing_bridge_0.m0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_150.clk_reset"
+   end="mm_clock_crossing_bridge_0.s0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_100.clk_reset"
+   end="mm_clock_crossing_bridge_0.s0_reset" />
+ <connection
+   kind="reset"
+   version="14.0"
+   start="clk_50.clk_reset"
+   end="mm_clock_crossing_bridge_0.s0_reset" />
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcp_0.cpu_bridge"
+   end="mm_clock_crossing_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="CFI_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04000000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="openmac_0.dma"
+   end="mm_clock_crossing_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="mm_clock_crossing_bridge_0.m0"
+   end="mm_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="avalon" version="14.0" start="mm_bridge_0.m0" end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00400000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="avalon" version="14.0" start="pcp_0.cpu_bridge" end="CFI_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04000000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="openmac_0.dma"
+   end="mm_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcie_subsytem.pcie_bar"
+   end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00400000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="14.0"
+   start="pcp_0.cpu_bridge"
+   end="mm_bridge_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
 </system>
