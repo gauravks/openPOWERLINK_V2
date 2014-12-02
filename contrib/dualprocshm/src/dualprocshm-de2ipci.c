@@ -95,7 +95,6 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 
     if (*pSize_p > MAX_COMMON_MEM_SIZE )
     {
-//        printk("%s Common memory not available\n",__FUNCTION__);
         return NULL;
     }
 
@@ -103,12 +102,10 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 
     if(pAddr == NULL)
     {
-    //	printk("%s Memory not found\n",__FUNCTION__); 	
         return NULL;
     }
 
     *pSize_p = MAX_COMMON_MEM_SIZE - 1;
-    DbgPrint("%s() Addr:%p\n", __FUNCTION__,pAddr);
     return pAddr;
 }
 
@@ -127,7 +124,6 @@ common memory.
 void dualprocshm_releaseCommonMemAddr(UINT16 pSize_p)
 {
     UNUSED_PARAMETER(pSize_p);
-    // nothing to do be done on zynq
 }
 
 //------------------------------------------------------------------------------
@@ -145,9 +141,8 @@ dynamic mapping table
 UINT8* dualprocshm_getDynMapTableAddr(void)
 {
     UINT8* pAddr = (UINT8*)ndis_getBar0Addr() + OCM_OFFSET;
-//printk("Dynamic map tab:%x\n",pAddr);
+
     pAddr = (UINT8*) (pAddr + MEM_ADDR_TABLE_OFFSET);
-    DbgPrint("%s() Addr:%p\n", __FUNCTION__, pAddr);
     return pAddr;
 }
 
@@ -163,7 +158,6 @@ dynamic mapping table
 //------------------------------------------------------------------------------
 void dualprocshm_releaseDynMapTableAddr(void)
 {
-    // nothing to be done on zynq
 }
 
 //------------------------------------------------------------------------------
@@ -185,7 +179,7 @@ UINT8* dualprocshm_getIntrMemAddr(void)
     if (pAddr == NULL)
         return NULL;
     pAddr = (UINT8*) (pAddr + MEM_INTR_OFFSET);
-    DbgPrint("%s() Addr:%p\n", __FUNCTION__,pAddr);
+
     return pAddr;
 }
 
@@ -201,7 +195,6 @@ interrupt synchronization registers.
 //------------------------------------------------------------------------------
 void dualprocshm_releaseIntrMemAddr()
 {
-    // nothing to be done on zynq
 }
 
 //------------------------------------------------------------------------------
@@ -222,7 +215,7 @@ void dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 
     if (pBase_p == NULL || pData_p == NULL)
     {
-//        printk("%s Invalid parameters\n",__FUNCTION__);
+        TRACE("%s Invalid parameters\n",__FUNCTION__);
         return;
     }
 
@@ -248,7 +241,7 @@ void dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 {
     if (pBase_p == NULL || pData_p == NULL)
     {
-//        printk("%s Invalid parameters\n",__FUNCTION__);
+        TRACE("%s Invalid parameters\n",__FUNCTION__);
         return;
     }
 
@@ -277,18 +270,18 @@ void dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p)
 
     if (pBase_p == NULL)
     {
+        TRACE("%s Invalid parameters\n", __FUNCTION__);
         return;
     }
-//printk("Lock Address %x\n",pBase_p);
+
     // spin till the passed token is written into memory
-    do{
-        //DUALPROCSHM_INVALIDATE_DCACHE_RANGE((UINT32)pBase_p,1);
+    do
+    {
         lock = DPSHM_READ8(pBase_p);
 
         if (lock == DEFAULT_LOCK_ID)
         {
             DPSHM_WRITE8(pBase_p, lockToken_p);
-            //DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p,1);
             continue;
         }
       }while (lock != lockToken_p);
@@ -312,6 +305,7 @@ void dualprocshm_targetReleaseLock(UINT8* pBase_p)
 
     if (pBase_p == NULL)
     {
+        TRACE("%s Invalid parameters\n", __FUNCTION__);
         return;
     }
 
@@ -335,7 +329,7 @@ used by the application for PDO and event synchronization.
 //------------------------------------------------------------------------------
 void dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p,void* pArg_p)
 {
-    //target_regSyncIrqHdl(callback_p,pArg_p);
+    DPSHM_REG_SYNC_INTR(callback_p, pArg_p);
 }
 
 //------------------------------------------------------------------------------
@@ -351,7 +345,10 @@ The function is used to enable or disable the sync interrupt
 //------------------------------------------------------------------------------
 void dualprocshm_enableSyncIrq(BOOL fEnable_p)
 {
-    //target_enableSyncIrq(fEnable_p);
+    if (fEnable_p)
+        DPSHM_ENABLE_SYNC_INTR();
+    else
+        DPSHM_DISABLE_SYNC_INTR();
 }
 
 //------------------------------------------------------------------------------
@@ -365,10 +362,10 @@ void dualprocshm_enableSyncIrq(BOOL fEnable_p)
 \ingroup module_dualprocshm
 */
 //------------------------------------------------------------------------------
-void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase , UINT16 index_p, UINT32 addr_p)
+void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p)
 {
-    UINT32          tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
-    UINT32          offset;
+    UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
+    UINT32    offset;
 
     if (addr_p != 0)
     {
@@ -376,7 +373,6 @@ void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase , UINT16 index_p, UIN
     }
     DPSHM_WRITE32(pMemTableBase + tableEntryOffs, offset);
     DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32) (pMemTableBase + tableEntryOffs), sizeof(UINT32));
-    DbgPrint("%s() I %d Addr:%x\n", __FUNCTION__, index_p, offset);
 }
 
 //------------------------------------------------------------------------------
@@ -412,7 +408,7 @@ UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
     {
         if (count == 20)
         {
-            DbgPrint("Unable to Get Address\n");
+            TRACE("%s() Failed to get address for index %d\n", __FUNCTION__, index_p);
             return NULL;
         }
         target_msleep(10);
@@ -420,6 +416,5 @@ UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
         count++;
     }
     bufAddr = (ssramBase + buffoffset);
-    DbgPrint("%s() I %d Addr:%p-%p-%x-%p\n", __FUNCTION__, index_p, memAddr, pMemTableBase, buffoffset, bufAddr);
     return bufAddr;
 }
