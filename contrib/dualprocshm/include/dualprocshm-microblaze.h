@@ -95,7 +95,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DPSHM_DISABLE_SYNC_INTR()                                  \
     XIntc_DisableIntr(TARGET_SYNC_IRQ_ID, TARGET_SYNC_IRQ |        \
                       Xil_In32(TARGET_IRQ_IC_BASE + XIN_IER_OFFSET))
-
+#define DPSHM_ENABLE_HOST_SYNC_IRQ()
 #ifndef NDEBUG
 #define TRACE(...) printf(__VA_ARGS__)
 #else

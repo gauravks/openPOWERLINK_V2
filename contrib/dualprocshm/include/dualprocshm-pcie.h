@@ -67,7 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MEM_ADDR_TABLE_OFFSET      MAX_COMMON_MEM_SIZE
 #define MEM_INTR_OFFSET            MAX_COMMON_MEM_SIZE + MAX_DYNAMIC_BUFF_SIZE
 #define OCM_OFFSET                 0x00004000
-#define SSRAM_OFFSET               0x0C400000
+#define SSRAM_OFFSET               0x00400000
 
 #elif defined(__NIOS2__)
 #include <system.h>
