@@ -319,6 +319,7 @@
     <VerifyProjectOutput>True</VerifyProjectOutput>
     <VerifyDrivers />
     <VerifyFlags>133563</VerifyFlags>
+    <OutDir>$(SolutionDir)..\..\..\..\..\bin\windows\$(PROCESSOR_ARCHITEW6432)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
     <FilesToPackage Include="@(Inf->'%(CopyOutput)')" Condition="'@(Inf)'!=''" />
