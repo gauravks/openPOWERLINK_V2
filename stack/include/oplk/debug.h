@@ -213,8 +213,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  definition of TRACE
 //------------------------------------------------------------------------------
 #ifndef NDEBUG
-#define TRACE(...) trace(__VA_ARGS__)
-
+#ifdef _KERNEL_MODE
+#define TRACE(...)      DbgPrint(__VA_ARGS__)
+#else
+#define TRACE(...)      trace(__VA_ARGS__)
+#endif
 #ifdef __cplusplus
 extern "C"
 {
@@ -261,7 +264,9 @@ void trace(const char* fmt, ...);
     }
 #else
 
+#ifndef _KERNEL_MODE
 #define ASSERTMSG(expr, string)
+#endif
 
 #endif
 
