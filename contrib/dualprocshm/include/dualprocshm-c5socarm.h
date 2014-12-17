@@ -74,16 +74,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DPSHM_MAKE_NONCACHEABLE(ptr)    (void*)(((unsigned long)ptr))
 #define DUALPROCSHM_MALLOC(size)        malloc(size)
 #define DUALPROCSHM_FREE(ptr)           free(ptr)
+#define DPSHM_ENABLE_INTR(fEnable)      target_enableGlobalInterrupt(fEnable)
 
-#define CALC_OFFSET(addr_p, baseAddr_p)  \
-    ({                                   \
-         ULONG offset = 0;               \
-         offset = (addr_p - baseAddr_p); \
-         offset;                         \
-     })
-
-// sleep
-#define DUALPROCSHM_USLEEP(x)           usleep((UINT32)x)
 #define DPSHM_DMB()                     // no data barriers used
 
 // IO operations
@@ -173,6 +165,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                                                            \
          ret;                                                              \
      })
+
+#define DPSHM_CONNECT_SYNC_IRQ()
+#define DPSHM_DISCONNECT_SYNC_IRQ()
 
 //------------------------------------------------------------------------------
 // typedef
