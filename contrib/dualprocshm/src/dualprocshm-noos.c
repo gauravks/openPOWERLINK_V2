@@ -166,6 +166,12 @@ tDualprocReturn dualprocshm_create(tDualprocConfig* pConfig_p, tDualprocDrvInsta
     // get the common memory address
     pDrvInst->pCommMemBase = dualprocshm_getCommonMemAddr(&pDrvInst->config.commMemSize);
 
+    if (pDrvInst->pCommMemBase == NULL)
+    {
+        ret = kDualprocNoResource;
+        goto Exit;
+    }
+
     if (pConfig_p->procInstance == kDualProcFirst)
     {
         memset(pDrvInst->pCommMemBase, 0, MAX_COMMON_MEM_SIZE);
@@ -173,10 +179,17 @@ tDualprocReturn dualprocshm_create(tDualprocConfig* pConfig_p, tDualprocDrvInsta
     // get the address to store address mapping table
     pDrvInst->pAddrTableBase = dualprocshm_getDynMapTableAddr();
 
+    if (pDrvInst->pAddrTableBase == NULL)
+    {
+        ret = kDualprocNoResource;
+        goto Exit;
+    }
+
     if (pConfig_p->procInstance == kDualProcFirst)
     {
         memset(pDrvInst->pAddrTableBase, 0, (MAX_DYNAMIC_BUFF_COUNT * 4));
     }
+
     pDrvInst->iMaxDynBuffEntries = MAX_DYNAMIC_BUFF_COUNT;
     pDrvInst->pDynResTbl = (tDualprocDynResConfig*)aDynResInit;
 
@@ -208,6 +221,7 @@ tDualprocReturn dualprocshm_create(tDualprocConfig* pConfig_p, tDualprocDrvInsta
         *ppInstance_p = pDrvInst;
     }
 
+Exit:
     if (ret != kDualprocSuccessful)
     {
         dualprocshm_delete(pDrvInst);
