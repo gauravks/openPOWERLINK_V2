@@ -4,11 +4,12 @@
 
 \brief  Target definitions for Windows
 
-This file contains target specific defintions for Windows.
+This file contains target specific definitions for Windows.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
+Copyright (c) 2014, Kalycito Infotech Private Limited
 Copyright (c) 2013, SYSTEC electronic GmbH
 All rights reserved.
 
@@ -48,6 +49,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _WIN32_WINNT 0x0501     // Windows version must be at least Windows XP
 #define WIN32_LEAN_AND_MEAN     // Do not use extended Win32 API functions
 #include <Windows.h>
+
+#ifdef CONFIG_PCIE
+#include <lock.h>
+#endif
 
 #include <oplk/basictypes.h>
 
@@ -118,14 +123,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OPLK_DCACHE_INVALIDATE(addr, len)   ((void)0)
 
 // Target memory barrier function
-#define OPLK_MEMBAR()               ((void)0)
+#define OPLK_MEMBAR()               MemoryBarrier()//((void)0)
 
-// Target lock
-#define OPLK_LOCK_T                 UINT8
-
+#ifdef CONFIG_PCIE
+#define OPLK_ATOMIC_T    UCHAR
+#define OPLK_LOCK_T      LOCK_T
+#define OPLK_ATOMIC_INIT(base) \
+                if (target_initLock(&base->lock) != 0) \
+                return kErrorNoResource
+#define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
+                target_lock(); \
+                oldval = READ_UCHAR(address); \
+                WRITE_UCHAR(address, newval); \
+                target_unlock()
+#else
+#define OPLK_LOCK_T      UINT8
 #define OPLK_ATOMIC_T    ULONG
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
             oldval = InterlockedExchange(address, newval);
+#endif
 
 #define OPLK_MUTEX_T    HANDLE
 
