@@ -68,9 +68,9 @@ typedef struct sDualProcShmIntrReg
     UINT16    irqEnable;                                        ///< Enable IRQs
     union
     {
-        volatile UINT16     irqSet;                             ///< Set IRQ (Pcp)
-        volatile UINT16     irqAck;                             ///< Acknowledge IRQ (Host)
-        volatile UINT16     irqPending;                         ///< Pending IRQ
+        volatile UINT16    irqSet;                              ///< Set IRQ (Pcp)
+        volatile UINT16    irqAck;                              ///< Acknowledge IRQ (Host)
+        volatile UINT16    irqPending;                          ///< Pending IRQ
     } irq;
 }tDualProcShmIntrReg;
 
@@ -82,8 +82,8 @@ for the local instance.
 */
 typedef struct
 {
-    tTargetIrqCb            apfnIrqCb[TARGET_MAX_INTERRUPTS];   ///< User applications interrupt callbacks
-    tDualProcShmIntrReg*    intrReg;                            ///< Pointer to interrupt register
+    tTargetIrqCb           apfnIrqCb[TARGET_MAX_INTERRUPTS];    ///< User applications interrupt callbacks
+    tDualProcShmIntrReg*   intrReg;                             ///< Pointer to interrupt register
 }tDualProcShmIntrInst;
 
 //------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ typedef struct
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static tDualProcShmIntrInst intrInst_l;
+static tDualProcShmIntrInst    intrInst_l;
 
 //------------------------------------------------------------------------------
 // local function prototypes
@@ -256,6 +256,16 @@ tDualprocReturn dualprocshm_enableIrq(tDualprocDrvInstance pInstance_p,
     DUALPROCSHM_FLUSH_DCACHE_RANGE(&intrInst_l.intrReg->irqEnable,
                                    sizeof(intrInst_l.intrReg->irqEnable));
 
+    // Enable host interrupt
+    if (fEnable_p)
+    {
+        DPSHM_ENABLE_HOST_SYNC_IRQ();
+    }
+    else
+    {
+        DPSHM_DISABLE_HOST_SYNC_IRQ();
+    }
+
     return kDualprocSuccessful;
 }
 
@@ -276,8 +286,8 @@ The function sets the specified interrupt.
 //------------------------------------------------------------------------------
 tDualprocReturn dualprocshm_setIrq(tDualprocDrvInstance pInstance_p, UINT8 irqId_p, BOOL fSet_p)
 {
-    UINT16      irqActive;
-    UINT16      irqEnable;
+    UINT16    irqActive;
+    UINT16    irqEnable;
 
     if (irqId_p > TARGET_MAX_INTERRUPTS || pInstance_p == NULL)
         return kDualprocInvalidParameter;
@@ -327,9 +337,9 @@ callbacks registered with dualprocshm_registerHandler().
 //------------------------------------------------------------------------------
 static void targetInterruptHandler(void* pArg_p)
 {
-    UINT16      pendings;
-    UINT16      mask;
-    int         i;
+    UINT16    pendings;
+    UINT16    mask;
+    int       i;
 
     UNUSED_PARAMETER(pArg_p);
 

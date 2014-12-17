@@ -1,15 +1,15 @@
 /**
 ********************************************************************************
-\file   dualprocshm-zynq.h
+\file   dualprocshm-mem.h
 
-\brief  Dual processor Library platform support header - For Zynq Platform
+\brief  Board specific memory definitions for dualprocshm library
 
-This header file provides specific macros for Xilinx Zynq platform .
-
+This file contains the definitions for memory offsets for dualprocshm library
+for a specific platform.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014 Kalycito Infotech Private Limited
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,45 +35,40 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_dualprocshm_ZYNQ_H_
-#define _INC_dualprocshm_ZYNQ_H_
+#ifndef _INC_dualprocshm_mem_H_
+#define _INC_dualprocshm_mem_H_
 
-#define OPLK_OPTIMIZE               TRUE                        ///< Optimize the dualprocessor library for openPOWERLINK stack on non-OS
+//------------------------------------------------------------------------------
+// includes
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// const defines
+//------------------------------------------------------------------------------
+/* Memory size */
+#define MAX_COMMON_MEM_SIZE        2048                         ///< Max common memory size
+#define MAX_DYNAMIC_BUFF_COUNT     20                           ///< Number of maximum dynamic buffers
+#define MAX_DYNAMIC_BUFF_SIZE      MAX_DYNAMIC_BUFF_COUNT * 4   ///< Max dynamic buffer size
 
 /* BASE ADDRESSES */
-#if defined(__MICROBLAZE__)
-#include "dualprocshm-microblaze.h"
+// TODO : gks check if this can be retrieved from hardware configuration
+#define COMMON_MEM_BASE             0x2C000000
+#define MEM_ADDR_TABLE_BASE         (COMMON_MEM_BASE + MAX_COMMON_MEM_SIZE)
+#define MEM_INTR_BASE               (MEM_ADDR_TABLE_BASE + MAX_DYNAMIC_BUFF_SIZE)
+//------------------------------------------------------------------------------
+// typedef
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// function prototypes
+//------------------------------------------------------------------------------
 
-#define TARGET_SYNC_IRQ_ID         -1
-#define TARGET_SYNC_IRQ            -1
-
-///< Interrupt controller specific defines
-#define TARGET_IRQ_IC_BASE         -1
-#define TARGET_IRQ_IC_DIST_BASE    -1
-
-
-#elif defined(__arm__)
-#include "dualprocshm-arm.h"
-
-
-#define TARGET_SYNC_IRQ_ID         XPAR_PS7_SCUGIC_0_DEVICE_ID
-#define TARGET_SYNC_IRQ            XPAR_FABRIC_AXI_OPENMAC_0_TIMER_IRQ_INTR
-
-///< Interrupt controller specific defines
-#ifdef XPAR_PS7_SCUGIC_0_BASEADDR
-#define TARGET_IRQ_IC_BASE         XPAR_PS7_SCUGIC_0_BASEADDR
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#ifdef XPAR_PS7_SCUGIC_0_DIST_BASEADDR
-#define TARGET_IRQ_IC_DIST_BASE    XPAR_PS7_SCUGIC_0_DIST_BASEADDR
+#ifdef __cplusplus
+}
 #endif
 
-#else
-
-#error "unknown target for Zynq"
-
-#endif
-
-#endif //_INC_dualprocshm_ZYNQ_H_
+#endif /* _INC_dualprocshm_mem_H_ */
