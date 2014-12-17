@@ -76,14 +76,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local types
 //------------------------------------------------------------------------------
-
+typedef struct
+{
+    HANDLE      syncThreadHandle;
+    tSyncCb     fnSyncCb;
+    BOOL        fThreadExit;
+}tSyncThreadInstance;
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
+tSyncThreadInstance syncThreadInstance_l;
 
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
+static UINT32 syncThread(void* arg_p);
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -108,7 +115,7 @@ int system_init(void)
     SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
     // lower the priority of this thread
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
-
+    syncThreadInstance_l.fThreadExit = FALSE;
     return 0;
 }
 
@@ -123,7 +130,7 @@ The function shuts down the system.
 //------------------------------------------------------------------------------
 void system_exit(void)
 {
-
+    CloseHandle(syncThreadInstance_l.syncThreadHandle);
 }
 
 /**
@@ -175,7 +182,15 @@ The function starts the thread used for synchronous data handling.
 void system_startSyncThread(tSyncCb pfnSync_p)
 {
     // Currently threads are not used on Windows
-    UNUSED_PARAMETER(pfnSync_p);
+    syncThreadInstance_l.fnSyncCb = pfnSync_p;
+
+    syncThreadInstance_l.syncThreadHandle = CreateThread(NULL,                  // Default security attributes
+                                      0,                     // Use Default stack size
+                                      syncThread,           // Thread routine
+                                      NULL,                  // Argum to the thread routine
+                                      0,                     // Use default creation flags
+                                      NULL   // Returened thread Id
+                                      );
 }
 
 
@@ -190,7 +205,8 @@ The function stops the thread used for synchronous data handling.
 //------------------------------------------------------------------------------
 void system_stopSyncThread(void)
 {
-    // Currently threads are not used on Windows
+    CancelIoEx(syncThreadInstance_l.syncThreadHandle, NULL);
+    syncThreadInstance_l.fThreadExit = TRUE;
 }
 #endif
 
@@ -199,5 +215,28 @@ void system_stopSyncThread(void)
 //============================================================================//
 /// \name Private Functions
 /// \{
+static UINT32 syncThread(void* arg_p)
+{
+    tOplkError ret;
 
-/// \}
+    while (!syncThreadInstance_l.fThreadExit)
+    {
+        if (syncThreadInstance_l.fnSyncCb)
+        {
+            ret = syncThreadInstance_l.fnSyncCb();
+            if (ret != kErrorOk)
+            {
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    printf("Exiting Sync Thread\n");
+    return 0;
+}
+///\}
+
