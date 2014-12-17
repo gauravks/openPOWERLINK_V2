@@ -1,16 +1,15 @@
 /**
 ********************************************************************************
-\file   common/driver.h
+\file   common/driver-windows.h
 
-\brief  Header file for openPOWERLINK drivers
+\brief  Header file for Windows openPOWERLINK drivers
 
 This file contains the necessary definitions for using the openPOWERLINK
-kernel driver modules.
+Windows kernel driver.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
-Copyright (c) 2013, SYSTEC electronic GmbH
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,78 +35,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_H_
-#define _INC_common_driver_H_
-
+#ifndef _INC_common_driver_windows_H_
+#define _INC_common_driver_windows_H_
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/dllcal.h>
-
+#ifndef _KERNEL_MODE
+#include <winioctl.h>
+#endif
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_CLASS_NAME    "plk"
-#define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
-#define PLK_DRV_NAME      "plk"
-#define PLK_IOC_MAGIC     '='
+#define PLK_DEV_FILE      "\\\\.\\plk"
+#define PLK_DEV_STRING    L"\\Device\\plk"
+#define PLK_LINK_NAME     L"\\DosDevices\\Global\\plk"
+//------------------------------------------------------------------------------
+//  Commands for <ioctl>
+//------------------------------------------------------------------------------
+
+#define PLK_IO_TYPE                    40001
+
+#define PLK_CMD_CTRL_EXECUTE_CMD \
+                                CTL_CODE(PLK_IO_TYPE, 0x901, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_CTRL_STORE_INITPARAM \
+                                CTL_CODE(PLK_IO_TYPE, 0x902, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_CTRL_READ_INITPARAM \
+                                CTL_CODE(PLK_IO_TYPE, 0x903, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_CTRL_GET_STATUS \
+                                CTL_CODE(PLK_IO_TYPE, 0x904, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_CTRL_GET_HEARTBEAT \
+                                CTL_CODE(PLK_IO_TYPE, 0x905, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_POST_EVENT      CTL_CODE(PLK_IO_TYPE, 0x906, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_GET_EVENT       CTL_CODE(PLK_IO_TYPE, 0x907, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_DLLCAL_ASYNCSEND \
+                                CTL_CODE(PLK_IO_TYPE, 0x908, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_ERRHND_WRITE    CTL_CODE(PLK_IO_TYPE, 0x909, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_ERRHND_READ     CTL_CODE(PLK_IO_TYPE, 0x90A, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_PDO_SYNC        CTL_CODE(PLK_IO_TYPE, 0x90B, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_PDO_GET_MEM     CTL_CODE(PLK_IO_TYPE, 0x90C, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_PDO_FREE_MEM    CTL_CODE(PLK_IO_TYPE, 0x90D, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_CMD_CLEAN           CTL_CODE(PLK_IO_TYPE, 0x90E, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_GET_BENCHMARK_BASE  CTL_CODE(PLK_IO_TYPE, 0x90F, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define PLK_FREE_BENCHMARK_BASE CTL_CODE(PLK_IO_TYPE, 0x910, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
-typedef struct
-{
-    tDllCalQueue            queue;
-    void*                   pData;
-    size_t                  size;
-} tIoctlDllCalAsync;
-
-typedef struct
-{
-    void*                   pData;
-    size_t                  size;
-} tIoctlBufInfo;
-
-typedef struct
-{
-    UINT32                  offset;
-    UINT32                  errVal;
-} tErrHndIoctl;
-
-/**
-\brief PDO mem structure
-
-The structure is used to retrieve the PDO memory allocated by kernel and
-mapped into user virtual address space.
-*/
-typedef struct
-{
-    UINT32                  memSize;        ///< Size of PDO to be allocated and mapped
-    void*                   pPdoAddr;       ///< Pointer to the pdo address returned by kernel
-} tPdoMem;
-
-/**
-\brief Benchmark memory struture
-
-The structure is used to retrieve the benchmark address.
-*/
-typedef struct
-{
-    void*                   pBaseAddr;       ///< Pointer to the benchmark address returned by kernel
-} tBenchmarkMem;
 
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// include architecture specific definitions
-//------------------------------------------------------------------------------
-#if (TARGET_SYSTEM == _LINUX_)
-#include <common/driver-linux.h>
-#elif (TARGET_SYSTEM == _WIN32_)
-#include <common/driver-windows.h>
-#endif
-
-#endif /* _INC_common_driver_H_ */
+#endif /* _INC_common_driver_windows_H_ */
