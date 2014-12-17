@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   common/driver.h
+\file   winkernel/target-winkernel.c
 
-\brief  Header file for openPOWERLINK drivers
+\brief  Target specific functions for Windows Kernel
 
-This file contains the necessary definitions for using the openPOWERLINK
-kernel driver modules.
+The file implements target specific functions used in the openPOWERLINK stack.
+
+\ingroup module_target
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
-Copyright (c) 2013, SYSTEC electronic GmbH
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,78 +36,93 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_H_
-#define _INC_common_driver_H_
-
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/dllcal.h>
+#include <common/target.h>
+
+//============================================================================//
+//            P U B L I C   F U N C T I O N S                                 //
+//============================================================================//
 
 //------------------------------------------------------------------------------
-// const defines
-//------------------------------------------------------------------------------
-#define PLK_CLASS_NAME    "plk"
-#define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
-#define PLK_DRV_NAME      "plk"
-#define PLK_IOC_MAGIC     '='
-
-//------------------------------------------------------------------------------
-// typedef
-//------------------------------------------------------------------------------
-typedef struct
-{
-    tDllCalQueue            queue;
-    void*                   pData;
-    size_t                  size;
-} tIoctlDllCalAsync;
-
-typedef struct
-{
-    void*                   pData;
-    size_t                  size;
-} tIoctlBufInfo;
-
-typedef struct
-{
-    UINT32                  offset;
-    UINT32                  errVal;
-} tErrHndIoctl;
-
 /**
-\brief PDO mem structure
+\brief  Initialize target specific stuff
 
-The structure is used to retrieve the PDO memory allocated by kernel and
-mapped into user virtual address space.
+The function initialize target specific stuff which is needed to run the
+openPOWERLINK stack.
+
+\return The function returns a tOplkError error code.
 */
-typedef struct
+//------------------------------------------------------------------------------
+tOplkError target_init(void)
 {
-    UINT32                  memSize;        ///< Size of PDO to be allocated and mapped
-    void*                   pPdoAddr;       ///< Pointer to the pdo address returned by kernel
-} tPdoMem;
+    return kErrorOk;
+}
 
+//------------------------------------------------------------------------------
 /**
-\brief Benchmark memory struture
+\brief  Clean up target specific stuff
 
-The structure is used to retrieve the benchmark address.
+The function cleans up target specific stuff.
+
+\return The function returns a tOplkError error code.
 */
-typedef struct
+//------------------------------------------------------------------------------
+tOplkError target_cleanup(void)
 {
-    void*                   pBaseAddr;       ///< Pointer to the benchmark address returned by kernel
-} tBenchmarkMem;
+    return kErrorOk;
+}
 
 //------------------------------------------------------------------------------
-// function prototypes
+/**
+\brief Sleep for the specified number of milliseconds
+
+The function makes the calling thread sleep until the number of specified
+milliseconds have elapsed.
+
+\param  milliSeconds_p      Number of milliseconds to sleep
+
+\ingroup module_target
+*/
 //------------------------------------------------------------------------------
+void target_msleep(UINT32 milliSeconds_p)
+{
+    NdisMSleep(milliSeconds_p * 1000);
+}
 
 //------------------------------------------------------------------------------
-// include architecture specific definitions
-//------------------------------------------------------------------------------
-#if (TARGET_SYSTEM == _LINUX_)
-#include <common/driver-linux.h>
-#else if (TARGET_SYSTEM == _WIN32_)
-#include <common/driver-windows.h>
-#endif
+/**
+\brief    Get current system tick
 
-#endif /* _INC_common_driver_H_ */
+This function returns the current system tick determined by the system timer.
+
+\return Returns the system tick in milliseconds
+
+\ingroup module_target
+*/
+//------------------------------------------------------------------------------
+UINT32 target_getTickCount(void)
+{
+    LARGE_INTEGER    tickCount;
+    KeQueryTickCount(&tickCount);
+
+    return (UINT32)tickCount.QuadPart;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief    Enable global interrupt
+
+This function enabels/disables global interrupts.
+
+\param  fEnable_p               TRUE = enable interrupts
+FALSE = disable interrupts
+
+\ingroup module_target
+*/
+//------------------------------------------------------------------------------
+void target_enableGlobalInterrupt(BYTE fEnable_p)
+{
+    // Nothing to do here
+}
