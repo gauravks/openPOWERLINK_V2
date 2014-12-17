@@ -223,11 +223,19 @@ The structure defines an openPOWERLINK event.
 */
 typedef struct
 {
-    tEventType          eventType;              ///< Type of this event
-    tEventSink          eventSink;              ///< Sink of this event
+    // Replace the event argument pointer variable with
+    // union to maintain same size and alignment
+    // for the struture on different processor architectures
+    // like x86_64 (64 bit) and NIOS2 (32 bit).
+    union
+    {
+        void*           pEventArg;              ///< Pointer to event argument
+        UINT64          eventArgAddr;           ///< Address of the event argument
+    } eventArg;
     tNetTime            netTime;                ///< Timestamp of the event
     UINT                eventArgSize;           ///< Size of the event argument
-    void*               pEventArg;              ///< Pointer to event argument
+    tEventType          eventType;              ///< Type of this event
+    tEventSink          eventSink;              ///< Sink of this event
 } tEvent;
 
 /**

@@ -66,7 +66,15 @@ the timer to the sink the event is sent to.
 */
 typedef struct
 {
-    tTimerHdl           timerHdl;       ///< Delivers the handle of the expired timer
+    // Use a union of tTimerHdl and 64 bit variable to avoid
+    // structure size mismatch while sharing the tTimerEventArg
+    // between heteregenous processors.
+    union
+    {
+        tTimerHdl           native;       ///< Native handle of the expired timer
+        UINT64              handle64;     ///< 64 Bit handle of the expired timer
+    } timerHdl;
+
     union
     {
         UINT32          value;          ///< Timer argument supplied as UINT32
