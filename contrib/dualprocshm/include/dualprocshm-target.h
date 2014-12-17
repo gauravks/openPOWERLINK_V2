@@ -43,7 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <stdint.h>
 
 #if defined(__ZYNQ__)
 
@@ -124,6 +123,34 @@ set to those provided by stdint.h.
 #define TRACE(...)
 #endif
 
+#ifndef MAX_COMMON_MEM_SIZE
+#define MAX_COMMON_MEM_SIZE        2048                         ///< Max common memory size
+#endif
+
+#ifndef MAX_DYNAMIC_BUFF_COUNT
+#define MAX_DYNAMIC_BUFF_COUNT     20                           ///< Number of maximum dynamic buffers
+#endif
+
+#ifndef MAX_DYNAMIC_BUFF_COUNT
+#define MAX_DYNAMIC_BUFF_SIZE      MAX_DYNAMIC_BUFF_COUNT * 4   ///< Max dynamic buffer size
+#endif
+
+#ifndef SHARED_MEM_BASE
+#define SHARED_MEM_BASE            NULL
+#endif
+
+#ifndef COMMON_MEM_BASE
+#define COMMON_MEM_BASE            NULL
+#endif
+
+#ifndef MEM_ADDR_TABLE_BASE
+#define MEM_ADDR_TABLE_BASE        NULL
+#endif
+
+#ifndef MEM_INTR_BASE
+#define MEM_INTR_BASE              NULL
+#endif
+
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
@@ -141,18 +168,20 @@ typedef void (*targetSyncHdl)(void*);
 #ifdef __cplusplus
 extern "C" {
 #endif
-UINT8*  dualprocshm_getCommonMemAddr(UINT16* pSize_p);
-UINT8*  dualprocshm_getDynMapTableAddr(void);
-UINT8*  dualprocshm_getIntrMemAddr(void);
-void    dualprocshm_releaseIntrMemAddr();
-void    dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
-void    dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
-void    dualprocshm_releaseCommonMemAddr(UINT16 pSize_p);
-void    dualprocshm_releaseDynMapTableAddr(void);
-void    dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p) SECTION_DUALPROCSHM_ACQUIRE_LOCK;
-void    dualprocshm_targetReleaseLock(UINT8* pBase_p) SECTION_DUALPROCSHM_RELEASE_LOCK;
-void    dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
-void    dualprocshm_enableSyncIrq(BOOL fEnable_p);
+UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p);
+UINT8* dualprocshm_getDynMapTableAddr(void);
+UINT8* dualprocshm_getIntrMemAddr(void);
+void   dualprocshm_releaseIntrMemAddr();
+void   dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
+void   dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
+void   dualprocshm_releaseCommonMemAddr(UINT16 pSize_p);
+void   dualprocshm_releaseDynMapTableAddr(void);
+void   dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p) SECTION_DUALPROCSHM_ACQUIRE_LOCK;
+void   dualprocshm_targetReleaseLock(UINT8* pBase_p) SECTION_DUALPROCSHM_RELEASE_LOCK;
+void   dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
+void   dualprocshm_enableSyncIrq(BOOL fEnable_p);
+void   dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p);
+UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
 #ifdef __cplusplus
 }
 #endif

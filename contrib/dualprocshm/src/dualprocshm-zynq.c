@@ -51,7 +51,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define DEFAULT_LOCK_ID    0x00             ///< Default lock Id
+#define DEFAULT_LOCK_ID             0x00    ///< Default lock Id
+#define DYN_MEM_TABLE_ENTRY_SIZE    4       ///< Size of Dynamic table entry
+
+#ifndef DPSHM_MAKE_NONCACHEABLE
+#define DPSHM_MAKE_NONCACHEABLE(pHdl_p)    pHdl_p
+#endif
 
 //------------------------------------------------------------------------------
 // module global vars
@@ -98,7 +103,7 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
         return NULL;
     }
 
-    pAddr = (UINT8*) (COMMON_MEM_BASE);
+    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(COMMON_MEM_BASE);
 
     *pSize_p = MAX_COMMON_MEM_SIZE - 1;
 
@@ -138,7 +143,7 @@ UINT8* dualprocshm_getDynMapTableAddr(void)
 {
     UINT8*   pAddr;
 
-    pAddr = (UINT8*) MEM_ADDR_TABLE_BASE;
+    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(MEM_ADDR_TABLE_BASE);
 
     return pAddr;
 }
@@ -174,7 +179,7 @@ UINT8* dualprocshm_getIntrMemAddr(void)
 {
     UINT8*   pAddr;
 
-    pAddr = (UINT8*) MEM_INTR_BASE;
+    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(MEM_INTR_BASE);
 
     return pAddr;
 }
@@ -217,7 +222,7 @@ void dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 
     DUALPROCSHM_INVALIDATE_DCACHE_RANGE((UINT32)pBase_p, size_p);
 
-    memcpy(pData_p, pBase_p, size_p);
+    DUALPROCSHM_MEMCPY(pData_p, pBase_p, size_p);
 }
 
 //------------------------------------------------------------------------------
@@ -241,7 +246,7 @@ void dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
         return;
     }
 
-    memcpy(pBase_p, pData_p, size_p);
+    DUALPROCSHM_MEMCPY(pBase_p, pData_p, size_p);
 
     DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p, size_p);
 }
@@ -350,9 +355,53 @@ void dualprocshm_enableSyncIrq(BOOL fEnable_p)
         DPSHM_DISABLE_SYNC_INTR();
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Write the buffer address in dynamic memory mapping table
+
+\param  pInstance_p  Driver instance.
+\param  index_p      Buffer index.
+\param  addr_p       Address of the buffer.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p)
+{
+    UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
+
+    DPSHM_WRITE32(pMemTableBase + tableEntryOffs, addr_p);
+    DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32) (pMemTableBase + tableEntryOffs), sizeof(UINT32));
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Read the buffer address from dynamic memory mapping table
+
+\param  pInstance_p  Driver instance.
+\param  index_p      Buffer index.
+
+\return Address of the buffer requested.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
+{
+    UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
+    UINT8*    bufAddr;
+
+        DUALPROCSHM_INVALIDATE_DCACHE_RANGE((pMemTableBase + tableEntryOffs), sizeof(UINT32));
+        bufAddr = (UINT8*)DPSHM_READ32(pMemTableBase + tableEntryOffs);
+
+    return bufAddr;
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
 /// \name Private Functions
 /// \{
+
 /// \}
+
