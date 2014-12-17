@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if (TARGET_SYSTEM == _WIN32_)
 typedef ULONG_PTR tTimerHdl;
 #else
-typedef ULONG tTimerHdl;
+typedef ULONGLONG tTimerHdl;
 #endif
 
 /**
@@ -64,6 +64,10 @@ typedef ULONG tTimerHdl;
 The structure defines a timer event argument. It provides information about
 the timer to the sink the event is sent to.
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     tTimerHdl           timerHdl;       ///< Delivers the handle of the expired timer
@@ -73,5 +77,7 @@ typedef struct
         void*           pValue;         ///< Timer argument supplied as void*
     } argument;                         ///< The timer argument the timer was initialized with.
 } tTimerEventArg;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 #endif /* _INC_common_timer_H_ */

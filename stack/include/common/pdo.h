@@ -70,7 +70,10 @@ typedef struct
     UINT                rxPdoChannelCount;      ///< max. number of RPDO channels
     UINT                txPdoChannelCount;      ///< max. number of TPDO channels
 } tPdoAllocationParam;
-
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 /**
 \brief PDO channel
 
@@ -84,7 +87,9 @@ typedef struct
     TPDO: 0x00=PRes, MN: CnNodeId=PReq
     */
     UINT                nodeId;
-    void*               pVar;                   ///< Pointer to frame data
+    // TODO@gks: Modify Pointer to ULONGLONG
+    //void*               pVar;                   ///< Pointer to frame data
+    ULONGLONG           pVar;                   ///< Pointer to frame data
     WORD                pdoSize;                ///< Size of this PDO
     BYTE                mappingVersion;         ///< The mapping version of this PDO
     unsigned int        mappObjectCount;        ///< The actual number of used mapped objects
@@ -115,7 +120,9 @@ typedef struct
     tPdoChannel*        pRxPdoChannel;          ///< Pointer to RXPDO channel table
     tPdoChannel*        pTxPdoChannel;          ///< Pointer to TXPDO channel table
 } tPdoChannelSetup;
-
+#ifdef _MSC_VER
+#pragma pack(pop,packing)
+#endif
 /**
 \brief PDO buffer information
 
@@ -141,7 +148,7 @@ of receive and transmit PDO buffers.
 typedef struct
 {
     UINT16              valid;                                      ///< Defines whether the memory region is valid
-    size_t              pdoMemSize;                                 ///< Size of the overall PDO memory
+    UINT32              pdoMemSize;                                 ///< Size of the overall PDO memory
     tPdoBufferInfo      rxChannelInfo[D_PDO_RPDOChannels_U16];      ///< Array of RPDO channels
     tPdoBufferInfo      txChannelInfo[D_PDO_TPDOChannels_U16];      ///< Array of TPDO channels
     OPLK_LOCK_T         lock;                                       ///< Locking variable
@@ -154,8 +161,8 @@ This structure specifies the sizes of the RPDO and TPDO memory.
 */
 typedef struct
 {
-    size_t      rxPdoMemSize;                   ///< Size of the RPDO memory
-    size_t      txPdoMemSize;                   ///< Size of the TPDO memory
+    UINT32      rxPdoMemSize;                   ///< Size of the RPDO memory
+    UINT32      txPdoMemSize;                   ///< Size of the TPDO memory
 } tPdoMemSize;
 
 #endif /* _INC_common_pdo_H_ */

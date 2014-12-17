@@ -128,11 +128,44 @@ typedef enum
 
 The structure contains all information about a POWERLINK frame.
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     UINT            frameSize;                      ///< Size of the frame
     tPlkFrame*      pFrame;                         ///< Pointer to the frame
 } tFrameInfo;
+
+/**
+\brief Structure for DLL Ident Parameters
+
+The structure contains all information needed for the identification of a
+node on the network.
+*/
+typedef struct
+{
+    UINT                sizeOfStruct;                   ///< Size of the structure
+    UINT32              deviceType;                     ///< NMT_DeviceType_U32
+    UINT32              vendorId;                       ///< NMT_IdentityObject_REC.VendorId_U32
+    UINT32              productCode;                    ///< NMT_IdentityObject_REC.ProductCode_U32
+    UINT32              revisionNumber;                 ///< NMT_IdentityObject_REC.RevisionNo_U32
+    UINT32              serialNumber;                   ///< NMT_IdentityObject_REC.SerialNo_U32
+    UINT64              vendorSpecificExt1;             ///< Vendor-specific extenstion field 1
+    UINT32              verifyConfigurationDate;        ///< CFM_VerifyConfiguration_REC.ConfDate_U32
+    UINT32              verifyConfigurationTime;        ///< CFM_VerifyConfiguration_REC.ConfTime_U32
+    UINT32              applicationSwDate;              ///< PDL_LocVerApplSw_REC.ApplSwDate_U32 on programmable device or date portion of NMT_ManufactSwVers_VS on non-programmable device
+    UINT32              applicationSwTime;              ///< PDL_LocVerApplSw_REC.ApplSwTime_U32 on programmable device or time portion of NMT_ManufactSwVers_VS on non-programmable device
+    UINT32              ipAddress;                      ///< IP address
+    UINT32              subnetMask;                     ///< IP subnet mask
+    UINT32              defaultGateway;                 ///< IP default gateway address
+    UINT8               sHostname[32];                  ///< Hostname
+    UINT8               aVendorSpecificExt2[48];        ///< Vendor-specific extenstion field 2
+} tDllIdentParam;
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 
 /**
 \brief Struct for not received Asnd events
@@ -175,32 +208,6 @@ typedef struct
     UINT                syncNodeId;                 ///< Synchronization trigger (AppCbSync, cycle preparation) after PRes from CN with this node-ID (0 = SoC, 255 = SoA)
     BOOL                fSyncOnPrcNode;             ///< TRUE: CN is PRes chained; FALSE: conventional CN (PReq/PRes)
 } tDllConfigParam;
-
-/**
-\brief Structure for DLL Ident Parameters
-
-The structure contains all information needed for the identification of a
-node on the network.
-*/
-typedef struct
-{
-    UINT                sizeOfStruct;                   ///< Size of the structure
-    UINT32              deviceType;                     ///< NMT_DeviceType_U32
-    UINT32              vendorId;                       ///< NMT_IdentityObject_REC.VendorId_U32
-    UINT32              productCode;                    ///< NMT_IdentityObject_REC.ProductCode_U32
-    UINT32              revisionNumber;                 ///< NMT_IdentityObject_REC.RevisionNo_U32
-    UINT32              serialNumber;                   ///< NMT_IdentityObject_REC.SerialNo_U32
-    UINT64              vendorSpecificExt1;             ///< Vendor-specific extenstion field 1
-    UINT32              verifyConfigurationDate;        ///< CFM_VerifyConfiguration_REC.ConfDate_U32
-    UINT32              verifyConfigurationTime;        ///< CFM_VerifyConfiguration_REC.ConfTime_U32
-    UINT32              applicationSwDate;              ///< PDL_LocVerApplSw_REC.ApplSwDate_U32 on programmable device or date portion of NMT_ManufactSwVers_VS on non-programmable device
-    UINT32              applicationSwTime;              ///< PDL_LocVerApplSw_REC.ApplSwTime_U32 on programmable device or time portion of NMT_ManufactSwVers_VS on non-programmable device
-    UINT32              ipAddress;                      ///< IP address
-    UINT32              subnetMask;                     ///< IP subnet mask
-    UINT32              defaultGateway;                 ///< IP default gateway address
-    UINT8               sHostname[32];                  ///< Hostname
-    UINT8               aVendorSpecificExt2[48];        ///< Vendor-specific extenstion field 2
-} tDllIdentParam;
 
 /**
 \brief Structure for DLL Node Information
