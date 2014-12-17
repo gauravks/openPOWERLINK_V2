@@ -55,7 +55,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if (TARGET_SYSTEM == _WIN32_)
 typedef ULONG_PTR tTimerHdl;
 #else
-typedef ULONG tTimerHdl;
+// FIXME: Replace with suitable data type
+//        to support both 32 bit and 64 bit
+//        pointers.
+typedef UINT64 tTimerHdl;
 #endif
 
 /**
