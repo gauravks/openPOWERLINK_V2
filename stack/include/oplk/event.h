@@ -192,15 +192,23 @@ typedef enum
 The structure defines an openPOWERLINK event.
 (element order must not be changed!)
 */
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 typedef struct
 {
     tEventType          eventType;              ///< Type of this event
     tEventSink          eventSink;              ///< Sink of this event
     tNetTime            netTime;                ///< Timestamp of the event
     UINT                eventArgSize;           ///< Size of the event argument
-    void*               pEventArg;              ///< Pointer to event argument
+    // TODO@gks: Change this to support 64 bit system pointers
+    //void*               pEventArg;              ///< Pointer to event argument
+    ULONGLONG           pEventArg;              ///< Pointer to event argument
 } tEvent;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 /**
 \brief  Structure for OBD error information
 

@@ -243,6 +243,10 @@ typedef INT (*tProcessNodeEventFunc)(UINT nodeId_p, tNmtState nodeNmtState_p,
                                      tNmtState nmtState_p, UINT16 errorCode_p,
                                      tOplkError* pRet_p);
 
+#ifdef _MSC_VER
+#pragma pack(push, packing)
+#pragma pack(4)
+#endif
 /**
 * \brief Node information structure
 *
@@ -282,7 +286,9 @@ typedef struct
     UINT32              prcPResTimeFirstCorrectionNs;   ///< to be commented!
     UINT32              prcPResTimeFirstNegOffsetNs;    ///< to be commented!
 } tNmtMnuInstance;
-
+#ifdef _MSC_VER
+#pragma pack(pop, packing)
+#endif
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
