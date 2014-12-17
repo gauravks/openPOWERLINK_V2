@@ -70,7 +70,11 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p, UINT16* pRetVal_p);
 tOplkError ctrlucal_checkKernelStack(void);
 void       ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p);
 tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p);
+#if (TARGET_SYSTEM == _LINUX_)
 int        ctrlucal_getFd(void);
+#elif (TARGET_SYSTEM == _WIN32_)
+HANDLE     ctrlucal_getFd(void);
+#endif
 
 #ifdef __cplusplus
 }
