@@ -134,6 +134,7 @@ CFG_APP_CPU_NAME=
 CFG_DRV_CPU_NAME=
 CFG_OPENMAC=
 CFG_HOSTINTERFACE=
+CFG_DUALPROCSHM=
 CFG_NODE=
 CFG_BOARD_CFLAGS=
 if [ -f ${BOARD_SETTINGS_FILE} ]; then
@@ -165,6 +166,9 @@ elif [ "${CPU_NAME}" == "${CFG_DRV_CPU_NAME}" ]; then
     CFG_TCI_MEM_NAME=${CFG_DRV_TCI_MEM_NAME}
     if [ "${CFG_NODE}" == "MN" ] && [ -n "${CFG_OPENMAC}" ] && [ -n "${CFG_HOSTINTERFACE}" ]; then
         LIB_NAME=oplkmndrv-hostif
+        LIB_SOURCES=${HW_COMMON_PATH}/drivers/openmac/omethlib_phycfg.c
+    elif [ "${CFG_NODE}" == "MN" ] && [ -n "${CFG_OPENMAC}" ] && [ -n "${CFG_DUALPROCSHM}" ]; then
+        LIB_NAME=oplkmndrv-dualprocshm
         LIB_SOURCES=${HW_COMMON_PATH}/drivers/openmac/omethlib_phycfg.c
     fi
 else
