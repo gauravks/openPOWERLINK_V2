@@ -182,7 +182,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // define target system
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
 
 #define TARGET_SYSTEM   _WIN32_     // WIN32 definition
 #define DEV_SYSTEM      _DEV_WIN32_
@@ -234,7 +234,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #elif (TARGET_SYSTEM == _WIN32_)
 
-#include <oplk/targetdefs/windows.h>
+#ifndef _KERNEL_MODE
+    #include <oplk/targetdefs/windows.h>
+#else
+    #include <oplk/targetdefs/winkernel.h>
+#endif
 
 #elif (TARGET_SYSTEM == _WINCE_)
 
