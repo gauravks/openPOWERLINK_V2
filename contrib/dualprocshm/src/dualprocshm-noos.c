@@ -163,6 +163,7 @@ tDualprocReturn dualprocshm_create(tDualprocConfig* pConfig_p, tDualprocDrvInsta
     // store the configuration
     pDrvInst->config = *pConfig_p;
 
+    dualprocshm_targetInit(pConfig_p->procInstance);
     // get the common memory address
     pDrvInst->pCommMemBase = dualprocshm_getCommonMemAddr(&pDrvInst->config.commMemSize);
 
@@ -665,6 +666,77 @@ tDualprocReturn dualprocshm_releaseBuffLock(tDualprocDrvInstance pInstance_p, UI
 #endif
     // Exit critical region
     DPSHM_ENABLE_INTR(TRUE);
+    return kDualprocSuccessful;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Translates address from one processor memory to other
+
+This function retrieves the address for the calling processor for a memory address
+in second processor memory range.
+
+\param  pInstance_p  The driver instance of the calling processor.
+\param  baseAddr_p   Address in second processor.
+\param  ppBufBase_p  Double pointer to the mapped address.
+
+\return The function returns a tDualprocReturn error code.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+tDualprocReturn dualprocshm_mapMem(tDualprocDrvInstance pInstance_p, UINT32 baseAddr_p,
+                                   UINT8** ppBufBase_p)
+{
+    tDualProcDrv*   pDrvInst = (tDualProcDrv*) pInstance_p;
+
+    if (pDrvInst->config.procInstance != kDualProcSecond)
+        return kDualprocWrongProcInst;
+
+    *ppBufBase_p = dualprocshm_targetMapMem(baseAddr_p);
+
+    if(*ppBufBase_p == NULL)
+        return kDualprocNoResource;
+
+    return kDualprocSuccessful;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get shared memory information
+
+This function retrieves the address and size of the shared memory between the processors
+in the address domain of calling and remote processor.
+
+\param  pInstance_p       The driver instance of the calling processor.
+\param  pSharedMemInst_p  Pointer to shared memory instance.
+
+\return The function returns a tDualprocReturn error code.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+tDualprocReturn dualprocshm_getSharedMemInfo(tDualprocDrvInstance pInstance_p,
+                                             tDualprocSharedMemInst* pSharedMemInst_p)
+{
+    tDualProcDrv*   pDrvInst = (tDualProcDrv*) pInstance_p;
+
+    if (pInstance_p == NULL)
+        return kDualprocInvalidParameter;
+
+    pSharedMemInst_p->pLocalBase = dualprocshm_targetGetSharedMemInfo(&pSharedMemInst_p->span);
+
+    if (pSharedMemInst_p->pLocalBase == NULL)
+        return kDualprocNoResource;
+
+    // Only Second processor can retrieve the remote base now.
+    // FIXME: Implement sharing of address from both processor.
+    if (pDrvInst->config.procInstance == kDualProcSecond)
+        pSharedMemInst_p->remoteBase = dualprocshm_targetGetRemoteMemBase();
+
+    if(pSharedMemInst_p->remoteBase == -1)
+        return kDualprocNoResource;
+
     return kDualprocSuccessful;
 }
 

@@ -136,6 +136,30 @@ typedef struct sDualprocMemInst
 } tDualprocMemInst;
 
 /**
+\brief Shared memory instance
+
+Structure to hold shared memory information.
+
+*/
+typedef struct sDualprocSharedMemInst
+{
+    UINT8*      pLocalBase;                  ///< Pointer to base of local shared memory.
+    UINT64      remoteBase;                  ///< Pointer to base of remote shared memory.
+    UINT32      span;                        ///< Size of the shared memory.
+} tDualprocSharedMemInst;
+
+/**
+\brief Header structure for dual processor library
+
+Currently holds the address of shared memory on the First processor.
+
+*/
+typedef struct sDualprocHeader
+{
+    UINT32      sharedMemBase;
+} tDualprocHeader;
+
+/**
 \brief Dual processor driver instance
 
 This type defines the driver instance.
@@ -238,7 +262,9 @@ tDualprocReturn         dualprocshm_registerHandler(tDualprocDrvInstance pInstan
 tDualprocReturn         dualprocshm_enableIrq(tDualprocDrvInstance pInstance_p,
                                               UINT8 irqId_p, BOOL fEnable_p) SECTION_DUALPROCSHM_IRQ_ENABLE;
 tDualprocReturn         dualprocshm_setIrq(tDualprocDrvInstance pInstance_p, UINT8 irqId_p, BOOL fSet_p) SECTION_DUALPROCSHM_IRQ_SET;
-
+tDualprocReturn         dualprocshm_mapMem(tDualprocDrvInstance pInstance_p, UINT32 baseAddr_p, UINT8** ppBufBase_p);
+tDualprocReturn         dualprocshm_getSharedMemInfo(tDualprocDrvInstance pInstance_p, tDualprocSharedMemInst* pSharedMemInst_p);
+tDualprocReturn         dualprocshm_getRemoteMemBase(tDualprocDrvInstance pInstance_p, UINT64* pRemoteBase_p);
 #ifdef __cplusplus
 }
 #endif

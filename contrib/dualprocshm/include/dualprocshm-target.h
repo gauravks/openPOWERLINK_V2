@@ -111,6 +111,10 @@ set to those provided by stdint.h.
 #define UINT32    uint32_t
 #endif
 
+#ifndef UINT64
+#define UINT64    uint64_t
+#endif
+
 /**@}*/
 
 #ifndef FALSE
@@ -198,6 +202,11 @@ void   dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
 void   dualprocshm_enableSyncIrq(BOOL fEnable_p);
 void   dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p);
 UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
+void   dualprocshm_targetInit(UINT32 procInstance_p);
+UINT8* dualprocshm_targetMapMem(UINT32 baseAddr_p);
+UINT64 dualprocshm_targetGetRemoteMemBase(void);
+UINT8* dualprocshm_targetGetSharedMemInfo(UINT32* pSize_p);
+
 #ifdef __cplusplus
 }
 #endif
