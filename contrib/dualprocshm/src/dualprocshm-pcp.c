@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <dualprocshm-target.h>
+#include <dualprocshm.h>
 
 #include <string.h>
 
@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
+static tDualprocHeader* pHeader_l;
 
 //------------------------------------------------------------------------------
 // global function prototypes
@@ -79,7 +80,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //------------------------------------------------------------------------------
 /**
-\brief  Get common memory address
+\brief  Initialize target resources
+
+This routine initializes the memory address for the processor instance assigned
+to the calling processor.
+
+\param  procInstance_p      Processor instance of the calling processor.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+void dualprocshm_targetInit(UINT32 procInstance_p)
+{
+    pHeader_l = (UINT8*) DPSHM_MAKE_NONCACHEABLE(COMMON_MEM_BASE);
+
+    if(pHeader_l == NULL)
+        return;
+
+    if (procInstance_p == kDualProcFirst)
+    {
+        UINT8*    sharedMemBase = (UINT8*) DPSHM_MAKE_NONCACHEABLE(SHARED_MEM_BASE);
+        DPSHM_WRITE32(&pHeader_l->sharedMemBase, (UINT32) sharedMemBase);
+        DUALPROCSHM_FLUSH_DCACHE_RANGE(&pHeader_l->sharedMemBase, sizeof(UINT32));
+    }
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get common memory address for platform
 
 Target specific routine to retrieve the base address of common memory between
 two processors.
@@ -96,13 +124,13 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 {
     UINT8*   pAddr;
 
-    if (*pSize_p > MAX_COMMON_MEM_SIZE )
+    if (*pSize_p > MAX_COMMON_MEM_SIZE || pHeader_l == NULL)
     {
         TRACE("%s Common memory not available\n", __func__);
         return NULL;
     }
 
-    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(COMMON_MEM_BASE);
+    pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
     *pSize_p = MAX_COMMON_MEM_SIZE - 1;
 
@@ -127,6 +155,53 @@ void dualprocshm_releaseCommonMemAddr(UINT16 pSize_p)
 
 //------------------------------------------------------------------------------
 /**
+\brief  Get shared memory information for platform
+
+Target specific routine to retrieve the shared memory base and size.
+
+/param pSize_p     Pointer to size of the shared memory.
+
+\return Pointer to base address of common memory.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT8* dualprocshm_targetGetSharedMemInfo(UINT32* pSize_p)
+{
+    UINT8*   pAddr;
+
+    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(SHARED_MEM_BASE);
+
+    if (pAddr == NULL || pSize_p == NULL)
+        return NULL;
+
+    *pSize_p = (UINT32) SHARED_MEM_SIZE;
+
+    return pAddr;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get remote shared memory base address
+
+Target specific routine to retrieve the base address of shared memory on other
+processor.
+
+
+\return Base address of shared memory on other processor.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT64 dualprocshm_targetGetRemoteMemBase(void)
+{
+    if(pHeader_l == NULL)
+        return -1;
+
+    return ((UINT64) pHeader_l->sharedMemBase);
+}
+//------------------------------------------------------------------------------
+/**
 \brief  Get dynamic mapping table base address
 
 Target specific routine to retrieve the base address for storing the
@@ -139,10 +214,12 @@ dynamic mapping table.
 //------------------------------------------------------------------------------
 UINT8* dualprocshm_getDynMapTableAddr(void)
 {
-    UINT8*   pAddr;
+    UINT8*     pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
-    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(MEM_ADDR_TABLE_BASE);
+    if (pHeader_l == NULL)
+        return NULL;
 
+    pAddr = (UINT8*)(pAddr + MEM_ADDR_TABLE_OFFSET);
     return pAddr;
 }
 
@@ -174,9 +251,12 @@ interrupt synchronization registers.
 //------------------------------------------------------------------------------
 UINT8* dualprocshm_getIntrMemAddr(void)
 {
-    UINT8*   pAddr;
+    UINT8*     pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
-    pAddr = (UINT8*) DPSHM_MAKE_NONCACHEABLE(MEM_INTR_BASE);
+    if (pHeader_l == NULL)
+        return NULL;
+
+    pAddr = (UINT8*)(pAddr + MEM_INTR_OFFSET);
 
     return pAddr;
 }
@@ -219,7 +299,7 @@ void dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 
     DUALPROCSHM_INVALIDATE_DCACHE_RANGE((UINT32)pBase_p, size_p);
 
-    memcpy(pData_p, pBase_p, size_p);
+    DUALPROCSHM_MEMCPY(pData_p, pBase_p, size_p);
 }
 
 //------------------------------------------------------------------------------
@@ -243,7 +323,7 @@ void dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
         return;
     }
 
-    memcpy(pBase_p, pData_p, size_p);
+    DUALPROCSHM_MEMCPY(pBase_p, pData_p, size_p);
 
     DUALPROCSHM_FLUSH_DCACHE_RANGE((UINT32)pBase_p, size_p);
 }
@@ -399,6 +479,35 @@ UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
 
     bufAddr = (SHARED_MEM_BASE + buffoffset);
     return bufAddr;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Map target memory address to local memory
+
+This routines transates the address in target processor memory into local
+memory.
+
+\param  baseAddr_p   Base address in target processor memory.
+
+\return Mapped address in local memory.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT8* dualprocshm_targetMapMem(UINT32 baseAddr_p)
+{
+    UINT8*    pLocalAddr;
+    UINT32    offset;
+
+    if(pHeader_l == NULL)
+        return NULL;
+
+    offset = (UINT32) CALC_OFFSET(baseAddr_p, pHeader_l->sharedMemBase);
+
+    pLocalAddr = (UINT8*) SHARED_MEM_BASE + offset;
+
+    return pLocalAddr;
 }
 
 //============================================================================//

@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 
-#include <dualprocshm-target.h>
+#include <dualprocshm.h>
 
 #include <ndis-intf.h>
 #include <common/target.h>
@@ -57,7 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // module global vars
 //------------------------------------------------------------------------------
-// get the address to store address mapping table
+static tDualprocHeader* pHeader_l;
 
 //------------------------------------------------------------------------------
 // global function prototypes
@@ -74,6 +74,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
+
+//------------------------------------------------------------------------------
+/**
+\brief  Initialize target resources
+
+This routine initializes the memory address for the processor instance assigned
+to the calling processor.
+
+\param  procInstance_p      Processor instance of the calling processor.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+void dualprocshm_targetInit(UINT32 procInstance_p)
+{
+    pHeader_l = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+
+    if(pHeader_l == NULL)
+        return;
+
+    if (procInstance_p == kDualProcFirst)
+    {
+        UINT8*    sharedMemBase = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_SHM);
+        DPSHM_WRITE32(&pHeader_l->sharedMemBase, (UINT32) sharedMemBase);
+        DUALPROCSHM_FLUSH_DCACHE_RANGE(&pHeader_l->sharedMemBase, sizeof(UINT32));
+    }
+}
+
 //------------------------------------------------------------------------------
 /**
 \brief  Get common memory address for platform
@@ -81,7 +109,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Target specific routine to retrieve the base address of common memory between
 two processors.
 
-\param  pSize_p      Minimum size of the common memory on intput, returns the
+\param  pSize_p      Minimum size of the common memory on input, returns the
                      actual size of common memory as output.
 
 \return Pointer to base address of common memory.
@@ -93,17 +121,13 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 {
     UINT8*   pAddr;
 
-    if (*pSize_p > MAX_COMMON_MEM_SIZE )
+    if (*pSize_p > MAX_COMMON_MEM_SIZE || pHeader_l == NULL)
     {
+        TRACE("%s Common memory not available\n", __func__);
         return NULL;
     }
 
-    pAddr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
-
-    if (pAddr == NULL)
-    {
-        return NULL;
-    }
+    pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
     *pSize_p = MAX_COMMON_MEM_SIZE - 1;
     return pAddr;
@@ -113,7 +137,7 @@ UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p)
 /**
 \brief  Free common memory address
 
-Target specific to routine to release the base address of
+Target specific routine to release the base address of
 common memory.
 
 \param  pSize_p      Size of the common memory
@@ -128,21 +152,67 @@ void dualprocshm_releaseCommonMemAddr(UINT16 pSize_p)
 
 //------------------------------------------------------------------------------
 /**
+\brief  Get shared memory information for platform
+
+Target specific routine to retrieve the shared memory base and size.
+
+/param pSize_p     Pointer to size of the shared memory.
+
+\return Pointer to base address of common memory.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT8* dualprocshm_targetGetSharedMemInfo(UINT32* pSize_p)
+{
+    UINT8*   pAddr;
+
+    pAddr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_SHM);
+
+    if (pAddr == NULL || pSize_p == NULL)
+        return NULL;
+
+    *pSize_p = ndis_getBarLength(OPLK_PCIEBAR_SHM);
+
+    return pAddr;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get remote shared memory base address
+
+Target specific routine to retrieve the base address of shared memory on other
+processor.
+
+\return Base address of shared memory on other processor.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT64 dualprocshm_targetGetRemoteMemBase(void)
+{
+    if(pHeader_l == NULL)
+        return -1;
+
+    return ((UINT64) pHeader_l->sharedMemBase);
+}
+//------------------------------------------------------------------------------
+/**
 \brief  Get dynamic mapping table base address
 
-Target specific routine to retrieve the base address for storing
-dynamic mapping table
+Target specific routine to retrieve the base address for storing the
+dynamic mapping table.
 
-\return Pointer to base address of dynamic mapping table
+\return Pointer to base address of dynamic mapping table.
 
 \ingroup module_dualprocshm
 */
 //------------------------------------------------------------------------------
 UINT8* dualprocshm_getDynMapTableAddr(void)
 {
-    UINT8*     pAddr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+    UINT8*     pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
-    if (pAddr == NULL)
+    if (pHeader_l == NULL)
         return NULL;
 
     pAddr = (UINT8*)(pAddr + MEM_ADDR_TABLE_OFFSET);
@@ -153,8 +223,8 @@ UINT8* dualprocshm_getDynMapTableAddr(void)
 /**
 \brief  Free dynamic mapping table base address
 
-Target specific routine to free the base address used for storing
-dynamic mapping table
+Target specific routine to free the base address used for storing the
+dynamic mapping table.
 
 \ingroup module_dualprocshm
  */
@@ -170,16 +240,16 @@ void dualprocshm_releaseDynMapTableAddr(void)
 Target specific routine to retrieve the base address for storing
 interrupt synchronization registers.
 
-\return Pointer to base address of interrupt synchronization registers
+\return Pointer to base address of interrupt synchronization registers.
 
 \ingroup module_dualprocshm
 */
 //------------------------------------------------------------------------------
 UINT8* dualprocshm_getIntrMemAddr(void)
 {
-    UINT8*     pAddr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+    UINT8*     pAddr = (UINT8*) pHeader_l + sizeof(tDualprocHeader);
 
-    if (pAddr == NULL)
+    if (pHeader_l == NULL)
         return NULL;
 
     pAddr = (UINT8*)(pAddr + MEM_INTR_OFFSET);
@@ -205,11 +275,11 @@ void dualprocshm_releaseIntrMemAddr()
 /**
 \brief  Read data from memory
 
-Target specific memory read routine
+Target specific memory read routine.
 
-\param  pBase_p    Base address to be read
-\param  size_p     No of bytes to be read
-\param  pData_p    Pointer to receive the read data
+\param  pBase_p    Address to read data from.
+\param  size_p     Number of bytes to be read.
+\param  pData_p    Pointer to store the read data.
 
 \ingroup module_dualprocshm
  */
@@ -233,9 +303,9 @@ void dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p)
 
 Target specific routine used to write data to the specified memory address.
 
-\param  pBase_p      Base address to be written
-\param  size_p       No of bytes to write
-\param  pData_p      Pointer to memory containing data to written
+\param  pBase_p      Address to write data to.
+\param  size_p       Number of bytes to be written.
+\param  pData_p      Pointer to memory containing data to be written.
 
 \ingroup module_dualprocshm
  */
@@ -320,11 +390,11 @@ void dualprocshm_targetReleaseLock(UINT8* pBase_p)
 /**
 \brief Register synchronization interrupt handler
 
-The function registers the ISR for target specific synchronization interrupt
-used by the application for PDO and event synchronization.
+The function registers the ISR for the target specific synchronization interrupt
+used by the application for synchronization.
 
-\param  callback_p              Interrupt handler
-\param  pArg_p                  Argument to be passed while calling the handler
+\param  callback_p              Interrupt handler.
+\param  pArg_p                  Argument to be passed when calling the handler.
 
 \ingroup module_dualprocshm
 */
@@ -338,9 +408,9 @@ void dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p)
 /**
 \brief Sync interrupt control routine
 
-The function is used to enable or disable the sync interrupt
+The function is used to enable or disable the sync interrupt.
 
-\param  fEnable_p              enable if TRUE, disable if FALSE
+\param  fEnable_p              Enable if TRUE, disable if FALSE.
 
 \ingroup module_dualprocshm
 */
@@ -367,7 +437,7 @@ void dualprocshm_enableSyncIrq(BOOL fEnable_p)
 void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p)
 {
     UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
-    UINT32    offset;
+    UINT32    offset = 0;
 
     if (addr_p != 0)
     {
@@ -395,12 +465,12 @@ UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
 {
     UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
     UINT32    buffoffset = 0x00;
-    UINT8*    Bar0Addr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_SHM);
+    UINT8*    bar0Addr = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_SHM);
     UINT8*    bufAddr;
     UINT8*    memEntryAddr = (pMemTableBase + tableEntryOffs);
     UINT      count = 0;
 
-    if (Bar0Addr == NULL)
+    if (bar0Addr == NULL)
         return NULL;
 
     DUALPROCSHM_INVALIDATE_DCACHE_RANGE((pMemTableBase + tableEntryOffs), sizeof(UINT32));
@@ -417,7 +487,45 @@ UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
         buffoffset = DPSHM_READ32(memEntryAddr);
         count++;
     }
-    bufAddr = (Bar0Addr + buffoffset);
+    bufAddr = (bar0Addr + buffoffset);
     return bufAddr;
 }
+
+//------------------------------------------------------------------------------
+/**
+\brief  Map target memory address to local memory
+
+This routines translates the address in target processor memory into local
+memory.
+
+\param  baseAddr_p   Base address in target processor memory.
+
+\return Mapped address in local memory.
+
+\ingroup module_dualprocshm
+*/
+//------------------------------------------------------------------------------
+UINT8* dualprocshm_targetMapMem(UINT32 baseAddr_p)
+{
+    UINT8*    pLocalAddr;
+    UINT8*    pShmBase = ndis_getBarAddr(OPLK_PCIEBAR_SHM);
+    UINT32    offset;
+
+    if(pShmBase == NULL || pHeader_l == NULL)
+        return NULL;
+
+    offset = baseAddr_p - pHeader_l->sharedMemBase;
+
+    pLocalAddr = (UINT8*)  + offset;
+
+    return pLocalAddr;
+}
+
+//============================================================================//
+//            P R I V A T E   F U N C T I O N S                               //
+//============================================================================//
+/// \name Private Functions
+/// \{
+
+/// \}
 
