@@ -322,7 +322,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     void*                 pInBuffer;
     void*                 pOutBuffer;
     tFileContext*         pFileContext;
-    tOplkError            oplRet;
+    tOplkError            oplkRet;
 
     UNREFERENCED_PARAMETER(pDeviceObject_p);
 
@@ -453,10 +453,11 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_PDO_GET_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*)pIrp_p->AssociatedIrp.SystemBuffer;
-            oplRet = drv_getPdoMem((UINT8**)&pPdoMem->pPdoAddr, pPdoMem->memSize);
+            oplkRet = drv_getPdoMem((UINT8**)&pPdoMem->pPdoAddr, pPdoMem->memSize);
 
-            if (oplRet != kErrorOk)
+            if (oplkRet != kErrorOk)
             {
+                // 
                 pIrp_p->IoStatus.Information = 0;
             }
             else
@@ -484,8 +485,8 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_GET_BENCHMARK_BASE:
         {
             tBenchmarkMem*   pBenchmarkMem = (tBenchmarkMem*)pIrp_p->AssociatedIrp.SystemBuffer;
-            oplRet = drv_getBenchmarkMem((UINT8**)&pBenchmarkMem->pBaseAddr);
-            if (oplRet != kErrorOk)
+            oplkRet = drv_getBenchmarkMem((UINT8**)&pBenchmarkMem->pBaseAddr);
+            if (oplkRet != kErrorOk)
             {
                 pIrp_p->IoStatus.Information = 0;
             }
@@ -506,6 +507,33 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             break;
         }
 
+        case PLK_CMD_MAP_MEM:
+        {
+            tMemStruc*   pMemStruc = (tMemStruc*) pIrp_p->AssociatedIrp.SystemBuffer;
+            oplkRet = drv_mapKernelMem((UINT8**) &pMemStruc->pKernelAddr, (UINT8**) &pMemStruc->pUserAddr);
+
+            if (oplkRet != kErrorOk)
+            {
+                // Error occurred, return size 0.
+                pIrp_p->IoStatus.Information = 0;
+            }
+            else
+            {
+                pIrp_p->IoStatus.Information = sizeof(tMemStruc);
+            }
+            // complete the IOCTL. If error occurred the return parameter size will be zero.
+            status = STATUS_SUCCESS;
+            break;
+
+        }
+        case PLK_CMD_UNMAP_MEM:
+        {
+            tMemStruc*   pMemStruc = (tMemStruc*) pIrp_p->AssociatedIrp.SystemBuffer;
+            drv_unmapKernelMem(pMemStruc->pUserAddr);
+            status = STATUS_SUCCESS;
+            pIrp_p->IoStatus.Information = 0;
+            break;
+        }
         default:
             DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n",
                                   irpStack->Parameters.DeviceIoControl.IoControlCode);
