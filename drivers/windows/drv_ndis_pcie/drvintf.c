@@ -116,6 +116,7 @@ typedef struct
     tErrHndObjects*         pErrorObjects;                      ///< Pointer to error objects.
     tMemInfo                pdoMem;                             ///< PDO memory information mapped to user space.
     tMemInfo                benchmarkMem;                       ///< Benchmark memory information mapped to user space.
+    tMemInfo                kernel2UserMem;                     ///< Kernel to user mapped memory.
     BOOL                    fDriverActive;                      ///< Flag to identify status of driver interface.
 }tDriverInstance;
 //------------------------------------------------------------------------------
@@ -563,6 +564,8 @@ before sharing it to user application.
 \param  ppPdoMem_p    Pointer to PDO memory.
 \param  memSize_p     Size of the PDO memory.
 
+\return Returns tOplkError error code.
+
 \ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
@@ -638,6 +641,8 @@ address space for accessing for user layer.
 
 \param  ppBenchmarkMem_p    Pointer to benchmark memory.
 
+\return Returns tOplkError error code.
+
 \ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
@@ -692,6 +697,86 @@ void drv_freeBenchmarkMem(UINT8* pBenchmarkMem_p)
     unmapMemory(pBenchmarkMemInfo);
 
     pBenchmarkMem_p = NULL;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Map memory in openPOWERLINK kernel into user layer
+
+Maps the kernel layer memory specified by the caller into user layer.
+
+\param  ppKernelMem_p    Double pointer to kernel memory.
+\param  ppUserMem_p      Double pointer to kernel memory mapped in user layer.
+
+\return Returns tOplkError error code.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p)
+{
+    tDualprocReturn         dualRet;
+    tMemInfo*               pKernel2UserMemInfo = &drvInstance_l.kernel2UserMem;
+    tDualprocSharedMemInst  sharedMemInst;
+
+    if(*ppKernelMem_p == NULL || *ppUserMem_p == NULL)
+        return kErrorNoResource;
+
+    dualRet = dualprocshm_getSharedMemInfo(drvInstance_l.dualProcDrvInst,
+                                           dualprocshm_getLocalProcInst(),
+                                           &sharedMemInst);
+
+    if (dualRet != kDualprocSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Unable to map kernel memory error %x\n",
+                              __func__, dualRet);
+        return kErrorNoResource;
+    }
+
+    pKernel2UserMemInfo->pKernelVa = (void*)sharedMemInst.baseAddr;
+    pKernel2UserMemInfo->memSize = sharedMemInst.span;
+
+    if (mapMemory(pKernel2UserMemInfo) != kErrorOk)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() error mapping memory\n", __func__);
+        return kErrorNoResource;
+    }
+
+    dualRet = dualprocshm_getSharedMemInfo(drvInstance_l.dualProcDrvInst,
+                                           dualprocshm_getRemoteProcInst(),
+                                           &sharedMemInst);
+
+    if (dualRet != kDualprocSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Unable to map kernel memory error %x\n",
+                              __func__, dualRet);
+        return kErrorNoResource;
+    }
+
+    *ppUserMem_p = pKernel2UserMemInfo->pUserVa;
+    *ppKernelMem_p = (UINT8*) sharedMemInst.baseAddr;
+
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Unmap mapped memory
+
+Unmap and free the kernel to user memory mapped before.
+
+\param  pUserMem_p    Pointer to mapped user memory.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+void drv_unmapKernelMem(UINT8* pUserMem_p)
+{
+    tMemInfo*    pKernel2UserMemInfo = &drvInstance_l.kernel2UserMem;
+
+    unmapMemory(pKernel2UserMemInfo);
+
+    pUserMem_p = NULL;
 }
 
 //============================================================================//
@@ -935,7 +1020,7 @@ Exit:
 
 Maps the specified memory into user space.
 
-\param  pMemInfo_p          Pointer memory map information struture for the
+\param  pMemInfo_p          Pointer memory map information structure for the
                             memory to map.
 
 \return Returns tOplkError error code.
@@ -943,6 +1028,9 @@ Maps the specified memory into user space.
 //------------------------------------------------------------------------------
 static tOplkError mapMemory(tMemInfo* pMemInfo_p)
 {
+    if(pMemInfo_p->pKernelVa == NULL )
+        return kErrorNoResource;
+
     // Allocate new MDL pointing to PDO memory
     pMemInfo_p->pMdl = IoAllocateMdl(pMemInfo_p->pKernelVa, pMemInfo_p->memSize,
                                       FALSE, FALSE, NULL);
@@ -978,9 +1066,9 @@ static tOplkError mapMemory(tMemInfo* pMemInfo_p)
 /**
 \brief  Unmap memory for user space
 
-Un,aps the specified memory mapped into user space
+Unmap the specified memory mapped into user space
 
-\param  pMemInfo_p          Pointer memory map information struture for the
+\param  pMemInfo_p          Pointer memory map information structure for the
 memory to map.
 
 \return Returns tOplkError error code.

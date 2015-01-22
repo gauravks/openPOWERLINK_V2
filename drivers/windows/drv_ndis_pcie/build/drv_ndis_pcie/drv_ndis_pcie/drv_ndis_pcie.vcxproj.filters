@@ -54,9 +54,6 @@
     <ClCompile Include="..\..\..\..\..\..\stack\src\common\debugstr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\stack\src\common\memmap\memmap-null.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\drvintf.c">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -97,6 +97,16 @@ typedef struct
     void*                   pBaseAddr;       ///< Pointer to the benchmark address returned by kernel
 } tBenchmarkMem;
 
+/**
+\brief Kernel to user memory mapping structure
+
+The structure is used to map openPOWERLINK kernel kayer memory into user layer.
+*/
+typedef struct
+{
+    void*                   pKernelAddr;       ///< Pointer to the Kernel address
+    void*                   pUserAddr;         ///< Pointer to the User address
+} tMemStruc;
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------

@@ -92,6 +92,8 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p);
 void       drv_freePdoMem(UINT8* pPdoMem_p, size_t memSize_p);
 tOplkError drv_getBenchmarkMem(UINT8** ppBenchmarkMem_p);
 void       drv_freeBenchmarkMem(UINT8* pBenchmarkMem_p);
+tOplkError drv_mapKernelMem(UINT8** pKernelMem_p, UINT8** pUserMem_p);
+void       drv_unmapKernelMem(UINT8* pUserMem_p);
 
 #ifdef __cplusplus
 }

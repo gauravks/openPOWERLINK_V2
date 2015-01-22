@@ -397,7 +397,6 @@
     <ClCompile Include="..\..\..\..\..\..\stack\src\common\circbuf\circbuf-noosdual.c" />
     <ClCompile Include="..\..\..\..\..\..\stack\src\common\circbuf\circbuffer.c" />
     <ClCompile Include="..\..\..\..\..\..\stack\src\common\debugstr.c" />
-    <ClCompile Include="..\..\..\..\..\..\stack\src\common\memmap\memmap-null.c" />
     <ClCompile Include="..\..\..\drvintf.c" />
     <ClCompile Include="..\..\..\main.c" />
   </ItemGroup>
