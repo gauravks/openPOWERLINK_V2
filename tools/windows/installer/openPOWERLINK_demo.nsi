@@ -69,6 +69,7 @@ Section "Demo" section1
 
 ;Create shortcuts
 ExecWait "$INSTDIR\Temp\vcredist_x64.exe"
+SetOutPath "$INSTDIR\Driver"
 ExecWait "$INSTDIR\Driver\installer-pcie.exe"
 WriteUninstaller $INSTDIR\uninstaller.exe
 !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
@@ -79,6 +80,7 @@ SectionEnd
 
 
 Section "Uninstall"
+SetOutPath "$INSTDIR\Driver"
 ExecWait "$INSTDIR\Driver\uninstaller-pcie.exe"
   ; Remove registry keys
    DeleteRegKey HKLM SOFTWARE\openPOWERLINK_demo
