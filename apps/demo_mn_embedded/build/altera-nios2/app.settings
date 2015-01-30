@@ -28,6 +28,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
+APP_TYPE=app
+
 APP_NAME=demo_mn_embedded
 
 # Library sources
@@ -48,8 +50,8 @@ ${OPLK_BASE_DIR}/apps/common/src/arp \
 ${OPLK_BASE_DIR}/stack/include \
 "
 
-CFG_APP_ARGS="\
---set APP_CFLAGS_DEFINED_SYMBOLS=-G4 -DCONFIG_INCLUDE_CFM\
+APP_CFLAGS="\
+-G4 -DCONFIG_INCLUDE_CFM \
 "
 
 APP_OPT_LEVEL=-O2

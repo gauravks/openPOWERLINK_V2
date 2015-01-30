@@ -28,6 +28,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
+APP_TYPE=app
+
 APP_NAME=demo_cn_embedded
 
 # Library sources
@@ -46,6 +48,9 @@ ${OPLK_BASE_DIR}/apps/common/src/gpio \
 ${OPLK_BASE_DIR}/apps/common/src/lcd \
 ${OPLK_BASE_DIR}/apps/common/src/arp \
 ${OPLK_BASE_DIR}/stack/include \
+"
+
+APP_CFLAGS="\
 "
 
 APP_OPT_LEVEL=-O2
