@@ -99,6 +99,7 @@ void __cdecl main(ULONG argc, __in_ecount(argc) PCHAR argv[])
         return;
     }
 
+    Sleep(2000);
     error = installapp((LPCTSTR) OPLK_INF_NAME, (LPCTSTR)OPLK_DEVICE_ID);
 
     if (error != 0)
