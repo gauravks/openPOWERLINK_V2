@@ -106,10 +106,10 @@ static tEventuCalInstance    instance_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-void              signalUserEvent(void);
-static UINT32     eventProcess(void* arg_p);
-static UINT32     kernelEventThread(void* arg_p);
-static tOplkError postEvent(tEvent* pEvent_p);
+void                signalUserEvent(void);
+static DWORD WINAPI eventProcess(LPVOID arg_p);
+static DWORD WINAPI kernelEventThread(LPVOID arg_p);
+static tOplkError   postEvent(tEvent* pEvent_p);
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -362,15 +362,17 @@ static tOplkError postEvent(tEvent* pEvent_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief    Event thread function
+\brief  User event handler thread function
 
-This function implements the event thread.
+This function contains the main function for the user event handler thread.
 
-\param  arg_p                Thread argument.
+\param  arg_p    Thread parameter. Not used!
+
+\return The function returns the thread exit code.
 
 */
 //------------------------------------------------------------------------------
-static UINT32 eventProcess(void* arg_p)
+static DWORD WINAPI eventProcess(LPVOID arg_p)
 {
     DWORD                   waitResult;
     tEvent*                 pEvent;
@@ -418,7 +420,19 @@ static UINT32 eventProcess(void* arg_p)
 
 }
 
-static UINT32 kernelEventThread(void* arg_p)
+//------------------------------------------------------------------------------
+/**
+\brief  Kernel event handler thread function
+
+This function contains the main function for the kernel event handler thread.
+
+\param  arg_p    Thread parameter. Not used!
+
+\return The function returns the thread exit code.
+
+*/
+//------------------------------------------------------------------------------
+static DWORD WINAPI kernelEventThread(LPVOID arg_p)
 {
     BOOL      ret;
     UINT32    eventBufSize = sizeof(tEvent) + MAX_EVENT_ARG_SIZE;
