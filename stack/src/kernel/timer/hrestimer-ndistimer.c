@@ -135,23 +135,6 @@ The function initializes the high-resolution timer module
 //------------------------------------------------------------------------------
 tOplkError hrestimer_init(void)
 {
-    return hrestimer_addInstance();
-    hresTimerInstance_l.fInitialized = TRUE;
-}
-
-//------------------------------------------------------------------------------
-/**
-\brief    Add instance of high-resolution timer module
-
-The function adds an instance of the high-resolution timer module.
-
-\return Returns a tOplkError error code.
-
-\ingroup module_hrestimer
-*/
-//------------------------------------------------------------------------------
-tOplkError hrestimer_addInstance(void)
-{
     NDIS_TIMER_CHARACTERISTICS    timerChars;
     NDIS_STATUS                   status = NDIS_STATUS_SUCCESS;
     NDIS_HANDLE                   adapterHandle = ndis_getAdapterHandle();
@@ -183,21 +166,24 @@ tOplkError hrestimer_addInstance(void)
         }
     }
     ExSetTimerResolution(10000, TRUE);
+
+    hresTimerInstance_l.fInitialized = TRUE;
+
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief    Delete instance of high-resolution timer module
+\brief    Shut down high-resolution timer module
 
-The function deletes an instance of the high-resolution timer module.
+The function shuts down the high-resolution timer module.
 
 \return Returns a tOplkError error code.
 
 \ingroup module_hrestimer
 */
 //------------------------------------------------------------------------------
-tOplkError hrestimer_delInstance(void)
+tOplkError hrestimer_exit(void)
 {
     tHresTimerInfo*   pTimerInfo;
     UINT              index;
