@@ -48,6 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <user/eventucal.h>
 #include <user/eventucalintf.h>
 #include <common/target.h>
+#include <oplk/benchmark.h>
 
 #include <user/ctrlucal.h>
 #include <common/driver.h>
@@ -97,6 +98,7 @@ typedef struct
     char      eventBuf[sizeof(tEvent) +MAX_EVENT_ARG_SIZE]; ///< Event buffer
     BOOL      fKernelEvent;                  ///< Flag to indicate new kernel event
     BOOL      fInitialized;                  ///< Flag to indicate module initialization
+    UINT8*    benchmarkBase;                 ///< Pointer to user benchmark base address
 } tEventuCalInstance;
 
 //------------------------------------------------------------------------------
@@ -197,6 +199,11 @@ tOplkError eventucal_init(void)
                               __func__, GetLastError());
         return kErrorNoResource;
     }
+
+    instance_l.benchmarkBase = ctrlucal_getUserBenchmarkBase();
+
+    if (instance_l.benchmarkBase == NULL)
+        return kErrorNoResource;
 
     instance_l.fInitialized = TRUE;
     return kErrorOk;
@@ -388,12 +395,14 @@ static DWORD WINAPI eventProcess(LPVOID arg_p)
                 if (instance_l.fKernelEvent)
                 {
                     pEvent = (tEvent*) instance_l.eventBuf;
+                    BENCHMARK_SET(instance_l.benchmarkBase, 1);
                     if (pEvent->eventArgSize != 0)
                         pEvent->pEventArg = (ULONGLONG)((char*) pEvent + sizeof(tEvent));
                     
                     eventu_process(pEvent);
                     instance_l.fKernelEvent = FALSE;
                     ReleaseMutex(instance_l.mutexK2U);
+                    BENCHMARK_RESET(instance_l.benchmarkBase, 1);
                 }
                 else
                 {

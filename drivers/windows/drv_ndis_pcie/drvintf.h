@@ -55,6 +55,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
+// module global defines
+//------------------------------------------------------------------------------
+extern UINT8*               benchmarkBase_g;          ///< Pointer to user benchmark
+
+//------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
 
@@ -94,6 +99,7 @@ tOplkError drv_getBenchmarkMem(UINT8** ppBenchmarkMem_p);
 void       drv_freeBenchmarkMem(UINT8* pBenchmarkMem_p);
 tOplkError drv_mapKernelMem(UINT8** pKernelMem_p, UINT8** pUserMem_p);
 void       drv_unmapKernelMem(UINT8* pUserMem_p);
+UINT8*     drv_getUserBenchmarkBase(void);
 
 #ifdef __cplusplus
 }

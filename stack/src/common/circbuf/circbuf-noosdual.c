@@ -48,9 +48,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #include <oplk/oplkinc.h>
 #include <common/target.h>
+#include <oplk/benchmark.h>
+#include <drvintf.h>
 
 #include "circbuf-arch.h"
 #include "dualprocshm.h"
+
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -130,7 +133,6 @@ tCircBufInstance* circbuf_createInstance(UINT8 id_p)
 
     pInstance->pCircBufArchInstance = pArch;
     pInstance->bufferId = id_p;
-
     return pInstance;
 }
 
@@ -307,12 +309,15 @@ void circbuf_lock(tCircBufInstance* pInstance_p)
     tDualprocReturn         ret;
     tCircBufArchInstance*   pArch = (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
 
+    BENCHMARK_SET(benchmarkBase_g, 2);
     ret = dualprocshm_acquireBuffLock(pArch->dualProcDrvInstance, pInstance_p->bufferId);
     if (ret != kDualprocSuccessful)
     {
+        BENCHMARK_RESET(benchmarkBase_g, 2);
         TRACE("%s() Failed to acquire lock for bufffer 0x%X error 0x%X!\n", \
               __func__, pInstance_p->bufferId, ret);
     }
+
 }
 
 //------------------------------------------------------------------------------
@@ -331,6 +336,7 @@ void circbuf_unlock(tCircBufInstance* pInstance_p)
     tCircBufArchInstance*   pArch = (tCircBufArchInstance*)pInstance_p->pCircBufArchInstance;
 
     dualprocshm_releaseBuffLock(pArch->dualProcDrvInstance, pInstance_p->bufferId);
+    BENCHMARK_RESET(benchmarkBase_g, 2);
 }
 
 //============================================================================//

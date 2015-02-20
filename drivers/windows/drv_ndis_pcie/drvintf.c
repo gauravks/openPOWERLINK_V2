@@ -63,13 +63,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 #define PROC_ID                        0xFA
-
-//------------------------------------------------------------------------------
-// module global vars
-//------------------------------------------------------------------------------
 #define DUALPROCSHM_BUFF_ID_ERRHDLR    12
 #define DUALPROCSHM_BUFF_ID_PDO        13
 #define BENCHMARK_OFFSET               0x00001000 //TODO: Get this value from PCIe header files
+//------------------------------------------------------------------------------
+// module global vars
+//------------------------------------------------------------------------------
+UINT8*               benchmarkBase_g;          ///< Pointer to user benchmark
 
 //------------------------------------------------------------------------------
 // global function prototypes
@@ -400,6 +400,7 @@ tOplkError drv_initDualProcDrv(void)
 {
     tDualprocReturn    dualRet;
     tDualprocConfig    dualProcConfig;
+    UINT8*             pMem;
 
     TRACE(" Initialize Driver interface...");
     OPLK_MEMSET(&drvInstance_l, 0, sizeof(tDriverInstance));
@@ -427,6 +428,13 @@ tOplkError drv_initDualProcDrv(void)
         DEBUG_LVL_ERROR_TRACE("{%s} Error Initializing interrupts %x\n ", __func__, dualRet);
         return kErrorNoResource;
     }
+
+    pMem = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+
+    if (pMem == NULL)
+        return kErrorNoResource;
+
+    benchmarkBase_g = pMem + BENCHMARK_OFFSET;
 
     drvInstance_l.fDriverActive = TRUE;
     TRACE(" OK\n");
@@ -747,6 +755,24 @@ void drv_unmapKernelMem(UINT8* pUserMem_p)
     unmapMemory(pKernel2UserMemInfo);
 
     pUserMem_p = NULL;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Return the user benchmark to internel modules
+
+The funtion returns the base address for user benchamark requested by internal
+modules.
+
+\return The function returns the base address for benchmark.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+UINT8* drv_getUserBenchmarkBase(void)
+{
+    if (drvInstance_l.benchmarkMem.pKernelVa != NULL)
+        return drvInstance_l.benchmarkMem.pKernelVa;
 }
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
