@@ -1,18 +1,17 @@
 /**
 ********************************************************************************
-\file   pdokcalmem-linuxkernel.c
+\file   circbuf-null.c
 
-\brief  PDO kernel CAL shared-memory module using the openPOWERLINK Linux kernel driver
+\brief  Empty circular buffer architecture implementation
 
-This file contains an implementation for the kernel PDO CAL module which uses
-the Linux kernel driver to provide its kernel memory to the user layer by
-the mmap device operation.
+This file provides the empty implementation for architecture support routines
+for circular buffer.
 
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
+Copyright (c) 2014, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,13 +36,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
+
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <kernel/pdokcal.h>
+#include <oplk/oplkinc.h>
 
-#include <linux/slab.h>
+#include "circbuf-arch.h"
+
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -85,139 +85,144 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
-
 //------------------------------------------------------------------------------
 /**
-\brief  Open PDO shared memory
+\brief  Create circular buffer instance
 
-The function performs all actions needed to setup the shared memory at the
-start of the stack.
+The function allocates the memory needed for the circular buffer instance.
 
-For the linux kernel mmap implementation nothing needs to be done.
+\param  id_p                ID of the circular buffer.
 
-\return The function returns a tOplkError error code.
+\return The function returns the pointer to the buffer instance or NULL on error.
 
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_openMem(void)
+tCircBufInstance* circbuf_createInstance(UINT8 id_p)
 {
-    return kErrorOk;
+    UNUSED_PARAMETER(id_p);
+    return NULL;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Close PDO shared memory
+\brief  Free circular buffer instance
 
-The function performs all actions needed to clean up the shared memory at
-shutdown.
+The function frees the allocated memory used by the circular buffer instance.
 
-For the linux kernel mmap implementation nothing needs to be done.
+\param  pInstance_p         Pointer to circular buffer instance.
 
-\return The function returns a tOplkError error code.
-
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_closeMem(void)
+void circbuf_freeInstance(tCircBufInstance* pInstance_p)
 {
-    return kErrorOk;
+    UNUSED_PARAMETER(pInstance_p);
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Allocate PDO shared memory
+\brief  Allocate memory for circular buffer
 
-The function allocates shared memory for the kernel needed to transfer the PDOs.
+The function allocates the memory needed for the circular buffer.
 
-\param  memSize_p               Size of PDO memory
-\param  ppPdoMem_p              Pointer to store the PDO memory pointer
+\param  pInstance_p         Pointer to the circular buffer instance.
+\param  size_p              Size of memory to allocate.
 
-\return The function returns a tOplkError error code.
+\return The function returns a tCircBufError error code.
 
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_allocateMem(size_t memSize_p, BYTE** ppPdoMem_p)
+tCircBufError circbuf_allocBuffer(tCircBufInstance* pInstance_p, size_t size_p)
 {
-    ULONG         order;
-
-    order = get_order(memSize_p);
-    if ((*ppPdoMem_p = (BYTE*)__get_free_pages(GFP_KERNEL, order)) == NULL)
-    {
-        return kErrorNoResource;
-    }
-    DEBUG_LVL_PDO_TRACE("%s() Allocated memory for PDO at %p size:%d/%d\n",
-                        __func__, *ppPdoMem_p, memSize_p, order);
-    return kErrorOk;
+    UNUSED_PARAMETER(pInstance_p);
+    UNUSED_PARAMETER(size_p);
+    return kCircBufOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Free PDO shared memory
+\brief  Free memory used by circular buffer
 
-The function frees shared memory which was allocated in the kernel layer for
-transfering the PDOs.
+The function frees the allocated memory used by the circular buffer.
 
-\param  pMem_p                  Pointer to the shared memory segment
-\param  memSize_p               Size of PDO memory
+\param  pInstance_p         Pointer to circular buffer instance.
 
-\return The function returns a tOplkError error code.
-
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_freeMem(BYTE* pMem_p, size_t memSize_p)
+void circbuf_freeBuffer(tCircBufInstance* pInstance_p)
 {
-    ULONG         order;
-
-    order = get_order(memSize_p);
-    free_pages((ULONG)pMem_p, order);
-    return kErrorOk;
+    UNUSED_PARAMETER(pInstance_p);
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Map PDO shared memory
+\brief  Connect to circular buffer
 
-This routine maps the PDO memory allocated in the kernel layer of the openPOWERLINK
-stack. This allows user stack to access the PDO memory directly.
+The function connects the calling thread to the circular buffer.
 
-\param  pKernelMem_p            Pointer to the shared memory segment in kernel space.
-\param  pUserMem_p              Pointer to the shared memory segment in user space.
-\param  pMemSize_p              Size of PDO memory.
+\param  pInstance_p         Pointer to circular buffer instance.
 
-\return The function returns a tOplkError error code.
+\return The function returns a tCircBufError error code.
 
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-tOplkError pdokcal_mapMem(UINT8** pKernelMem_p, UINT8** pUserMem_p, size_t* pMemSize_p)
+tCircBufError circbuf_connectBuffer(tCircBufInstance* pInstance_p)
 {
-    UNUSED_PARAMETER(pKernelMem_p);
-    UNUSED_PARAMETER(pUserMem_p);
-    UNUSED_PARAMETER(pMemSize_p);
+    UNUSED_PARAMETER(pInstance_p);
 
-    return kErrorOk;
+    return kCircBufNoResource;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Unmap PDO shared memory
+\brief  Disconnect from circular buffer
 
-Unmap the PDO memory shared with the user layer. The memory will be freed in
-pdokcal_freeMem().
+The function disconnects the calling thread from the circular buffer.
 
-\param  pMem_p                  Pointer to the shared memory segment.
-\param  memSize_p               Size of PDO memory.
+\param  pInstance_p         Pointer to circular buffer instance.
 
-\ingroup module_pdokcal
+\ingroup module_lib_circbuf
 */
 //------------------------------------------------------------------------------
-void pdokcal_unMapMem(UINT8* pMem_p, size_t memSize_p)
+void circbuf_disconnectBuffer(tCircBufInstance* pInstance_p)
 {
-    UNUSED_PARAMETER(pMem_p);
-    UNUSED_PARAMETER(memSize_p);
+    UNUSED_PARAMETER(pInstance_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Lock circular buffer
+
+The function enters a locked section of the circular buffer.
+
+\param  pInstance_p         Pointer to circular buffer instance.
+
+\ingroup module_lib_circbuf
+*/
+//------------------------------------------------------------------------------
+void circbuf_lock(tCircBufInstance* UNUSED_PARAMETER)
+{
+    UNUSED_PARAMETER(UNUSED_PARAMETER);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Unlock circular buffer
+
+The function leaves a locked section of the circular buffer.
+
+\param  pInstance_p         Pointer to circular buffer instance.
+
+\ingroup module_lib_circbuf
+*/
+//------------------------------------------------------------------------------
+void circbuf_unlock(tCircBufInstance* pInstance_p)
+{
+    UNUSED_PARAMETER(pInstance_p);
 }
 
 //============================================================================//
@@ -226,4 +231,6 @@ void pdokcal_unMapMem(UINT8* pMem_p, size_t memSize_p)
 /// \name Private Functions
 /// \{
 
+
 /// \}
+
