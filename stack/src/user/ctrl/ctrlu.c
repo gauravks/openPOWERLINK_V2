@@ -905,6 +905,24 @@ UINT32 ctrlu_getFeatureFlags(void)
     return getRequiredKernelFeatures();
 }
 
+#ifdef CONFIG_INCLUDE_USER_BENCHMARK
+//------------------------------------------------------------------------------
+/**
+\brief Returns user benchmark address
+
+The function returns the user benchmark base address acquired from the kernel
+layer.
+
+\return The function returns the user benchmark base address.
+
+\ingroup module_ctrlu
+*/
+//------------------------------------------------------------------------------
+UINT8* ctrlu_getUserBenchmark(void)
+{
+    return ctrlucal_getUserBenchmarkBase();
+}
+#endif
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

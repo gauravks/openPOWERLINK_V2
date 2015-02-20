@@ -1235,6 +1235,24 @@ tOplkError oplk_triggerPresForward(UINT nodeId_p)
 #endif
 }
 
+#ifdef CONFIG_INCLUDE_USER_BENCHMARK
+//------------------------------------------------------------------------------
+/**
+\brief  Get User benchmark base address
+
+The function retrieves the user benchmark base address on platforms which use
+the FPGA based benchmark implementation in user space.
+
+\return The funtion returns the base address of benchmark.
+
+\ingroup module_api
+*/
+//------------------------------------------------------------------------------
+UINT8* oplk_getUserBenchmarkBase(void)
+{
+    return ctrlu_getUserBenchmark();
+}
+#endif
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

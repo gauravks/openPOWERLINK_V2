@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // includes
 //------------------------------------------------------------------------------
 #include <oplk/oplk.h>
+#include <oplk/benchmark.h>
 
 #include "app.h"
 #include "xap.h"
@@ -97,7 +98,7 @@ static UINT                 cnt_l;
 static APP_NODE_VAR_T       nodeVar_l[MAX_NODES];
 static PI_IN*               pProcessImageIn_l;
 static PI_OUT*              pProcessImageOut_l;
-
+static UINT8*               pBenchmarBase_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -134,7 +135,8 @@ tOplkError initApp(void)
         nodeVar_l[i].toggle = 0;
         nodeVar_l[i].period = 0;
     }
-
+    
+    pBenchmarBase_l = oplk_getUserBenchmarkBase();
     ret = initProcessImage();
 
     return ret;
@@ -175,11 +177,13 @@ tOplkError processSync(void)
     ret = oplk_waitSyncEvent(100000);
     if (ret != kErrorOk)
         return ret;
-
+    if (pBenchmarBase_l)
+        BENCHMARK_SET(pBenchmarBase_l, 1);
     ret = oplk_exchangeProcessImageOut();
     if (ret != kErrorOk)
         return ret;
-
+    if (pBenchmarBase_l)
+        BENCHMARK_RESET(pBenchmarBase_l, 1);
     cnt_l++;
 
     nodeVar_l[0].input = pProcessImageOut_l->CN1_M00_DigitalInput_00h_AU8_DigitalInput;
@@ -234,8 +238,11 @@ tOplkError processSync(void)
     pProcessImageIn_l->CN32_M00_DigitalOutput_00h_AU8_DigitalOutput = nodeVar_l[1].leds;
     pProcessImageIn_l->CN110_M00_DigitalOutput_00h_AU8_DigitalOutput = nodeVar_l[2].leds;
 
+    if (pBenchmarBase_l)
+        BENCHMARK_SET(pBenchmarBase_l, 2);
     ret = oplk_exchangeProcessImageIn();
-
+    if (pBenchmarBase_l)
+        BENCHMARK_RESET(pBenchmarBase_l, 2);
     return ret;
 }
 

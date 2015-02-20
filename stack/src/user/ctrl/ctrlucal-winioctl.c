@@ -82,6 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // local vars
 //------------------------------------------------------------------------------
 static HANDLE    fileHandle_l;
+tBenchmarkMem    benchmarkMem_l;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -361,6 +362,37 @@ The function returns the file descriptor of the kernel module.
 HANDLE ctrlucal_getFd(void)
 {
     return fileHandle_l;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Return the user benchmark base address
+
+The funtion returns the base address for user benchamark situated on external
+device such as FPGA.
+
+\return The function returns the base address for benchmark.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+UINT8* ctrlucal_getUserBenchmarkBase(void)
+{
+    ULONG   bytesReturned;
+    if (benchmarkMem_l.pBaseAddr != NULL)
+        return benchmarkMem_l.pBaseAddr;
+
+    if (!DeviceIoControl(fileHandle_l, PLK_GET_BENCHMARK_BASE,
+        0, 0, &benchmarkMem_l, sizeof(tBenchmarkMem),
+        &bytesReturned, NULL))
+    {
+        return NULL;
+    }
+
+    if (bytesReturned == 0 || benchmarkMem_l.pBaseAddr == NULL)
+        return NULL;
+
+    return benchmarkMem_l.pBaseAddr;
 }
 
 //============================================================================//

@@ -136,6 +136,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         #undef BENCHMARK_MODULES
         #define BENCHMARK_MODULES           0x00000000
     #endif
+#elif (TARGET_SYSTEM == _WIN32_)
+
+    #define BENCHMARK_SET(base, x)        OPLK_IO_WR8(base,((OPLK_IO_RD8(base)) | (1 << (x))))
+    #define BENCHMARK_RESET(base, x)      OPLK_IO_WR8(base,((OPLK_IO_RD8(base)) & ~(1 << (x))))
+    #define BENCHMARK_TOGGLE(base, x)     OPLK_IO_WR8(base,((OPLK_IO_RD8(base)) ^ (1 << (x))))
+
 #else
     // disable Benchmarking
     #undef BENCHMARK_MODULES

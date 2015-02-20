@@ -520,6 +520,7 @@ OPLKDLLEXPORT tOplkError oplk_testSdoSeqSend(UINT uiNodeId_p, tSdoType SdoType_p
                                               tAsySdoSeq* pSdoCom_p, size_t SdoSize_p);
 OPLKDLLEXPORT tOplkError oplk_testSdoSeqDelCon(void);
 
+OPLKDLLEXPORT UINT8*     oplk_getUserBenchmarkBase(void);
 #ifdef __cplusplus
 }
 #endif
