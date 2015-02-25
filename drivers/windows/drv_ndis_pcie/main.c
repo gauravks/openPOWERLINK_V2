@@ -99,6 +99,7 @@ typedef struct
     NDIS_HANDLE           driverHandle;             ///< Miniport driver handle
     BOOL                  fInitialized;             ///< Initialization status
     tPlkDeviceInstance*   pDeviceInst;              ///< Pointer to IOCTL device instance
+    UINT                  instanceCount;            ///< Number of open instances
 }tPlkDriverInstance;
 
 //------------------------------------------------------------------------------
@@ -165,6 +166,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath
     // register application interface handlers
     ndis_registerDrvIntf(registerDrvIntf, deregisterDrvIntf);
     plkDriverInstance_l.fInitialized = FALSE;
+    plkDriverInstance_l.instanceCount = 0;
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry - OK\n");
     return ndisStatus;
@@ -219,6 +221,9 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     }
 
     plkDriverInstance_l.pDeviceInst->fSyncClean = TRUE;
+
+    // Increase the count for open instances
+    plkDriverInstance_l.instanceCount++;
 
     pIrp_p->IoStatus.Information = 0;
     pIrp_p->IoStatus.Status = STATUS_SUCCESS;
@@ -280,7 +285,10 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     pFileContext = irpStack->FileObject->FsContext;
     ExFreePoolWithTag(pFileContext, PLK_MEM_TAG);
 
-    if (plkDriverInstance_l.fInitialized)
+    plkDriverInstance_l.instanceCount--;
+
+    // Close lower driver resources only if all open instances have closed.
+    if (plkDriverInstance_l.fInitialized && plkDriverInstance_l.instanceCount == 0)
     {
         plkDriverInstance_l.fInitialized = FALSE;
         drv_exitDualProcDrv();
