@@ -290,6 +290,17 @@ The function disconnects the calling thread from the circular buffer.
 //------------------------------------------------------------------------------
 void circbuf_disconnectBuffer(tCircBufInstance* pInstance_p)
 {
+    tDualprocReturn         ret;
+    size_t                  size;
+    tDualprocDrvInstance    dualProcDrvInst;
+    tCircBufArchInstance*   pArch = (tCircBufArchInstance*) pInstance_p->pCircBufArchInstance;
+
+    ret = dualprocshm_freeMemory(pArch->dualProcDrvInstance, pInstance_p->bufferId, pArch->fAlloc);
+    if (ret != kDualprocSuccessful)
+    {
+        TRACE("%s() Unable to free memory rror %X!\n", __func__, ret);
+    }
+
     pInstance_p->pCircBufHeader = NULL;
 }
 
