@@ -120,6 +120,7 @@ typedef struct
     tMemInfo                kernel2UserMem;                     ///< Kernel to user mapped memory.
     BOOL                    fDriverActive;                      ///< Flag to identify status of driver interface.
 } tDriverInstance;
+
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
@@ -164,6 +165,14 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
     UINT16        cmd = pCtrlCmd_p->cmd;
     int           timeout;
 
+    // Clean up stack
+    if (cmd == kCtrlCleanupStack || cmd == kCtrlShutdown)
+    {
+        exitDllQueues();
+        exitErrHndl();
+        exitEvent();
+    }
+
     if (dualprocshm_writeDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, ctrlCmd),
         sizeof(tCtrlCmd), (UINT8*)pCtrlCmd_p) != kDualprocSuccessful)
         return;
@@ -206,13 +215,6 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
             pCtrlCmd_p->retVal = (UINT16)ret;
             return;
         }
-    }
-
-    if (cmd == kCtrlShutdown)
-    {
-        exitDllQueues();
-        exitErrHndl();
-        exitEvent();
     }
 }
 
@@ -405,7 +407,7 @@ tOplkError drv_initDualProcDrv(void)
     tDualprocConfig     dualProcConfig;
     INT                 loopCount = 0;
 
-    TRACE(" Initialize Driver interface...");
+    TRACE("Initialize driver interface...");
     OPLK_MEMSET(&drvInstance_l, 0, sizeof(tDriverInstance));
 
     OPLK_MEMSET(&dualProcConfig, 0, sizeof(tDualprocConfig));
@@ -465,6 +467,8 @@ initialization.
 void drv_exitDualProcDrv(void)
 {
     tDualprocReturn    dualRet;
+
+    TRACE("Exit driver interface...\n");
 
     drvInstance_l.fIrqMasterEnable = FALSE;
     drvInstance_l.fDriverActive = FALSE;
@@ -836,8 +840,11 @@ Close event queues initialized earlier.
 //------------------------------------------------------------------------------
 static void exitEvent(void)
 {
-    circbuf_disconnect(drvInstance_l.eventQueueInst[kEventQueueK2U]);
-    circbuf_disconnect(drvInstance_l.eventQueueInst[kEventQueueU2K]);
+    if (drvInstance_l.eventQueueInst[kEventQueueK2U] != NULL)
+        circbuf_disconnect(drvInstance_l.eventQueueInst[kEventQueueK2U]);
+
+    if (drvInstance_l.eventQueueInst[kEventQueueU2K] != NULL)
+        circbuf_disconnect(drvInstance_l.eventQueueInst[kEventQueueU2K]);
 }
 
 //------------------------------------------------------------------------------
@@ -959,12 +966,18 @@ static tOplkError initDllQueues(void)
 //------------------------------------------------------------------------------
 static void exitDllQueues(void)
 {
-    circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxGen]);
-    circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxNmt]);
-    circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxSync]);
+    if (drvInstance_l.dllQueueInst[kDllCalQueueTxGen] != NULL)
+        circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxGen]);
+
+    if (drvInstance_l.dllQueueInst[kDllCalQueueTxNmt] != NULL)
+        circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxNmt]);
+
+    if (drvInstance_l.dllQueueInst[kDllCalQueueTxSync] != NULL)
+        circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxSync]);
 /*
     //TODO: VETH to be integrated later
-    circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxVeth]);
+    if (drvInstance_l.dllQueueInst[kDllCalQueueTxVeth] != NULL)
+        circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxVeth]);
         */
 }
 
@@ -1091,4 +1104,5 @@ static void unmapMemory(tMemInfo* pMemInfo_p)
         IoFreeMdl(pMemInfo_p->pMdl);
     }
 }
-///\}
+
+/// \}
