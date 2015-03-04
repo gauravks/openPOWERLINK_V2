@@ -108,10 +108,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             oldval = InterlockedExchange(address, newval);
 
 // TODO: Update them with TAG
-#define OPLK_TAG                      'negO'
-#define OPLK_MALLOC(siz)              ExAllocatePool(NonPagedPool, (siz))
-#define OPLK_FREE(ptr)                ExFreePool(ptr)
-#define OPLK_MEMSET(dst, val, siz)    NdisZeroMemory(dst, siz)
+#define OPLK_TAG                      'klpO'
+#define OPLK_MALLOC(siz)              ExAllocatePoolWithTag (NonPagedPool, (siz), OPLK_TAG)
+#define OPLK_FREE(ptr)                ExFreePoolWithTag((ptr), OPLK_TAG)
+#define OPLK_MEMSET(dst, val, siz)    NdisFillMemory((dst), (siz), (val))
+#define OPLK_MEMCPY(dst, src, siz)    NdisMoveMemory((dst), (src), (siz))
 
 #define OPLK_MUTEX_T                  HANDLE
 

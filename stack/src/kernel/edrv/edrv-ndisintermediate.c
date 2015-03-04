@@ -154,9 +154,6 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     // clear instance structure
     OPLK_MEMSET(&edrvInstance_l, 0, sizeof(edrvInstance_l));
 
-    // save the init data
-    edrvInstance_l.initParam = *pEdrvInitParam_p;
-
     // Check if NDIS intermediate driver is ready
     if (!ndis_checkBindingState())
     {
@@ -179,7 +176,10 @@ tOplkError edrv_init(tEdrvInitParam* pEdrvInitParam_p)
     ndis_getMacAddress(pEdrvInitParam_p->aMacAddr);
 
     ndis_setBindingState(NdisBindingRunning);
-    // TODO@gks: Get the MAC address here and assign to init params
+
+    // save the init data
+    edrvInstance_l.initParam = *pEdrvInitParam_p;
+
     return kErrorOk;
 }
 

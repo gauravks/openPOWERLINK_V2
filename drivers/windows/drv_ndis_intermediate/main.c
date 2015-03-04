@@ -88,6 +88,7 @@ typedef struct
     NDIS_HANDLE       pAppDeviceHandle;         ///< IOCTL interface device handle
     NDIS_HANDLE       driverHandle;             ///< Miniport driver handle
     BOOL              fInitialized;             ///< Initialization status
+    UINT                  instanceCount;            ///< Number of open instances
 }tPlkDriverInstance;
 
 //------------------------------------------------------------------------------
@@ -102,12 +103,13 @@ DRIVER_DISPATCH       powerlinkCreate;
 DRIVER_DISPATCH       powerlinkCleanup;
 DRIVER_DISPATCH       powerlinkClose;
 DRIVER_DISPATCH       powerlinkIoctl;
-static void registerAppIntf(NDIS_HANDLE driverHandle_p);
-static void deRegisterAppIntf(void);
+
+static void registerDrvIntf(NDIS_HANDLE driverHandle_p);
+static void deregisterDrvIntf(void);
 static void increaseHeartbeatCb(void* unusedParameter1_p, void* functionContext_p,
                                 void* unusedParameter2_p, void* unusedParameter3_p);
-void startHeartbeatTimer(LONG timeInMs_p);
-void stopHeartbeatTimer(void);
+static void startHeartbeatTimer(LONG timeInMs_p);
+static void stopHeartbeatTimer(void);
 
 //------------------------------------------------------------------------------
 //  Kernel module specific data structures
@@ -118,18 +120,18 @@ void stopHeartbeatTimer(void);
 //============================================================================//
 
 //---------------------------------------------------------------------------
-//  Initailize driver
+//  Initialize driver
 //---------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 /**
 \brief  Driver initialization routine
 
-The function implements openPOWERLINK Windows kernel driver initialization function.
-OS calls this routine on the driver registration.
+The function implements openPOWERLINK Windows kernel driver initialization callback.
+OS calls this routine on driver registration.
 
-\param driverObject_p       Pointer to the system's driver object structure
-                            for this driver.
-\param registryPath_p       System's registry path for this driver.
+\param  driverObject_p       Pointer to the system's driver object structure
+                             for this driver.
+\param  registryPath_p       System's registry path for this driver.
 
 \return This routine returns a NTSTATUS error code.
 \retval STATUS_SUCCESS If no error occurs
@@ -148,14 +150,15 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath
     {
         DEBUG_LVL_ERROR_TRACE("%s() Failed to initialize driver 0x%X\n", __FUNCTION__,
                               ndisStatus);
+        return ndisStatus;
     }
 
     // register application interface handlers
-    ndis_registerAppIntf(registerAppIntf, deRegisterAppIntf);
+    ndis_registerAppIntf(registerDrvIntf, deregisterDrvIntf);
     plkDriverInstance_l.fInitialized = FALSE;
+    plkDriverInstance_l.instanceCount = 0;
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry - OK\n");
-    DbgPrint("PLK: + Driver Entry - OK\n");
     return ndisStatus;
 }
 
@@ -163,9 +166,17 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath
 /**
 \brief  openPOWERLINK driver create function
 
-The function implements openPOWERLINK kernel module open function.
+The function implements openPOWERLINK kernel module create callback. OS calls
+this routine when a application tries to open an FILE interface to this driver
+using CreateFile().
 
-\ingroup module_driver_linux_kernel
+\param  pDeviceObject_p     Pointer to device object allocated for the IOCTL device.
+\param  pIrp_p              Pointer to I/O request packet for this call.
+
+\return This routine returns a NTSTATUS error code.
+\retval STATUS_SUCCESS If no error occurs
+
+\ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
@@ -174,6 +185,8 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     tFileContext*                 pFileContext;
     PIO_STACK_LOCATION            irpStack;
     NDIS_STATUS                   status;
+
+    UNREFERENCED_PARAMETER(pDeviceObject_p);
 
     DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkCreate ...\n");
 
@@ -193,7 +206,6 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
     if (!plkDriverInstance_l.fInitialized)
     {
-        plkDriverInstance_l.fInitialized = TRUE;
         NdisZeroMemory(&timerChars, sizeof(timerChars));
 
         {C_ASSERT(NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1 <= sizeof(timerChars));
@@ -222,24 +234,35 @@ NTSTATUS powerlinkCreate(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
 
         startHeartbeatTimer(20);
+        plkDriverInstance_l.fInitialized = TRUE;
     }
 
-    DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkCreate - OK\n");
+    // Increase the count for open instances
+    plkDriverInstance_l.instanceCount++;
 
     pIrp_p->IoStatus.Information = 0;
     pIrp_p->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
+
+    DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkCreate - OK\n");
 
     return STATUS_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  openPOWERLINK driver create function
+\brief  openPOWERLINK driver clean-up function
 
-The function implements openPOWERLINK kernel module open function.
+The function implements the clean-up callback. OS calls this when an application
+closes the FILE interface to the IOCTL device.
 
-\ingroup module_driver_linux_kernel
+\param  pDeviceObject_p     Pointer to device object allocated for the IOCTL device.
+\param  pIrp_p              Pointer to I/O request packet for this call.
+
+\return This routine returns a NTSTATUS error code.
+\retval STATUS_SUCCESS If no error occurs
+
+\ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
@@ -249,11 +272,18 @@ NTSTATUS powerlinkCleanup(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief  openPOWERLINK driver create function
+\brief  openPOWERLINK driver close function
 
-The function implements openPOWERLINK kernel module open function.
+The function implements openPOWERLINK kernel driver close callback. OS calls
+this function when the user application calls CloseHandle() for the device.
 
-\ingroup module_driver_linux_kernel
+\param  pDeviceObject_p     Pointer to device object allocated for the IOCTL device.
+\param  pIrp_p              Pointer to I/O request packet for this call.
+
+\return This routine returns a NTSTATUS error code.
+\retval Always return STATUS_SUCCESS.
+
+\ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
@@ -269,10 +299,14 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     pFileContext = irpStack->FileObject->FsContext;
     ExFreePoolWithTag(pFileContext, PLK_MEM_TAG);
 
-    if (plkDriverInstance_l.fInitialized)
+// TODO: Check the implementation handling here
+    plkDriverInstance_l.instanceCount--;
+
+        // Close lower driver resources only if all open instances have closed.
+    if (plkDriverInstance_l.fInitialized && plkDriverInstance_l.instanceCount == 0)
     {
-        stopHeartbeatTimer();
         plkDriverInstance_l.fInitialized = FALSE;
+        stopHeartbeatTimer();
     }
 
     ctrlk_exit();
@@ -285,21 +319,28 @@ NTSTATUS powerlinkClose(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         drv_executeCmd(&ctrlCmd);
     }
 
-    DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkClose - OK\n");
-
     pIrp_p->IoStatus.Information = 0;
     pIrp_p->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
+
+    DEBUG_LVL_ALWAYS_TRACE("PLK: + powerlinkClose - OK\n");
     return STATUS_SUCCESS;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  openPOWERLINK driver create function
+\brief  openPOWERLINK driver IOCTL handler
 
-The function implements openPOWERLINK kernel module open function.
+The function implements IOCTL callback. OS calls this routine when the user
+application calls DeviceIoControl() for the device.
 
-\ingroup module_driver_linux_kernel
+\param  pDeviceObject_p     Pointer to device object allocated for the IOCTL device.
+\param  pIrp_p              Pointer to I/O request packet for this call.
+
+\return This routine returns a NTSTATUS error code.
+\retval Always return STATUS_SUCCESS.
+
+\ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
 NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
@@ -310,7 +351,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
     void*                 pInBuffer;
     void*                 pOutBuffer;
     tFileContext*         pFileContext;
-    tOplkError            oplRet;
+    tOplkError            oplkRet;
 
     UNREFERENCED_PARAMETER(pDeviceObject_p);
 
@@ -323,10 +364,8 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 
     if (!NT_SUCCESS(status))
     {
-        //
         // Lock is in a removed state. That means we have already received
         // cleaned up request for this handle.
-        //
         pIrp_p->IoStatus.Status = status;
         IoCompleteRequest(pIrp_p, IO_NO_INCREMENT);
         return status;
@@ -383,7 +422,12 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             size_t    eventSize = 0;
             pOutBuffer = pIrp_p->AssociatedIrp.SystemBuffer;
             eventkcal_getEventForUser(pOutBuffer, &eventSize);
-            pIrp_p->IoStatus.Information = eventSize;
+
+            if (!pIrp_p->Cancel)
+                pIrp_p->IoStatus.Information = eventSize;
+            else
+                pIrp_p->IoStatus.Information = 0;
+
             break;
         }
         case PLK_CMD_DLLCAL_ASYNCSEND:
@@ -409,7 +453,8 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         }
         case PLK_CMD_PDO_SYNC:
         {
-            if ((oplRet = pdokcal_waitSyncEvent()) == kErrorRetry)
+            // Implement pending IOCTLs
+            if ((oplkRet = pdokcal_waitSyncEvent()) == kErrorRetry)
                 status = NDIS_STATUS_RESOURCES;
             else
                 status = STATUS_SUCCESS;
@@ -421,7 +466,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
             oplkRet = pdokcal_mapMem((UINT8**)&pPdoMem->pPdoAddr, pPdoMem->memSize);
 
-            if (oplRet != kErrorOk)
+            if (oplkRet != kErrorOk)
             {
                 pIrp_p->IoStatus.Information = 0;
             }
@@ -442,7 +487,8 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             break;
         }
         default:
-            DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
+            DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n",
+                                  irpStack->Parameters.DeviceIoControl.IoControlCode);
             break;
     }
 
@@ -468,21 +514,22 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
 /**
 \brief Register application interface device
 
-This routine is called from the miniport initialize callback to register IOCTL
-interface to be used to comunicate with user application.
+This routine is called from the miniport initialize to register an IOCTL
+interface for the driver. A user application can use this interfaces to
+communicate with this driver.
 
 A device object to be used for this purpose is created by NDIS when we call
 NdisMRegisterDevice.
 
-This routine is called whenever a new miniport instance is
-initialized. However, we only create one global device object,
-when the first miniport instance is initialized.
+This routine is called whenever a new miniport instance is initialized.
+However, we only create one global device object, when the first miniport
+instance is initialized.
 
 /param  driverHandle_p      Miniport driver handle returned by OS on registration
 
 */
 //------------------------------------------------------------------------------
-static void registerAppIntf(NDIS_HANDLE driverHandle_p)
+static void registerDrvIntf(NDIS_HANDLE driverHandle_p)
 {
     NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
     UNICODE_STRING                   deviceName;
@@ -533,7 +580,7 @@ De-register the IOCTL interface registered during initialization,
 
 */
 //------------------------------------------------------------------------------
-static void deRegisterAppIntf(void)
+static void deregisterDrvIntf(void)
 {
     if (plkDriverInstance_l.pAppDeviceHandle != NULL)
     {

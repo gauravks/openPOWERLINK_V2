@@ -4,7 +4,8 @@
 
 \brief  Driver interface header file
 
-// TODO: Add description here
+Driver interface for the kernel daemon - Header file
+
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
@@ -37,6 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _INC_drvintf_H_
 #define _INC_drvintf_H_
 
+//------------------------------------------------------------------------------
+// includes
+//------------------------------------------------------------------------------
 #include <common/driver.h>
 #include <common/ctrl.h>
 #include <common/ctrlcal-mem.h>
@@ -44,9 +48,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/ctrlkcal.h>
 #include <kernel/dllkcal.h>
 #include <kernel/pdokcal.h>
-//------------------------------------------------------------------------------
-// includes
-//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // const defines
@@ -55,18 +56,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
+
+/*
+/brief File context for user application
+
+This struture contains lock to rundown threads that are dispatching I/Os on
+driver file handle while the cleanup is in progress.
+*/
 typedef struct
 {
-    //
-    // Lock to rundown threads that are dispatching I/Os on a file handle
-    // while the cleanup for that handle is in progress.
-    //
-    IO_REMOVE_LOCK    driverAccessLock;
+    IO_REMOVE_LOCK    driverAccessLock;     ///< Driver lock for IO access.
 } tFileContext;
 
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void  drv_executeCmd(tCtrlCmd* ctrlCmd_p);
 void  drv_readInitParam(tCtrlInitParam* pInitParam_p);
 void  drv_storeInitParam(tCtrlInitParam* pInitParam_p);
@@ -75,9 +83,6 @@ void  drv_getHeartbeat(UINT16* heartbeat);
 void  drv_sendAsyncFrame(unsigned char* pArg_p);
 void  drv_writeErrorObject(tErrHndIoctl* pWriteObject_p);
 void  drv_readErrorObject(tErrHndIoctl* pReadObject_p);
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifdef __cplusplus
 }
