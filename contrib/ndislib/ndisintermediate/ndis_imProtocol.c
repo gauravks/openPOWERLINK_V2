@@ -88,7 +88,7 @@ static BOOLEAN       fBinding_l = FALSE;
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
-NDIS_STATUS starVEth(PNDIS_STRING instanceName_p);
+NDIS_STATUS startVEth(PNDIS_STRING instanceName_p);
 void        freeVEthInstance(tVEthInstance* pVEthInstance_p);
 void        stopVEth(tVEthInstance* pVEthInstance_p);
 NDIS_STATUS allocateTxRxBuf(ULONG txBufCount, ULONG rxBufCount);
@@ -606,6 +606,28 @@ UCHAR* protocol_getCurrentMac(void)
     return &pVethInst->currentAddress[0];
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Register VEth Tx handler
+
+Ndis intermediate driver calls the VEth Tx handler from miniportSendNetBufferLists
+routine. The handler receives the complete frame
+
+\param pfnTxCallback_p      Pointer to Tx complete callback.
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void protocol_registerVEthHandler(tVEthSendCb pfnTxCallback_p)
+{
+    tVEthInstance*      pVethInstance = protocolInstance_l.pVEthInstance;
+
+    if (pVethInstance == NULL)
+        return;
+
+    pVethInstance->pfnVEthSendCb = pfnTxCallback_p;
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
@@ -720,7 +742,7 @@ NDIS_STATUS protocolBindAdapter(NDIS_HANDLE protocolDriverContext_p,
 
     // Initialize VETH instance
     // TODO: Identify the lower bindings and select one before starting as we support only one lower binding
-    status = starVEth(&deviceName);
+    status = startVEth(&deviceName);
 
     if (status != NDIS_STATUS_SUCCESS)
     {
@@ -972,7 +994,7 @@ NDIS_STATUS protocolPnpHandler(NDIS_HANDLE protocolBindingContext_p,
             break;
         case NetEventIMReEnableDevice:
 
-            //starVEth(pNetPnPEventNotification_p->NetPnPEvent.Buffer);
+            //startVEth(pNetPnPEventNotification_p->NetPnPEvent.Buffer);
 
             status = NDIS_STATUS_SUCCESS;
             break;
@@ -1268,7 +1290,7 @@ void closeBinding(void)
 
 */
 //------------------------------------------------------------------------------
-NDIS_STATUS starVEth(PNDIS_STRING instanceName_p)
+NDIS_STATUS startVEth(PNDIS_STRING instanceName_p)
 {
     NDIS_STATUS                      status = NDIS_STATUS_SUCCESS;
     tVEthInstance*                   pVEthInstance = NULL;

@@ -171,7 +171,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
 
     protocolChars.SetOptionsHandler = protocolSetOptions;
 
-    NdisInitUnicodeString(&ndisDriverName, L"OPLK");    // Protocol name
+    NdisInitUnicodeString(&ndisDriverName, L"MUXP");    // Protocol name
     protocolChars.Name = ndisDriverName;
     protocolChars.OpenAdapterCompleteHandlerEx = protocolOpenAdapterComplete;
     protocolChars.CloseAdapterCompleteHandlerEx = protocolCloseAdapterComplete;
@@ -234,7 +234,12 @@ void ndis_getMacAddress(UCHAR*  pMac_p)
     currentMac = protocol_getCurrentMac();
 
     if (currentMac != NULL)
+    {
         NdisMoveMemory(pMac_p, currentMac, ETH_LENGTH_OF_ADDRESS);
+        DbgPrint("Current Mac Address %X:%X:%X:%X:%X:%X\n", pMac_p[0], pMac_p[1],
+                 pMac_p[2], pMac_p[3], pMac_p[4], pMac_p[5]);
+    }
+
 }
 
 //------------------------------------------------------------------------------
@@ -426,6 +431,22 @@ void ndis_registerTxRxHandler(tNdisTransmitCompleteCb pfnTxCallback_p,
                               tNdisReceiveCb pfnRxCallback_p)
 {
     protocol_registerTxRxHandler(pfnTxCallback_p, pfnRxCallback_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Register VEth Tx callback
+
+Register VEth Tx callback to NDIS driver.
+
+\param  pfnVEthTxCallback_p      Pointer to Tx callback routine.
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+void ndis_registerVethHandler(tVEthSendCb pfnVEthTxCallback_p)
+{
+    protocol_registerVEthHandler(pfnVEthTxCallback_p);
 }
 
 //------------------------------------------------------------------------------

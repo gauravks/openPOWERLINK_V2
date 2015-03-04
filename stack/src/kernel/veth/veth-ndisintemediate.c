@@ -45,6 +45,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <kernel/dllk.h>
 #include <common/ami.h>
 
+#include <ndisintermediate/ndis-intf.h>
+
 
 //============================================================================//
 //            G L O B A L   D E F I N I T I O N S                             //
@@ -82,6 +84,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
+static void veth_xmit(void* pVEthTxData_p, size_t size_p);
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -102,6 +105,10 @@ The function initializes the virtual Ethernet module.
 //------------------------------------------------------------------------------
 tOplkError veth_init(const UINT8 aSrcMac_p[6])
 {
+    UNUSED_PARAMETER(aSrcMac_p);
+
+    ndis_registerVethHandler(veth_xmit);
+
     return kErrorOk;
 }
 
@@ -118,6 +125,7 @@ The function shuts down the virtual Ethernet module.
 //------------------------------------------------------------------------------
 tOplkError veth_exit(void)
 {
+    ndis_registerVethHandler(NULL);
     return kErrorOk;
 }
 //============================================================================//
@@ -126,7 +134,48 @@ tOplkError veth_exit(void)
 /// \name Private Functions
 /// \{
 
+//------------------------------------------------------------------------------
+/**
+\brief  Transmit entry point of virtual Ethernet driver
 
+The function contains the transmit function for the virtual Ethernet driver.
+
+\param  pSkb_p          Pointer to packet which should be transmitted.
+\param  pNetDevice_p    Pointer to net device structure of interface.
+
+\return The function returns an error code.
+*/
+//------------------------------------------------------------------------------
+static void veth_xmit(void* pVEthTxData_p, size_t size_p)
+{
+    tOplkError      ret = kErrorOk;
+    tFrameInfo      frameInfo;
+
+    DbgPrint("%s()\n", __func__);
+
+    if (pVEthTxData_p == NULL)
+        return;
+
+    frameInfo.pFrame = (tPlkFrame*) pVEthTxData_p;
+    frameInfo.frameSize = size_p;
+
+    //call send fkt on DLL
+    ret = dllkcal_sendAsyncFrame(&frameInfo, kDllAsyncReqPrioGeneric);
+    if (ret != kErrorOk)
+    {
+        DEBUG_LVL_VETH_TRACE("veth_xmit: dllkcal_sendAsyncFrame returned 0x%02X\n", ret);
+        DbgPrint("veth_xmit: dllkcal_sendAsyncFrame returned 0x%02X\n", ret);
+        goto Exit;
+    }
+    else
+    {
+        DEBUG_LVL_VETH_TRACE("veth_xmit: frame passed to DLL\n");
+        DbgPrint("veth_xmit: frame passed to DLL\n");
+    }
+
+Exit:
+    return;
+}
 ///\}
 
 

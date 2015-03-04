@@ -136,6 +136,9 @@ static BOOLEAN    fInitialize = FALSE;
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
+//------------------------------------------------------------------------------
+/**
+\brief  Miniport receive handler
 
 This is the receive handler for the NDIS miniport. The receive handler forwards
 the received frames to the protocols enabled on this miniport.
@@ -604,8 +607,10 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
     ULONG               totalLength, txLength;
     ULONG               offset = 0;                 // CurrentMdlOffset
 
+    DbgPrint("%s() Send Packets\n",__FUNCTION__);
     UNREFERENCED_PARAMETER(portNumber_p);
 
+    if (pVEthInstance->pfnVEthSendCb == NULL)
     {
         PNET_BUFFER_LIST    TempNetBufferList;
 
@@ -623,8 +628,9 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
         NdisMSendNetBufferListsComplete(pVEthInstance->miniportAdapterHandle,
                                         currentNbl,
                                         completeFlags);
+        goto Exit;
     }
-    /*
+
     pVethTxBuff = NdisAllocateMemoryWithTagPriority(driverInstance_l.pMiniportHandle,
                                                     (OPLK_MAX_FRAME_SIZE),
                                                     OPLK_MEM_TAG, NormalPoolPriority);
@@ -647,7 +653,7 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
         netBufferLists_p = NET_BUFFER_LIST_NEXT_NBL(netBufferLists_p);
         NET_BUFFER_LIST_NEXT_NBL(currentNbl) = NULL;
 
-        //pVEthInstance->sendRequests++;
+        pVEthInstance->sendRequests++;
 
         pMdl = NET_BUFFER_CURRENT_MDL(NET_BUFFER_LIST_FIRST_NB(currentNbl));
         txLength = totalLength = NET_BUFFER_DATA_LENGTH(NET_BUFFER_LIST_FIRST_NB(currentNbl));
@@ -698,7 +704,6 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
         NdisFreeMemory(pVethTxBuff, 0, 0);
     }
 
-    */
 Exit:
     return;
 }

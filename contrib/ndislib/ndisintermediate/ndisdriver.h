@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define OPLK_MEM_TAG           'klpO'
+#define OPLK_MEM_TAG           'mlpO'
 #define OPLK_MAX_FRAME_SIZE    1546
 
 //------------------------------------------------------------------------------
@@ -186,7 +186,9 @@ extern tNdisDriverInstance    driverInstance_l;
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 // Miniport driver prototypes
 
 DRIVER_DISPATCH                            miniportIoDispatch;
@@ -232,10 +234,7 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
                                     PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);
 NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p);
 UCHAR*      protocol_getCurrentMac(void);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+void protocol_registerVEthHandler(tVEthSendCb pfnTxCallback_p);
 
 #ifdef __cplusplus
 }
