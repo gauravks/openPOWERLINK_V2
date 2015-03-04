@@ -8,7 +8,7 @@ Class=
 ClassGuid=
 Provider=
 DriverVer=
-CatalogFile=
+CatalogFile=drv_ndis_intermediate.cat
 
 [DestinationDirs]
 DefaultDestDir = 12

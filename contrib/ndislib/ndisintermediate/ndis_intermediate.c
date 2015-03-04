@@ -171,7 +171,7 @@ NDIS_STATUS ndis_initDriver(PDRIVER_OBJECT pDriverObject_p, PUNICODE_STRING pReg
 
     protocolChars.SetOptionsHandler = protocolSetOptions;
 
-    NdisInitUnicodeString(&ndisDriverName, L"MUXP");    // Protocol name
+    NdisInitUnicodeString(&ndisDriverName, L"OPLK");    // Protocol name
     protocolChars.Name = ndisDriverName;
     protocolChars.OpenAdapterCompleteHandlerEx = protocolOpenAdapterComplete;
     protocolChars.CloseAdapterCompleteHandlerEx = protocolCloseAdapterComplete;
