@@ -451,6 +451,36 @@ void ndis_registerVethHandler(tVEthSendCb pfnVEthTxCallback_p)
 
 //------------------------------------------------------------------------------
 /**
+\brief  Receive packet handler for non-EPL packets
+
+This routine can be invoked from the caller to indicate the receive of non-EPL
+packet to the operating system.
+
+\param  pData_p      Pointer to frame received.
+\param  size_p       Size of the re
+
+\ingroup module_ndis
+*/
+//------------------------------------------------------------------------------
+tNdisErrorStatus ndis_vethReceive(void* pData_p, size_t size_p)
+{
+    NDIS_STATUS     status = NDIS_STATUS_SUCCESS;
+
+    if (pData_p == NULL)
+        return NdisStatusInvalidParams;
+
+    status = miniport_handleReceive(pData_p, size_p);
+
+    if (status != NDIS_STATUS_SUCCESS)
+    {
+        DbgPrint("Status %x\n", status);
+        return NdisStatusRxError;
+    }
+
+    return NdisStatusSuccess;
+}
+//------------------------------------------------------------------------------
+/**
 \brief  Create Application interface device
 
 This routines calls the IOCTL interface registration routine which initializes

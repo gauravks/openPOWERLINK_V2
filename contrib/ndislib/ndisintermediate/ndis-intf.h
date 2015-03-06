@@ -117,6 +117,7 @@ void             ndis_closeAppIntf(void);
 NDIS_HANDLE      ndis_getAdapterHandle(void);
 void             ndis_getMacAddress(UCHAR*  pMac_p);
 void             ndis_registerVethHandler(tVEthSendCb pfnVEthTxCallback_p);
+tNdisErrorStatus ndis_vethReceive(void* pData_p, size_t size_p);
 #ifdef __cplusplus
 }
 #endif

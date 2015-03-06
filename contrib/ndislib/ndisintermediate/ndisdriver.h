@@ -48,7 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #define OPLK_MEM_TAG           'mlpO'
 #define OPLK_MAX_FRAME_SIZE    1546
-
+#define OPLK_ALLOCATED_NBL     0x10000000
+#define OPLK_MAX_VETH_BUFF     40
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
@@ -98,6 +99,19 @@ typedef struct
 
 typedef struct
 {
+    LIST_ENTRY          rxLink;
+    PNET_BUFFER_LIST    pNbl;
+    PMDL                pMdl;
+    BOOLEAN             free;
+    ULONG               maxLength;
+    ULONG               length;
+    void*               pData;
+} tVEthRcvBufInfo;
+
+
+
+typedef struct
+{
     NDIS_HANDLE                bindingHandle;
     NDIS_HANDLE                sendNblPool;
     NDIS_EVENT                 adapterEvent;        ///<
@@ -133,6 +147,7 @@ typedef struct
 {
     NDIS_HANDLE          miniportAdapterHandle; ///< Adapter handle for NDIS up-calls related
     NDIS_HANDLE          bindingHandle;     ///<
+    NDIS_HANDLE          receiveNblPool;
                                             ///< to this virtual miniport.
     BOOLEAN              miniportHalting;   ///< Has our Halt entry point been called?
     BOOLEAN              miniportPaused;
@@ -170,7 +185,15 @@ typedef struct
 
     ULONG                sendRequests;
     ULONG                receiveIndication;
+    ULONG                receiveHead;
+    ULONG                receiveTail;
     tVEthSendCb          pfnVEthSendCb;
+    tVEthRcvBufInfo*     pReceiveBufInfo;
+    void*                pReceiveBuf;
+    LIST_ENTRY           rxList;
+    NDIS_SPIN_LOCK       rxListLock;
+
+    
 }tVEthInstance;
 //------------------------------------------------------------------------------
 // global defines
@@ -183,6 +206,7 @@ extern tNdisDriverInstance    driverInstance_l;
 //------------------------------------------------------------------------------
 
 #define TXINFO_FROM_NBL(_NBL)    ((tTxBufInfo*)((_NBL)->ProtocolReserved[0]))
+#define VETHINFO_FROM_NBL(_NBL)    ((tVEthRcvBufInfo*)((_NBL)->MiniportReserved[0]))
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
@@ -234,7 +258,8 @@ NDIS_STATUS protocol_sendOidRequest(NDIS_REQUEST_TYPE requestType_p, NDIS_OID oi
                                     PVOID oidReqBuffer_p, ULONG oidReqBufferLength_p);
 NDIS_STATUS protocol_sendPacket(void* pToken_p, size_t size_p, void* pTxLink_p);
 UCHAR*      protocol_getCurrentMac(void);
-void protocol_registerVEthHandler(tVEthSendCb pfnTxCallback_p);
+void        protocol_registerVEthHandler(tVEthSendCb pfnTxCallback_p);
+NDIS_STATUS miniport_handleReceive(UINT8* pDataBuff_p, size_t size_p);
 
 #ifdef __cplusplus
 }

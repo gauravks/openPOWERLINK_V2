@@ -85,7 +85,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // local function prototypes
 //------------------------------------------------------------------------------
 static void veth_xmit(void* pVEthTxData_p, size_t size_p);
-
+static tOplkError veth_receiveFrame(tFrameInfo* pFrameInfo_p,
+                                    tEdrvReleaseRxBuffer* pReleaseRxBuffer_p);
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
 //============================================================================//
@@ -105,9 +106,21 @@ The function initializes the virtual Ethernet module.
 //------------------------------------------------------------------------------
 tOplkError veth_init(const UINT8 aSrcMac_p[6])
 {
+    tOplkError  ret = kErrorOk;
+
     UNUSED_PARAMETER(aSrcMac_p);
 
     ndis_registerVethHandler(veth_xmit);
+
+    // register callback function in DLL
+    ret = dllk_regAsyncHandler(veth_receiveFrame);
+
+    if (ret != kErrorOk)
+    {
+        DEBUG_LVL_VETH_TRACE("veth_open: dllk_regAsyncHandler returned 0x%02X\n", ret);
+        return ret;
+    }
+
 
     return kErrorOk;
 }
@@ -150,6 +163,8 @@ static void veth_xmit(void* pVEthTxData_p, size_t size_p)
 {
     tOplkError      ret = kErrorOk;
     tFrameInfo      frameInfo;
+    INT             count;
+    unsigned char*  pData = (unsigned char*) pVEthTxData_p;
 
     DbgPrint("%s()\n", __func__);
 
@@ -158,6 +173,14 @@ static void veth_xmit(void* pVEthTxData_p, size_t size_p)
 
     frameInfo.pFrame = (tPlkFrame*) pVEthTxData_p;
     frameInfo.frameSize = size_p;
+
+/*    DbgPrint("Send Frame Size %d\n", size_p);
+
+    for (count = 0; count < size_p; count++)
+    {
+        DbgPrint("0x%2X", pData[count]);
+    }
+    DbgPrint("end\n");*/
 
     //call send fkt on DLL
     ret = dllkcal_sendAsyncFrame(&frameInfo, kDllAsyncReqPrioGeneric);
@@ -175,6 +198,41 @@ static void veth_xmit(void* pVEthTxData_p, size_t size_p)
 
 Exit:
     return;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Receive frame from virtual Ethernet interface
+
+The function receives a frame from the virtual Ethernet interface.
+
+\param  pFrameInfo_p        Pointer to frame information of received frame.
+\param  pReleaseRxBuffer_p  Pointer to buffer release flag. The function must
+set this flag to determine if the RxBuffer could be
+released immediately.
+
+\return The function returns a tOplkError error code.
+*/
+//------------------------------------------------------------------------------
+static tOplkError veth_receiveFrame(tFrameInfo* pFrameInfo_p,
+                                    tEdrvReleaseRxBuffer* pReleaseRxBuffer_p)
+{
+    tNdisErrorStatus status = NdisStatusSuccess;
+
+    DbgPrint("Receive %d\n", pFrameInfo_p->frameSize);
+    status = ndis_vethReceive((void*) pFrameInfo_p->pFrame,
+                                    pFrameInfo_p->frameSize);
+    if (status != NdisStatusSuccess)
+    {
+        DEBUG_LVL_VETH_TRACE("%s() Unable to indicate received frames error 0x%2X\n",
+                             __func__, status);
+        DbgPrint("Error here %x\n", status);
+        return kErrorNoResource;
+    }
+
+    *pReleaseRxBuffer_p = kEdrvReleaseRxBufferImmediately;
+    return kErrorOk;
+
 }
 ///\}
 
