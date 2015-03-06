@@ -1235,6 +1235,29 @@ tOplkError oplk_triggerPresForward(UINT nodeId_p)
 #endif
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief Write firmware update file to kernel stack
+
+The function writes the given firmware update file to the kernel stack.
+
+\param  length_p            Length of file
+\param  pFileBuffer_p       Pointer to firmware update file
+
+\return The function returns a \ref tOplkError error code.
+\retval kErrorOk            The update image was transferred successfully.
+\retval kErrorGeneralError  Writing the update image failed.
+
+\ingroup module_api
+*/
+//------------------------------------------------------------------------------
+tOplkError oplk_writeKernelStackUpdateFile(INT length_p, UINT8* pFileBuffer_p)
+{
+    tCtrlFileType fileType = kCtrlFileTypeFirmwareUpdate;
+
+    return ctrlu_writeFileToKernel(fileType, length_p, pFileBuffer_p);
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

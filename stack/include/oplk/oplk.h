@@ -507,6 +507,8 @@ OPLKDLLEXPORT tOplkError oplk_setupProcessImage(void);
 // Request forwarding of Pres frame from DLL -> API
 OPLKDLLEXPORT tOplkError oplk_triggerPresForward(UINT nodeId_p);
 
+OPLKDLLEXPORT tOplkError oplk_writeKernelStackUpdateFile(INT length_p, UINT8* pFileBuffer_p);
+
 // SDO Test Api functions
 OPLKDLLEXPORT void       oplk_testSdoSetVal(tOplkApiInitParam* pInitParam_p);
 OPLKDLLEXPORT tOplkError oplk_testSdoComInit(void);
