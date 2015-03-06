@@ -73,8 +73,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define CTRL_HOSTIF_INITPARAM_SIZE  HOSTIF_USER_INIT_PAR_SIZE
-#define CMD_TIMEOUT_SEC     20 // command timeout in seconds
+#define CTRL_HOSTIF_ALIGN(x)        ((x + 3) & ~3)
+
+#define CTRL_HOSTIF_INITPARAM_SIZE  CTRL_HOSTIF_ALIGN(sizeof(tCtrlInitParam))
+#define CTRL_HOSTIF_FILEBUF_SIZE    CTRL_HOSTIF_ALIGN(sizeof(tCtrlFileTransferBuffer))
+
+#define CTRL_HOSTIF_TOTAL_SIZE      (CTRL_HOSTIF_INITPARAM_SIZE + CTRL_HOSTIF_FILEBUF_SIZE)
+
+#define CTRL_HOSTIF_INITPARAM_OFF   0
+#define CTRL_HOSTIF_FILEBUF_OFF     (CTRL_HOSTIF_INITPARAM_OFF + CTRL_HOSTIF_INITPARAM_SIZE)
+
+#define CMD_TIMEOUT_SEC             20 // command timeout in seconds
 
 //------------------------------------------------------------------------------
 // local types
@@ -121,6 +130,13 @@ tOplkError ctrlucal_init(void)
 {
     tHostifReturn hifRet;
     tHostifConfig hifConfig;
+
+    if (CTRL_HOSTIF_TOTAL_SIZE > HOSTIF_USER_INIT_PAR_SIZE)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s User init parameter size exceeded (%d)\n",
+                              __func__, CTRL_HOSTIF_TOTAL_SIZE);
+        return kErrorNoResource;
+    }
 
     OPLK_MEMSET(&instance_l, 0, sizeof(instance_l));
 
@@ -464,9 +480,29 @@ The function sets the given file transfer data chunk descriptor.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
 {
-    UNUSED_PARAMETER(pDataChunk_p);
+    tHostifReturn               hifret;
+    UINT8*                      pInitBase;
+    UINT8*                      pSrc;
+    tCtrlFileTransferBuffer*    pFileBuffer;
 
-    return kErrorNoResource;
+    hifret = hostif_getInitParam(instance_l.hifInstance, &pInitBase);
+    if (hifret != kHostifSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Getting init base failed (0x%X)!\n", __func__, hifret);
+        return kErrorNoResource;
+    }
+
+    pSrc = getDynBuff((UINT32)(pInitBase + CTRL_HOSTIF_FILEBUF_OFF));
+    if (pSrc == NULL)
+        return kErrorNoResource;
+
+    pFileBuffer = (tCtrlFileTransferBuffer*)pSrc;
+
+    OPLK_MEMCPY(&pFileBuffer->dataChunk, pDataChunk_p, sizeof(tCtrlDataChunk));
+
+    freeDynBuff(pSrc);
+
+    return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
@@ -488,10 +524,32 @@ The function writes the provided buffer data to the file transfer buffer.
 //------------------------------------------------------------------------------
 tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p)
 {
-    UNUSED_PARAMETER(length_p);
-    UNUSED_PARAMETER(pBuffer_p);
+    tHostifReturn               hifret;
+    UINT8*                      pInitBase;
+    UINT8*                      pDst;
+    tCtrlFileTransferBuffer*    pFileBuffer;
 
-    return kErrorInvalidOperation;
+    hifret = hostif_getInitParam(instance_l.hifInstance, &pInitBase);
+    if (hifret != kHostifSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Getting init base failed (0x%X)!\n", __func__, hifret);
+        return kErrorNoResource;
+    }
+
+    pDst = getDynBuff((UINT32)(pInitBase + CTRL_HOSTIF_FILEBUF_OFF));
+    if (pDst == NULL)
+        return kErrorGeneralError;
+
+    pFileBuffer = (tCtrlFileTransferBuffer*)pDst;
+
+    if (pFileBuffer->bufferSize < length_p)
+        return kErrorNoResource;
+
+    OPLK_MEMCPY(pFileBuffer->aBuffer, pBuffer_p, length_p);
+
+    freeDynBuff(pDst);
+
+    return kErrorOk;
 }
 
 //============================================================================//
