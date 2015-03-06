@@ -70,6 +70,8 @@ typedef enum eCtrlCmd
     kCtrlGetFeaturesHigh,               ///< Get higher part of features of kernel stack
     kCtrlGetFeaturesLow,                ///< Get lower part of features of kernel stack
     kCtrlWriteFile,                     ///< Write file to kernel stack
+    kCtrlSetKernelFactoryImage,         ///< Sets factory image to be loaded after kCtrlShutdown command
+    kCtrlSetKernelUpdateImage,          ///< Sets update image to be loaded after kCtrlShutdown command
 } tCtrlCmdType;
 
 /**
