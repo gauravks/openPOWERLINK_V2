@@ -368,6 +368,48 @@ UINT16 ctrlk_getHeartbeat(void)
     return instance_l.heartbeat;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Get current file transfer data chunk
+
+The function returns the current file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Pointer to data chunk structure which is written.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlk
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlk_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    return ctrlkcal_getFileTransferChunk(pDataChunk_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Read file transfer buffer
+
+The function reads the file transfer buffer's data and copies it to the given
+buffer.
+
+\param  length_p            Size of the given buffer.
+\param  pBuffer_p           Pointer to the buffer which is used to store the
+                            read data.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The data chunk was copied to pBuffer_p successful.
+\retval kErrorNoResource    The provided buffer length is shorter than the
+                            data chunk.
+
+\ingroup module_ctrlk
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlk_readFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    return ctrlkcal_readFileTransfer(length_p, pBuffer_p);
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

@@ -876,6 +876,104 @@ UINT32 ctrlu_getFeatureFlags(void)
     return getRequiredKernelFeatures();
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Write file to kernel stack
+
+The function writes the given file to the kernel layer.
+
+\param  type_p              Select file type to be written
+\param  length_p            Length of given file
+\param  pBuffer_p           Pointer to file buffer
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlu
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlu_writeFileToKernel(tCtrlFileType type_p, INT length_p, UINT8* pBuffer_p)
+{
+    tOplkError      ret = kErrorOk;
+    UINT16          retVal;
+    tCtrlDataChunk  dataChunk;
+    INT             length = length_p;
+
+    if ((pBuffer_p == NULL) || (length_p <= 0))
+        return kErrorInvalidOperation;
+
+    OPLK_MEMSET((void*)&dataChunk, 0, sizeof(tCtrlDataChunk));
+
+    DEBUG_LVL_CTRL_TRACE("%s Start write to kernel stack...\n", __func__);
+
+    // Signalize start of file image
+    dataChunk.offset = 0;
+    dataChunk.fStart = 1;
+
+    dataChunk.fileType = type_p;
+
+    do
+    {
+        if (length < CTRL_FILETRANSFER_SIZE)
+        {
+            dataChunk.length = length;
+            dataChunk.fLast = 1;
+        }
+        else
+        {
+            dataChunk.length = CTRL_FILETRANSFER_SIZE;
+            dataChunk.fLast = 0;
+        }
+
+        ret = ctrlucal_setFileTransferChunk(&dataChunk);
+        if (ret != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("Setting file transfer chunk failed with 0x%X\n", ret);
+            goto Exit;
+        }
+
+        ret = ctrlucal_storeFileTransfer(dataChunk.length, pBuffer_p + dataChunk.offset);
+        if (ret != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("Storing file transfer chunk failed with 0x%X\n", ret);
+            goto Exit;
+        }
+
+        ret = ctrlucal_executeCmd(kCtrlWriteFile, &retVal);
+        if (ret != kErrorOk || (tOplkError)retVal != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("%s Exec write file to kernel failed\n", __func__);
+            DEBUG_LVL_ERROR_TRACE(" Command ret: 0x%X\n", ret);
+            DEBUG_LVL_ERROR_TRACE(" Kernel ret:  0x%X\n", retVal);
+
+            // Return kernel error if user is ok
+            ret = (ret == kErrorOk) ? (tOplkError)retVal : ret;
+            goto Exit;
+        }
+
+        dataChunk.fStart = 0; // First chunk is done for sure
+
+        // Switch to next file chunk
+        dataChunk.offset += dataChunk.length;
+        length -= dataChunk.length;
+
+#if (DEBUG_GLB_LVL & DEBUG_LVL_CTRL)
+        {
+            static UINT8    lastProg = 0;
+            UINT8           currentProg = (dataChunk.offset * 100) / length_p;
+
+            if (currentProg > lastProg)
+            {
+                TRACE(" Downloading %08X (%3d %%)\n", dataChunk.offset, currentProg);
+                lastProg = currentProg;
+            }
+        }
+#endif
+    } while (length > 0);
+
+Exit:
+    return ret;
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

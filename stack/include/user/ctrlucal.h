@@ -76,6 +76,9 @@ int        ctrlucal_getFd(void);
 HANDLE     ctrlucal_getFd(void);
 #endif
 
+tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p);
+tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p);
+
 #ifdef __cplusplus
 }
 #endif

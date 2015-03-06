@@ -449,6 +449,50 @@ Exit:
     return ret;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Set file transfer data chunk
+
+The function sets the given file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Data chunk to be written to teh file transfer buffer.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    UNUSED_PARAMETER(pDataChunk_p);
+
+    return kErrorNoResource;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Write file transfer buffer
+
+The function writes the provided buffer data to the file transfer buffer.
+
+\param  length_p            Size of the data to be written.
+\param  pBuffer_p           Pointer to the data to be written.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The provided data was copied successful.
+\retval kErrorNoResource    The provided data length exceeds the transfer buffer
+                            length.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    UNUSED_PARAMETER(length_p);
+    UNUSED_PARAMETER(pBuffer_p);
+
+    return kErrorInvalidOperation;
+}
 
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //

@@ -75,6 +75,7 @@ tOplkError ctrlu_cbObdAccess(tObdCbParam MEM* pParam_p);
 UINT8*     ctrlu_getEthMacAddr(void);
 BOOL       ctrlu_stackIsInitialized(void);
 UINT32     ctrlu_getFeatureFlags(void);
+tOplkError ctrlu_writeFileToKernel(tCtrlFileType type_p, INT length_p, UINT8* pBuffer_p);
 
 #ifdef __cplusplus
 }

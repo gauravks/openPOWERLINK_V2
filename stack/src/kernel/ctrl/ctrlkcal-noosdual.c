@@ -344,6 +344,53 @@ tOplkError ctrlkcal_readInitParam(tCtrlInitParam* pInitParam_p)
     return kErrorOk;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Get current file transfer data chunk
+
+The function returns the current file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Pointer to data chunk structure which is written.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlkcal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlkcal_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    UNUSED_PARAMETER(pDataChunk_p);
+
+    return kErrorNoResource;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Read file transfer buffer
+
+The function reads the file transfer buffer's data and copies it to the given
+buffer.
+
+\param  length_p            Size of the given buffer.
+\param  pBuffer_p           Pointer to the buffer which is used to store the
+                            read data.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The data chunk was copied to pBuffer_p successful.
+\retval kErrorNoResource    The provided buffer length is shorter than the
+                            data chunk.
+
+\ingroup module_ctrlkcal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlkcal_readFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    UNUSED_PARAMETER(length_p);
+    UNUSED_PARAMETER(pBuffer_p);
+
+    return kErrorInvalidOperation;
+}
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
