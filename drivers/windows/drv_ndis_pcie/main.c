@@ -525,6 +525,27 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             pIrp_p->IoStatus.Information = 0;
             break;
         }
+        case PLK_CMD_SET_FW_CHUNK:
+        {
+            tCtrlDataChunk* pCtrlDataChunk = (tCtrlDataChunk*) pIrp_p->AssociatedIrp.SystemBuffer;
+
+            drv_setFileTransferChunk(pCtrlDataChunk);
+
+            status = STATUS_SUCCESS;
+            pIrp_p->IoStatus.Information = 0;
+            break;
+        }
+
+        case PLK_CMD_STORE_FW_FILE:
+        {
+            UINT8* pFileBuffer = (UINT8*) pIrp_p->AssociatedIrp.SystemBuffer;
+
+            drv_storeFileTransfer(pFileBuffer, inlen);
+
+            status = STATUS_SUCCESS;
+            pIrp_p->IoStatus.Information = 0;
+            break;
+        }
         default:
             DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n",
                                   irpStack->Parameters.DeviceIoControl.IoControlCode);

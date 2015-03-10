@@ -265,6 +265,53 @@ void drv_storeInitParam(tCtrlInitParam* pInitParam_p)
 
 //------------------------------------------------------------------------------
 /**
+\brief  Store file transfer data chunk in common memory
+
+Store the given file transfer data descriptor into the common memory.
+
+\param  pDataChunk_p    Data chunk to be written to the file transfer buffer.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+void drv_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    if (!drvInstance_l.fDriverActive)
+        return;
+
+    dualprocshm_writeDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, fileTransferBuff.dataChunk),
+                                sizeof(tCtrlDataChunk), (UINT8*) pDataChunk_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Write file transfer buffer
+
+The function writes the provided buffer data to the file transfer buffer.
+
+\param  pBuffer_p           Pointer to the data to be written.
+\param  length_p            Size of the data to be written.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+void drv_storeFileTransfer(UINT8* pBuffer_p, UINT length_p)
+{
+    if (!drvInstance_l.fDriverActive)
+        return;
+
+    if (pBuffer_p == NULL || length_p <= 0)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() No data buffer specified\n", __func__);
+        return;
+    }
+
+    dualprocshm_writeDataCommon(drvInstance_l.dualProcDrvInst, FIELD_OFFSET(tCtrlBuf, fileTransferBuff.aBuffer),
+                                length_p, (UINT8*) pBuffer_p);
+}
+
+//------------------------------------------------------------------------------
+/**
 \brief  Get kernel status
 
 Return the current status of kernel stack.
@@ -752,6 +799,7 @@ void drv_unmapKernelMem(UINT8* pUserMem_p)
 
     pUserMem_p = NULL;
 }
+
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//

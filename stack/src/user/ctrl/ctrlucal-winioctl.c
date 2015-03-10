@@ -363,6 +363,69 @@ HANDLE ctrlucal_getFd(void)
     return fileHandle_l;
 }
 
+//------------------------------------------------------------------------------
+/**
+\brief  Set file transfer data chunk
+
+The function sets the given file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Data chunk to be written to teh file transfer buffer.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    ULONG    bytesReturned;
+
+    if (!DeviceIoControl(fileHandle_l, PLK_CMD_SET_FW_CHUNK,
+        pDataChunk_p, sizeof(tCtrlDataChunk),
+        0, 0,
+        &bytesReturned, NULL))
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
+        return kErrorGeneralError;
+    }
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Write file transfer buffer
+
+The function writes the provided buffer data to the file transfer buffer.
+
+\param  length_p            Size of the data to be written.
+\param  pBuffer_p           Pointer to the data to be written.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The provided data was copied successful.
+\retval kErrorNoResource    The provided data length exceeds the transfer buffer
+length.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    ULONG    bytesReturned;
+
+    if (pBuffer_p == NULL)
+        return kErrorGeneralError;
+
+    if (!DeviceIoControl(fileHandle_l, PLK_CMD_STORE_FW_FILE,
+        pBuffer_p, length_p,
+        0, 0,
+        &bytesReturned, NULL))
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Error in DeviceIoControl : %d\n", __func__, GetLastError());
+        return kErrorGeneralError;
+    }
+
+    return kErrorOk;
+}
 //============================================================================//
 //            P R I V A T E   F U N C T I O N S                               //
 //============================================================================//
