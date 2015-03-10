@@ -359,9 +359,22 @@ The function returns the current file transfer data chunk descriptor.
 //------------------------------------------------------------------------------
 tOplkError ctrlkcal_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
 {
-    UNUSED_PARAMETER(pDataChunk_p);
+    tDualprocReturn             dualRet;
 
-    return kErrorNoResource;
+    if(pDataChunk_p == NULL);
+        return kErrorGeneralError;
+
+    dualRet = dualprocshm_readDataCommon(instance_l.dualProcDrvInst,
+                                         offsetof(tCtrlBuf, fileTransferBuff.dataChunk),
+                                         sizeof(tCtrlDataChunk), (UINT8*)pDataChunk_p);
+
+    if (dualRet != kDualprocSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("Cannot read initparam (0x%X)\n", dualRet);
+        return kErrorGeneralError;
+    }
+
+    return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
@@ -385,10 +398,36 @@ buffer.
 //------------------------------------------------------------------------------
 tOplkError ctrlkcal_readFileTransfer(UINT length_p, UINT8* pBuffer_p)
 {
-    UNUSED_PARAMETER(length_p);
-    UNUSED_PARAMETER(pBuffer_p);
+    tDualprocReturn             dualRet;
+    UINT32                      length;
 
-    return kErrorInvalidOperation;
+    if (pBuffer_p == NULL)
+        return kErrorGeneralError;
+
+    dualRet = dualprocshm_readDataCommon(instance_l.dualProcDrvInst,
+                                             offsetof(tCtrlBuf, fileTransferBuff.dataChunk.length),
+                                             sizeof(UINT32), (UINT8*)&length);
+
+    if (dualRet != kDualprocSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("Cannot read initparam (0x%X)\n", dualRet);
+        return kErrorGeneralError;
+    }
+
+    if (length > length_p)
+        return kErrorNoResource;
+
+    dualRet = dualprocshm_readDataCommon(instance_l.dualProcDrvInst,
+                                         offsetof(tCtrlBuf, fileTransferBuff.aBuffer),
+                                         length, (UINT8*)pBuffer_p);
+
+    if (dualRet != kDualprocSuccessful)
+    {
+        DEBUG_LVL_ERROR_TRACE("Cannot read initparam (0x%X)\n", dualRet);
+        return kErrorGeneralError;
+    }
+
+    return kErrorOk;
 }
 
 //============================================================================//
