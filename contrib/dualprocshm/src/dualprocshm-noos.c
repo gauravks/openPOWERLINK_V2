@@ -533,9 +533,13 @@ tDualprocReturn dualprocshm_readDataCommon(tDualprocDrvInstance pInstance_p,
 {
     tDualProcDrv*   pDrvInst = (tDualProcDrv*) pInstance_p;
     UINT8*          base = pDrvInst->pCommMemBase;
+    UINT8*          pReadBase = base + offset_p;
 
     if (pInstance_p == NULL || pData_p == NULL)
         return kDualprocInvalidParameter;
+
+    if ((pReadBase + size_p) > (base + pDrvInst->config.commMemSize))
+        return kDualprocBufferError;
 
     dualprocshm_targetReadData(base + offset_p, (UINT16)size_p, pData_p);
 
@@ -565,11 +569,15 @@ tDualprocReturn dualprocshm_writeDataCommon(tDualprocDrvInstance pInstance_p,
 {
     tDualProcDrv*   pDrvInst = (tDualProcDrv*) pInstance_p;
     UINT8*          base = pDrvInst->pCommMemBase;
+    UINT8*          pWriteBase = base + offset_p;
 
     if (pInstance_p == NULL || pData_p == NULL)
         return kDualprocInvalidParameter;
 
-    dualprocshm_targetWriteData(base + offset_p, (UINT16) size_p, pData_p);
+    if ((pWriteBase + size_p) > (base + pDrvInst->config.commMemSize))
+        return kDualprocBufferOverflow;
+
+    dualprocshm_targetWriteData(pWriteBase, (UINT16) size_p, pData_p);
 
     return kDualprocSuccessful;
 }
