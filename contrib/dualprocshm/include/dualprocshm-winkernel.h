@@ -50,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Memory size */
 // We don't use memory header for windows
-#define MAX_COMMON_MEM_SIZE        2048                         ///< Max common memory size
+#define MAX_COMMON_MEM_SIZE        3072                         ///< Max common memory size
 #define MAX_DYNAMIC_BUFF_COUNT     20                           ///< Number of maximum dynamic buffers
 #define MAX_DYNAMIC_BUFF_SIZE      MAX_DYNAMIC_BUFF_COUNT * 4   ///< Max dynamic buffer size
 
