@@ -98,6 +98,16 @@ typedef struct
 } tBenchmarkMem;
 
 /**
+\brief POWERLINK status LEDs memory struture
+
+The structure is used to retrieve the POWERLINK status LEDs address.
+*/
+typedef struct
+{
+    void*                   pBaseAddr;       ///< Pointer to the LEDs address returned by kernel
+} tPlkLedMem;
+
+/**
 \brief Kernel to user memory mapping structure
 
 The structure is used to map openPOWERLINK kernel kayer memory into user layer.

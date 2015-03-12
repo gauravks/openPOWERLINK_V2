@@ -71,6 +71,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DUALPROCSHM_BUFF_ID_PDO        13
 #define BENCHMARK_OFFSET               0x00001000   //TODO: Get this value from PCIe header files
 #define DPSHM_ENABLE_TIMEOUT_SEC       10           // wait for dpshm interface enable time out
+#define PLK_LED_OFFSET                 0x00001020 //TODO: Get this value from PCIe header
 
 //------------------------------------------------------------------------------
 // global function prototypes
@@ -117,6 +118,7 @@ typedef struct
     tMemInfo                pdoMem;                             ///< PDO memory information mapped to user space.
     tMemInfo                benchmarkMem;                       ///< Benchmark memory information mapped to user space.
     tMemInfo                kernel2UserMem;                     ///< Kernel to user mapped memory.
+    tMemInfo                plkLedMem;                          ///< POWERLINK status LEDs memory.
     BOOL                    fDriverActive;                      ///< Flag to identify status of driver interface.
 }tDriverInstance;
 
@@ -701,6 +703,75 @@ void drv_freeBenchmarkMem(UINT8* pBenchmarkMem_p)
     unmapMemory(pBenchmarkMemInfo);
 
     pBenchmarkMem_p = NULL;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get POWERLINK status LEDs Base
+
+Retrieves the status LEDs memory from NDIS driver and maps it into user virtual
+address space for accessing for user layer.
+
+\param  ppPlkLedMem_p    Pointer to POWERLINK LEDs memory.
+
+\return Returns tOplkError error code.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+tOplkError drv_getPlkLedMem(UINT8** ppPlkLedMem_p)
+{
+    UINT8*      pMem;
+    tMemInfo*   pPlkLedMemInfo = &drvInstance_l.plkLedMem;
+
+    if (!drvInstance_l.fDriverActive)
+        return kErrorNoResource;
+
+    // Check if memory is already allocated and mapped
+    if (pPlkLedMemInfo->pUserVa != NULL)
+        goto Exit;
+
+    pMem = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+
+    if (pMem == NULL)
+        return kErrorNoResource;
+
+    pPlkLedMemInfo->pKernelVa = pMem + PLK_LED_OFFSET;
+    pPlkLedMemInfo->memSize = 24;
+
+    if (mapMemory(pPlkLedMemInfo) != kErrorOk)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() error mapping memory\n", __func__);
+        return kErrorNoResource;
+    }
+
+Exit:
+    *ppPlkLedMem_p = pPlkLedMemInfo->pUserVa;
+
+    TRACE("%s() POWERLINK LED status memory address in user space %p\n", __func__,
+          pPlkLedMemInfo->pUserVa);
+
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Free POWERLINK LED status memory
+
+Frees the POWERLINK LED status memory previously allocated.
+
+\param  pPlkLedMem_p    Pointer to POWERLINK status LED memory.
+
+\ingroup module_driver_ndispcie
+*/
+//------------------------------------------------------------------------------
+void drv_freePlkLedMem(UINT8* pPlkLedMem_p)
+{
+    tMemInfo*   pPlkLedMemInfo = &drvInstance_l.plkLedMem;
+
+    unmapMemory(pPlkLedMemInfo);
+
+    pPlkLedMem_p = NULL;
 }
 
 //------------------------------------------------------------------------------
