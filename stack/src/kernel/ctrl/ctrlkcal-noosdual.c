@@ -361,7 +361,7 @@ tOplkError ctrlkcal_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
 {
     tDualprocReturn             dualRet;
 
-    if(pDataChunk_p == NULL);
+    if(pDataChunk_p == NULL)
         return kErrorGeneralError;
 
     dualRet = dualprocshm_readDataCommon(instance_l.dualProcDrvInst,
