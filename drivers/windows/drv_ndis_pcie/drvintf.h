@@ -96,6 +96,8 @@ tOplkError drv_mapKernelMem(UINT8** pKernelMem_p, UINT8** pUserMem_p);
 void       drv_unmapKernelMem(UINT8* pUserMem_p);
 void       drv_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p);
 void       drv_storeFileTransfer(UINT8* pBuffer_p, UINT length_p);
+tOplkError drv_getPlkLedMem(UINT8** ppPlkLedMem_p);
+void       drv_freePlkLedMem(UINT8* pPlkLedMem_p);
 
 #ifdef __cplusplus
 }

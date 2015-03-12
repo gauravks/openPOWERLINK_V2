@@ -546,6 +546,29 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
             pIrp_p->IoStatus.Information = 0;
             break;
         }
+        case PLK_CMD_GET_PLK_LED_BASE:
+        {
+            tPlkLedMem*   pPlkLedMem = (tPlkLedMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            oplkRet = drv_getPlkLedMem((UINT8**) &pPlkLedMem->pBaseAddr);
+            if (oplkRet != kErrorOk)
+            {
+                pIrp_p->IoStatus.Information = 0;
+            }
+            else
+            {
+                pIrp_p->IoStatus.Information = sizeof(tPlkLedMem);
+            }
+            status = STATUS_SUCCESS;
+            break;
+        }
+        case PLK_CMD_FREE_PLK_LED_BASE:
+        {
+            tPlkLedMem*   pPlkLedMem = (tPlkLedMem*) pIrp_p->AssociatedIrp.SystemBuffer;
+            drv_freePlkLedMem(pPlkLedMem->pBaseAddr);
+            status = STATUS_SUCCESS;
+            pIrp_p->IoStatus.Information = 0;
+            break;
+        }
         default:
             DEBUG_LVL_ERROR_TRACE("PLK: - Invalid cmd (cmd=%d)\n",
                                   irpStack->Parameters.DeviceIoControl.IoControlCode);
