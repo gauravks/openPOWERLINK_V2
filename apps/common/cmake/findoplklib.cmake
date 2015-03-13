@@ -84,6 +84,7 @@ MACRO(FIND_OPLK_LIBRARY OPLK_NODE_TYPE)
 
     # Set oplk library directory
     SET(OPLKLIB_DIR ${OPLK_ROOT_DIR}/stack/lib/${SYSTEM_NAME_DIR}/${SYSTEM_PROCESSOR_DIR})
+    INCLUDE_DIRECTORIES(${OPLKLIB_DIR}/${OPLKLIB_NAME})
 
     IF((CMAKE_GENERATOR MATCHES "Visual Studio") OR (CMAKE_BUILD_TYPE STREQUAL "Release"))
         # Search for release library
