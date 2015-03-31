@@ -169,11 +169,17 @@ tOplkError dllknode_cleanupLocalNode(tNmtState oldNmtState_p)
 
 #if defined(CONFIG_INCLUDE_NMT_MN)
     // destroy all data structures
-    OPLK_FREE(dllkInstance_g.ppTxBufferList);
-    dllkInstance_g.ppTxBufferList = NULL;
+    if (dllkInstance_g.ppTxBufferList != NULL)
+    {
+        //DbgPrint("FreeTxBufferList\n");
+        OPLK_FREE(dllkInstance_g.ppTxBufferList);
+        dllkInstance_g.ppTxBufferList = NULL;
+    }
+
 #endif
 
     // delete Tx frames
+    
     if ((ret = dllkframe_deleteTxFrame(DLLK_TXFRAME_IDENTRES)) != kErrorOk)
         return ret;
 
@@ -215,6 +221,7 @@ tOplkError dllknode_cleanupLocalNode(tNmtState oldNmtState_p)
                 dllkInstance_g.aNodeInfo[index].pPreqTxBuffer = NULL;
                 if (handle != DLLK_TXFRAME_PRES)
                 {
+                    //DbgPrint("Handle  %d\n",handle);
                     if ((ret = dllkframe_deleteTxFrame(handle)) != kErrorOk)
                         return ret;
                 }

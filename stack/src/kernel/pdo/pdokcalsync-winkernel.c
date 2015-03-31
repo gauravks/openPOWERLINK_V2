@@ -120,7 +120,7 @@ tOplkError pdokcal_initSync(void)
 
     instance_l->fInitialized = TRUE;
 
-    DbgPrint("Initialization Complete\n");
+    //DbgPrint("Initialization Complete\n");
     return kErrorOk;
 }
 
@@ -154,7 +154,11 @@ The function sends a sync event
 //------------------------------------------------------------------------------
 tOplkError pdokcal_sendSyncEvent(void)
 {
-    if ((instance_l != NULL) && (instance_l->fInitialized == TRUE))
+    if (instance_l == NULL)
+        return kErrorNoResource;
+
+    //DbgPrint("Send Sync Event\n");
+    if (instance_l->fInitialized == TRUE)
     {
         NdisSetEvent(&instance_l->syncWaitEvent);
     }

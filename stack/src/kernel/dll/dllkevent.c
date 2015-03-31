@@ -767,7 +767,10 @@ static tOplkError processSync(tNmtState nmtState_p)
 
     if (dllkInstance_g.pfnCbSync != NULL)
     {
+        //DbgPrint("Sync %p\n", dllkInstance_g.pfnCbSync);
+
         ret = dllkInstance_g.pfnCbSync();
+        //ret = kErrorOk;
         if (ret == kErrorReject)
             fReadyFlag = FALSE;
         else if (ret == kErrorOk)

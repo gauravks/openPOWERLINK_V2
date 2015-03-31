@@ -199,7 +199,7 @@ NDIS_STATUS protocol_allocateTxRxBuf(ULONG txBufCount_p, ULONG rxBufCount_p)
 
     NdisInitializeListHead(&protocolInstance_l.txList);
     NdisAllocateSpinLock(&protocolInstance_l.txListLock);
-
+    DbgPrint("Allocate\n");
     NdisZeroMemory(&poolParameters, sizeof(NET_BUFFER_LIST_POOL_PARAMETERS));
 
     poolParameters.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
@@ -321,6 +321,8 @@ Exit:
     {
         protocol_freeTxRxBuffers();
     }
+
+    DbgPrint("Ok %x\n", status);
     return status;
 }
 
@@ -337,7 +339,7 @@ void protocol_freeTxRxBuffers(void)
 {
     PLIST_ENTRY    pTxLink;
     tTxBufInfo*    pTxBufInfo;
-
+    DbgPrint("Free \n");
     if (protocolInstance_l.txList.Flink != NULL)
     {
         while (!IsListEmpty(&protocolInstance_l.txList))
@@ -390,6 +392,8 @@ void protocol_freeTxRxBuffers(void)
                        (sizeof(tRxBufInfo) * OPLK_MAX_FRAME_SIZE),
                        0);
     }
+
+    DbgPrint("Ok\n");
 }
 
 //------------------------------------------------------------------------------
@@ -413,6 +417,7 @@ tTxBufInfo* protocol_getTxBuff(size_t size_p)
 
     if (IsListEmpty(&protocolInstance_l.txList) || (size_p > OPLK_MAX_FRAME_SIZE))
     {
+        DbgPrint("Erorror1 %d\n", size_p);
         return NULL;
     }
 
@@ -424,6 +429,7 @@ tTxBufInfo* protocol_getTxBuff(size_t size_p)
 
         if ((pTxBufInfo == NULL))
         {
+            DbgPrint("Erorror2\n");
             return NULL;
         }
     }

@@ -1034,6 +1034,7 @@ tOplkError dllkframe_deleteTxFrame(UINT handle_p)
 
     if (handle_p >= dllkInstance_g.maxTxFrames)
     {   // handle is not valid
+        //DbgPrint("handle_p %d maxframe %d\n", handle_p, dllkInstance_g.maxTxFrames);
         return kErrorDllIllegalHdl;
     }
 

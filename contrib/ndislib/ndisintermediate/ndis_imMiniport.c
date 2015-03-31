@@ -160,34 +160,34 @@ NDIS_STATUS miniport_handleReceive(UINT8* pDataBuff_p, size_t size_p)
     if (pDataBuff_p == NULL || size_p <= 0)
         return NDIS_STATUS_INVALID_PACKET;
 
-    DbgPrint("1\n");
+   // DbgPrint("1\n");
     if (pVEthInstance_l == NULL)
         return NDIS_STATUS_RESOURCES;
-    DbgPrint("2\n");
+   // DbgPrint("2\n");
     if (IsListEmpty(&pVEthInstance_l->rxList))
     {
-        DbgPrint("List Empty\n");
+     //   DbgPrint("List Empty\n");
         return NDIS_STATUS_RESOURCES;
     }
-    DbgPrint("3\n");
+    //DbgPrint("3\n");
     pRxLink = NdisInterlockedRemoveHeadList(&pVEthInstance_l->rxList,
                                             &pVEthInstance_l->rxListLock);
 
     if (pRxLink == NULL)
         return NDIS_STATUS_RESOURCES;
-    DbgPrint("4\n");
+    //DbgPrint("4\n");
     pVethRxInfo = CONTAINING_RECORD(pRxLink, tVEthRcvBufInfo, rxLink);
 
     if (pVethRxInfo->pData == NULL || pVethRxInfo == NULL)
         return NDIS_STATUS_RESOURCES;
-    DbgPrint("5\n");
+    //DbgPrint("5\n");
     NdisMoveMemory(pVethRxInfo->pData, pDataBuff_p, size_p);
 
     // Update the size
     pNetBuffer = NET_BUFFER_LIST_FIRST_NB(pVethRxInfo->pNbl);
     NET_BUFFER_DATA_LENGTH(pNetBuffer) = size_p;
 
-    DbgPrint("Indicate %d\n", size_p);
+   // DbgPrint("Indicate %d\n", size_p);
     // Indicate the received packet to upper layer protocols
     NdisMIndicateReceiveNetBufferLists(pVEthInstance_l->miniportAdapterHandle,
                                        pVethRxInfo->pNbl, 0, 1, 0);
@@ -660,7 +660,7 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
     ULONG               totalLength, txLength;
     ULONG               offset = 0;                 // CurrentMdlOffset
 
-    DbgPrint("%s() Send Packets\n",__FUNCTION__);
+    //DbgPrint("%s() Send Packets\n",__FUNCTION__);
     UNREFERENCED_PARAMETER(portNumber_p);
 
     if (pVEthInstance->pfnVEthSendCb == NULL)
@@ -706,7 +706,7 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
         netBufferLists_p = NET_BUFFER_LIST_NEXT_NBL(netBufferLists_p);
         NET_BUFFER_LIST_NEXT_NBL(currentNbl) = NULL;
 
-        pVEthInstance->sendRequests++;
+        //pVEthInstance->sendRequests++;
 
         pMdl = NET_BUFFER_CURRENT_MDL(NET_BUFFER_LIST_FIRST_NB(currentNbl));
         txLength = totalLength = NET_BUFFER_DATA_LENGTH(NET_BUFFER_LIST_FIRST_NB(currentNbl));
@@ -737,7 +737,7 @@ VOID miniportSendNetBufferLists(NDIS_HANDLE adapterContext_p, PNET_BUFFER_LIST n
             offset = 0;
             NdisGetNextMdl(pMdl, &pMdl);
         }
-        DbgPrint("Send Packet\n");
+        //DbgPrint("Send Packet\n");
         pVEthInstance->pfnVEthSendCb(pVethTxBuff, txLength);
 
         NET_BUFFER_LIST_STATUS(currentNbl) = status;
@@ -783,14 +783,14 @@ VOID miniportReturnNetBufferLists(NDIS_HANDLE adapterContext_p,
     tVEthInstance*      pVEthInstance = (tVEthInstance*) adapterContext_p;
     tVEthRcvBufInfo*    pVethRxInfo = NULL;
 
-    DbgPrint("Return \n");
+    //DbgPrint("Return \n");
     while (netBufferLists_p != NULL)
     {
         pVethRxInfo = VETHINFO_FROM_NBL(netBufferLists_p);
 
         if (pVethRxInfo != NULL)
         {
-            DbgPrint("Insert Frame\n");
+           // DbgPrint("Insert Frame\n");
             NdisInterlockedInsertTailList(&pVEthInstance->rxList,
                                           &pVethRxInfo->rxLink,
                                           &pVEthInstance->rxListLock);
@@ -968,7 +968,7 @@ void miniportFreeVethRxBuff(tVEthInstance* pVEthInstance_p)
     PLIST_ENTRY         pRxLink;
     tVEthRcvBufInfo*    pRxBufInfo;
 
-    DbgPrint(" Free Veth Resources\n");
+    //DbgPrint(" Free Veth Resources\n");
     if (pVEthInstance_p == NULL)
         return;
 
@@ -976,7 +976,7 @@ void miniportFreeVethRxBuff(tVEthInstance* pVEthInstance_p)
     {
         while (!IsListEmpty(&pVEthInstance_p->rxList))
         {
-            DbgPrint("Not Empty\n");
+            //DbgPrint("Not Empty\n");
             pRxLink = NdisInterlockedRemoveHeadList(&pVEthInstance_p->rxList,
                                                     &pVEthInstance_p->rxListLock);
             pRxBufInfo = CONTAINING_RECORD(pRxLink, tVEthRcvBufInfo, rxLink);
@@ -1010,7 +1010,7 @@ void miniportFreeVethRxBuff(tVEthInstance* pVEthInstance_p)
 
     NdisFreeSpinLock(&pVEthInstance_p->rxListLock);
 
-    DbgPrint(" Free Veth Resources\n");
+    //DbgPrint(" Free Veth Resources\n");
 
 }
 ///\}

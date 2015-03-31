@@ -392,6 +392,7 @@ tSyncCb dllk_regSyncHandler(tSyncCb pfnCbSync_p)
     pfnCbOld = dllkInstance_g.pfnCbSync;
     dllkInstance_g.pfnCbSync = pfnCbSync_p;
 
+    //DbgPrint("SyncHdl %p\n",pfnCbSync_p);
     return pfnCbOld;
 }
 

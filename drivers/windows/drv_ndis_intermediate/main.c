@@ -143,7 +143,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driverObject_p, PUNICODE_STRING registryPath
 {
     NDIS_STATUS    ndisStatus;
 
-    DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry 1.1 ...\n");
+    DEBUG_LVL_ALWAYS_TRACE("PLK: + Driver Entry 1.2 ...\n");
     ndisStatus = ndis_initDriver(driverObject_p, registryPath_p);
 
     if (ndisStatus != NDIS_STATUS_SUCCESS)

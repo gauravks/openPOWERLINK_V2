@@ -222,7 +222,7 @@ void drv_writeErrorObject(tErrHndIoctl* pWriteObject_p)
 {
     tErrHndObjects*   errorObjects;
     errorObjects = errhndkcal_getMemPtr();
-    *((UINT32*)(char*) errorObjects + pWriteObject_p->offset) = pWriteObject_p->errVal;
+    *((char*) errorObjects + pWriteObject_p->offset) = pWriteObject_p->errVal;
 }
 
 //------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ void drv_readErrorObject(tErrHndIoctl* pReadObject_p)
     tErrHndObjects*   errorObjects;
 
     errorObjects = errhndkcal_getMemPtr();
-    pReadObject_p->errVal = *((UINT32*)(char*) errorObjects + pReadObject_p->offset);
+    pReadObject_p->errVal = *((char*) errorObjects + pReadObject_p->offset);
 }
 
 //============================================================================//

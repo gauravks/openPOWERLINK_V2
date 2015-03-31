@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // const defines
 //------------------------------------------------------------------------------
 #ifndef EDRV_MAX_TX_BUFFERS
-#define EDRV_MAX_TX_BUFFERS    42
+#define EDRV_MAX_TX_BUFFERS    256
 #endif
 
 #ifndef EDRV_MAX_TX_QUEUE
@@ -317,6 +317,7 @@ tOplkError edrv_allocTxBuffer(tEdrvTxBuffer* pBuffer_p)
         return kErrorEdrvNoFreeBufEntry;
     }
 
+    //DbgPrint("BufSiZe %d\n", pBuffer_p->maxBufferSize);
     ndisStatus = ndis_getTxBuff(&pTxBuffer, pBuffer_p->maxBufferSize,
                                 &pBuffer_p->txBufferNumber.pArg);
 
@@ -354,7 +355,11 @@ This function releases the Tx buffer.
 //------------------------------------------------------------------------------
 tOplkError edrv_freeTxBuffer(tEdrvTxBuffer* pBuffer_p)
 {
+    if (pBuffer_p == NULL)
+        return kErrorEdrvBufNotExisting;
+
     ndis_freeTxBuff(pBuffer_p->txBufferNumber.pArg);
+
     return kErrorOk;
 }
 
