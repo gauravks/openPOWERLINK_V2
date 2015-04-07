@@ -66,6 +66,8 @@ do
     shift
 done
 
+TMP_LIB_FILE=${OUT_PATH}/created-lib.tmp
+
 if [ -z "${BSP_PATH}" ];
 then
     echo "ERROR: No BSP path is given!"
@@ -132,7 +134,9 @@ CFG_APP_CPU_NAME=
 CFG_DRV_CPU_NAME=
 CFG_OPENMAC=
 CFG_HOSTINTERFACE=
+CFG_DUALPROCSHM=
 CFG_NODE=
+CFG_BOARD_CFLAGS=
 if [ -f ${BOARD_SETTINGS_FILE} ]; then
     source ${BOARD_SETTINGS_FILE}
 else
@@ -162,6 +166,9 @@ elif [ "${CPU_NAME}" == "${CFG_DRV_CPU_NAME}" ]; then
     CFG_TCI_MEM_NAME=${CFG_DRV_TCI_MEM_NAME}
     if [ "${CFG_NODE}" == "MN" ] && [ -n "${CFG_OPENMAC}" ] && [ -n "${CFG_HOSTINTERFACE}" ]; then
         LIB_NAME=oplkmndrv-hostif
+        LIB_SOURCES=${HW_COMMON_PATH}/drivers/openmac/omethlib_phycfg.c
+    elif [ "${CFG_NODE}" == "MN" ] && [ -n "${CFG_OPENMAC}" ] && [ -n "${CFG_DUALPROCSHM}" ]; then
+        LIB_NAME=oplkmndrv-dualprocshm
         LIB_SOURCES=${HW_COMMON_PATH}/drivers/openmac/omethlib_phycfg.c
     fi
 else
@@ -205,7 +212,7 @@ OUT_PATH+=/lib${LIB_NAME}
 LIB_GEN_ARGS="--lib-name ${LIB_NAME} --lib-dir ${OUT_PATH} \
 --bsp-dir ${BSP_PATH} \
 --src-files ${LIB_SOURCES} \
---set CFLAGS=${CFLAGS} ${CFG_LIB_CFLAGS} -D${DEBUG_MODE} -DCONFIG_${CFG_NODE} \
+--set CFLAGS=${CFLAGS} ${CFG_LIB_CFLAGS} ${CFG_BOARD_CFLAGS} -D${DEBUG_MODE} -DCONFIG_${CFG_NODE} \
 -DALT_TCIMEM_SIZE=${TCI_MEM_SIZE} \
 --set LIB_CFLAGS_OPTIMIZATION=${LIB_OPT_LEVEL} \
 ${CFG_LIB_ARGS} \
@@ -217,5 +224,14 @@ do
 done
 
 nios2-lib-generate-makefile ${LIB_GEN_ARGS}
+RET=$?
+
+if [ ${RET} -ne 0 ]; then
+    echo "ERROR: Library generation returned with error ${RET}!"
+    exit ${RET}
+fi
+
+# Write library name into tmp file for app.sh
+echo ${LIB_NAME} > ${TMP_LIB_FILE}
 
 exit $?

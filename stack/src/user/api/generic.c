@@ -1068,6 +1068,44 @@ BOOL oplk_checkKernelStack(void)
 
 //------------------------------------------------------------------------------
 /**
+\brief Get openPOWERLINK Version
+
+The function identifies the openPOWERLINK version of the stack.
+The version is represented by a 32 bit number, which contains the major-, minor- and build-number.
+Additionally the macros \ref PLK_STACK_VER, \ref PLK_STACK_REF and \ref PLK_STACK_REL can be used
+to get the respective value of the major-, minor- or build-number.
+
+\return Returns the openPOWERLINK version
+\retval Returns a 32 bit number, which contains the major-, minor- and build-number.
+
+*/
+//------------------------------------------------------------------------------
+UINT32 oplk_getVersion(void)
+{
+    return PLK_DEFINED_STACK_VERSION;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief Get openPOWERLINK stack configuration
+
+The function returns the openPOWERLINK kernel feature flags (configuration options) of the stack.
+The stack can be compiled conditionally with different features. The user library requires these
+features from the kernel driver. The kernel feature flags are located in the header file \ref oplk/oplkdefs.h.
+
+\return Returns the configured kernel features
+\retval Returns a UINT32 variable with the kernel feature flags.
+
+*/
+//------------------------------------------------------------------------------
+UINT32 oplk_getStackConfiguration(void)
+{
+    return ctrlu_getFeatureFlags();
+}
+
+//------------------------------------------------------------------------------
+
+/**
 \brief Wait for sync event
 
 The function waits for a sync event. It blocks until the sync event occurred or
@@ -1195,6 +1233,29 @@ tOplkError oplk_triggerPresForward(UINT nodeId_p)
     UNUSED_PARAMETER(nodeId_p);
     return kErrorApiInvalidParam;
 #endif
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief Write firmware update file to kernel stack
+
+The function writes the given firmware update file to the kernel stack.
+
+\param  length_p            Length of file
+\param  pFileBuffer_p       Pointer to firmware update file
+
+\return The function returns a \ref tOplkError error code.
+\retval kErrorOk            The update image was transferred successfully.
+\retval kErrorGeneralError  Writing the update image failed.
+
+\ingroup module_api
+*/
+//------------------------------------------------------------------------------
+tOplkError oplk_writeKernelStackUpdateFile(INT length_p, UINT8* pFileBuffer_p)
+{
+    tCtrlFileType fileType = kCtrlFileTypeFirmwareUpdate;
+
+    return ctrlu_writeFileToKernel(fileType, length_p, pFileBuffer_p);
 }
 
 //============================================================================//

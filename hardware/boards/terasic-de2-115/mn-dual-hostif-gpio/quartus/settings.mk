@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Application creation settings file for Altera Nios II
+# Settings makefile for TERASIC DE2-115 MN Dual Host Interface GPIO design
 #
 # Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
 # All rights reserved.
@@ -28,29 +28,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
-APP_NAME=demo_mn_embedded
+PROJECT = mn-dual-hostif-gpio
+QSYS_PROJECT = mnDualHostifGpio
 
-# Library sources
-APP_SOURCES="\
-${OPLK_BASE_DIR}/apps/common/src/lcd/lcd.c \
-${OPLK_BASE_DIR}/apps/common/src/lcd/lcdl-16207.c \
-${OPLK_BASE_DIR}/apps/common/src/gpio/gpio-nios2.c \
-${OPLK_BASE_DIR}/apps/common/src/arp/arp.c \
-${OPLK_BASE_DIR}/apps/demo_mn_embedded/src/app.c \
-${OPLK_BASE_DIR}/apps/demo_mn_embedded/src/event.c \
-${OPLK_BASE_DIR}/apps/demo_mn_embedded/src/main.c \
-"
+QSYS_OUT = $(QSYS_PROJECT)/synthesis/*.*
+QSYS_OUT += $(QSYS_PROJECT)/synthesis/submodules/*.*
+QSYS_OUT += $(QSYS_PROJECT).sopcinfo
 
-APP_INCLUDES="\
-${OPLK_BASE_DIR}/apps/common/src/gpio \
-${OPLK_BASE_DIR}/apps/common/src/lcd \
-${OPLK_BASE_DIR}/apps/common/src/arp \
-${OPLK_BASE_DIR}/stack/include \
-${OPLK_BASE_DIR}/stack/proj/generic/liboplkmnapp-hostif \
-"
-
-CFG_APP_ARGS="\
---set APP_CFLAGS_DEFINED_SYMBOLS=-G4 -DCONFIG_INCLUDE_CFM\
-"
-
-APP_OPT_LEVEL=-O2
+SOURCE_FILES = toplevel.vhd
+SOURCE_FILES += ../../common/ipcore/**
+SOURCE_FILES += $(QSYS_OUT)

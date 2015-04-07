@@ -71,7 +71,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define CTRL_HOSTIF_INITPARAM_SIZE  HOSTIF_USER_INIT_PAR_SIZE
+#define CTRL_HOSTIF_ALIGN(x)        ((x + 3) & ~3)
+
+#define CTRL_HOSTIF_INITPARAM_SIZE  CTRL_HOSTIF_ALIGN(sizeof(tCtrlInitParam))
+#define CTRL_HOSTIF_FILEBUF_SIZE    CTRL_HOSTIF_ALIGN(sizeof(tCtrlFileTransferBuffer))
+
+#define CTRL_HOSTIF_TOTAL_SIZE      (CTRL_HOSTIF_INITPARAM_SIZE + CTRL_HOSTIF_FILEBUF_SIZE)
+
+#define CTRL_HOSTIF_INITPARAM_OFF   0
+#define CTRL_HOSTIF_FILEBUF_OFF     (CTRL_HOSTIF_INITPARAM_OFF + CTRL_HOSTIF_INITPARAM_SIZE)
 
 //------------------------------------------------------------------------------
 // local types
@@ -86,6 +94,7 @@ typedef struct
 {
     tHostifInstance     hifInstance;                        ///< Host interface instance
     UINT8*              pInitParamBase;                     ///< Init parameters
+    UINT8*              pFileBufferBase;                    ///< File transfer buffer
 } tCtrlkCalInstance;
 
 //------------------------------------------------------------------------------
@@ -116,8 +125,16 @@ the memory block access functions.
 //------------------------------------------------------------------------------
 tOplkError ctrlkcal_init(void)
 {
-    tHostifReturn hifRet;
-    tHostifConfig hifConfig;
+    tHostifReturn               hifRet;
+    tHostifConfig               hifConfig;
+    tCtrlFileTransferBuffer*    pFileBuffer;
+
+    if (CTRL_HOSTIF_TOTAL_SIZE > HOSTIF_USER_INIT_PAR_SIZE)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s User init parameter size exceeded (%d)\n",
+                              __func__, CTRL_HOSTIF_TOTAL_SIZE);
+        return kErrorNoResource;
+    }
 
     OPLK_MEMSET(&instance_l, 0, sizeof(instance_l));
 
@@ -136,6 +153,12 @@ tOplkError ctrlkcal_init(void)
     hifRet = hostif_getInitParam(instance_l.hifInstance, &instance_l.pInitParamBase);
     if (hifRet != kHostifSuccessful)
         goto Cleanup;
+
+    instance_l.pFileBufferBase = instance_l.pInitParamBase + CTRL_HOSTIF_FILEBUF_OFF;
+
+    pFileBuffer = (tCtrlFileTransferBuffer*)instance_l.pFileBufferBase;
+    OPLK_MEMSET(pFileBuffer, 0, sizeof(tCtrlFileTransferBuffer));
+    pFileBuffer->bufferSize = sizeof(pFileBuffer->aBuffer); // Set buffer size
 
     ctrlkcal_setStatus(kCtrlStatusReady);
 
@@ -325,6 +348,69 @@ tOplkError ctrlkcal_readInitParam(tCtrlInitParam* pInitParam_p)
         return kErrorNoResource;
 
     OPLK_MEMCPY(pInitParam_p, instance_l.pInitParamBase, sizeof(tCtrlInitParam));
+
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get current file transfer data chunk
+
+The function returns the current file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Pointer to data chunk structure which is written.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlkcal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlkcal_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    tCtrlFileTransferBuffer* pFileBuffer;
+
+    if ((instance_l.pFileBufferBase == NULL) || (pDataChunk_p == NULL))
+        return kErrorGeneralError;
+
+    pFileBuffer = (tCtrlFileTransferBuffer*)instance_l.pFileBufferBase;
+
+    OPLK_MEMCPY(pDataChunk_p, &(pFileBuffer->dataChunk), sizeof(tCtrlDataChunk));
+
+    return kErrorOk;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Read file transfer buffer
+
+The function reads the file transfer buffer's data and copies it to the given
+buffer.
+
+\param  length_p            Size of the given buffer.
+\param  pBuffer_p           Pointer to the buffer which is used to store the
+                            read data.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The data chunk was copied to pBuffer_p successful.
+\retval kErrorNoResource    The provided buffer length is shorter than the
+                            data chunk.
+
+\ingroup module_ctrlkcal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlkcal_readFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    tCtrlFileTransferBuffer* pFileBuffer;
+
+    if ((instance_l.pFileBufferBase == NULL) || (pBuffer_p == NULL))
+        return kErrorGeneralError;
+
+    pFileBuffer = (tCtrlFileTransferBuffer*)instance_l.pFileBufferBase;
+
+    if (pFileBuffer->dataChunk.length > length_p)
+        return kErrorNoResource;
+
+    OPLK_MEMCPY(pBuffer_p, pFileBuffer->aBuffer, pFileBuffer->dataChunk.length);
 
     return kErrorOk;
 }

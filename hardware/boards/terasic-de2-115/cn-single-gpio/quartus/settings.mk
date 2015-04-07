@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Drivers creation settings file for Altera Nios II
+# Settings makefile for TERASIC DE2-115 CN Single GPIO design
 #
 # Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
 # All rights reserved.
@@ -28,20 +28,13 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ################################################################################
 
-DRV_NAME=drv_daemon
+PROJECT = cn-single-gpio
+QSYS_PROJECT = cnSingleGpio
 
-# Driver sources
-DRV_SOURCES="\
-${OPLK_BASE_DIR}/drivers/altera-nios2/drv_daemon/daemon.c \
-"
+QSYS_OUT = $(QSYS_PROJECT)/synthesis/*.*
+QSYS_OUT += $(QSYS_PROJECT)/synthesis/submodules/*.*
+QSYS_OUT += $(QSYS_PROJECT).sopcinfo
 
-DRV_INCLUDES="\
-${OPLK_BASE_DIR}/stack/include \
-${OPLK_BASE_DIR}/stack/include/kernel \
-${OPLK_BASE_DIR}/stack/proj/generic/liboplkmndrv-hostif \
-"
-
-CFG_DRV_ARGS="\
-"
-
-DRV_OPT_LEVEL=-O2
+SOURCE_FILES = toplevel.vhd
+SOURCE_FILES += ../../common/ipcore/**
+SOURCE_FILES += $(QSYS_OUT)

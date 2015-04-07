@@ -70,7 +70,14 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p, UINT16* pRetVal_p);
 tOplkError ctrlucal_checkKernelStack(void);
 void       ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p);
 tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p);
+#ifdef  __LINUX__
 int        ctrlucal_getFd(void);
+#elif   _WIN32
+HANDLE     ctrlucal_getFd(void);
+#endif
+
+tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p);
+tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p);
 
 #ifdef __cplusplus
 }

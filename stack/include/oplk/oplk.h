@@ -488,6 +488,8 @@ OPLKDLLEXPORT tOplkError oplk_getIdentResponse(UINT nodeId_p, tIdentResponse** p
 OPLKDLLEXPORT tOplkError oplk_getEthMacAddr(UINT8* pMacAddr_p);
 OPLKDLLEXPORT BOOL       oplk_checkKernelStack(void);
 OPLKDLLEXPORT tOplkError oplk_waitSyncEvent(ULONG timeout_p);
+OPLKDLLEXPORT UINT32     oplk_getVersion(void);
+OPLKDLLEXPORT UINT32     oplk_getStackConfiguration(void);
 
 // Process image API functions
 OPLKDLLEXPORT tOplkError oplk_allocProcessImage(UINT sizeProcessImageIn_p, UINT sizeProcessImageOut_p);
@@ -504,6 +506,8 @@ OPLKDLLEXPORT tOplkError oplk_setupProcessImage(void);
 
 // Request forwarding of Pres frame from DLL -> API
 OPLKDLLEXPORT tOplkError oplk_triggerPresForward(UINT nodeId_p);
+
+OPLKDLLEXPORT tOplkError oplk_writeKernelStackUpdateFile(INT length_p, UINT8* pFileBuffer_p);
 
 // SDO Test Api functions
 OPLKDLLEXPORT void       oplk_testSdoSetVal(tOplkApiInitParam* pInitParam_p);

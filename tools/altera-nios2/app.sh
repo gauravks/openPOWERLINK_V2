@@ -1,7 +1,7 @@
 #!/bin/bash
 ################################################################################
 #
-# Apps generator script for Altera Nios II
+# App generator script for Altera Nios II
 #
 # Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
 # All rights reserved.
@@ -56,8 +56,8 @@ do
             OUT_PATH=$1
             ;;
         --help)
-            echo "$ apps.sh [APP] [BOARD] [OPTIONS]"
-            echo "APP       ... Path to application project (apps.settings)"
+            echo "$ app.sh [APP] [BOARD] [OPTIONS]"
+            echo "APP       ... Path to application project (app.settings)"
             echo "BOARD     ... Path to hardware project (board.settings)"
             echo "OPTIONS   ... :"
             echo "              --debug ... Lib is generated with O0"
@@ -80,11 +80,20 @@ then
     echo "ERROR: No board path is given!"
 fi
 
+# Let's source the app.settings
+APP_TYPE=
+APP_CFLAGS=
+APP_SETTINGS_FILE=${APP_PATH}/app.settings
+if [ -f ${APP_SETTINGS_FILE} ]; then
+    source ${APP_SETTINGS_FILE}
+else
+    echo "ERROR: ${APP_SETTINGS_FILE} not found!"
+    exit 1
+fi
+
 # Let's source the board.settings (null.settings before)
+BSP_CFLAGS=
 BOARD_SETTINGS_FILE=${BOARD_PATH}/board.settings
-CFG_APP_CPU_NAME=
-CFG_APP_EPCS=
-CFG_JTAG_CABLE=
 if [ -f ${BOARD_SETTINGS_FILE} ]; then
     source ${BOARD_SETTINGS_FILE}
 else
@@ -92,33 +101,82 @@ else
     exit 1
 fi
 
-if [ -z "${CFG_APP_CPU_NAME}" ]; then
-    echo "ERROR: The board has no CPU processing app!"
+# Decide if it is driver or app
+case ${APP_TYPE} in
+    app)
+        echo "INFO: Generate application for app."
+        SEL_SUB_NAME=${CFG_APP_SUB_NAME}
+        SEL_PROC_NAME=${CFG_APP_PROC_NAME}
+        SEL_CPU_NAME=${CFG_APP_CPU_NAME}
+        SEL_SYS_TIMER_NAME=${CFG_APP_SYS_TIMER_NAME}
+        SEL_TCI_MEM_NAME=${CFG_APP_TCI_MEM_NAME}
+        SEL_BSP_TYPE=${CFG_APP_BSP_TYPE}
+        SEL_BSP_OPT_LEVEL=${CFG_APP_BSP_OPT_LEVEL}
+        SEL_MAX_HEAP_BYTES=${CFG_APP_MAX_HEAP_BYTES}
+        SEL_EPCS=${CFG_APP_EPCS}
+        ;;
+    drv)
+        echo "INFO: Generate application for driver."
+        SEL_SUB_NAME=${CFG_DRV_SUB_NAME}
+        SEL_PROC_NAME=${CFG_DRV_PROC_NAME}
+        SEL_CPU_NAME=${CFG_DRV_CPU_NAME}
+        SEL_SYS_TIMER_NAME=${CFG_DRV_SYS_TIMER_NAME}
+        SEL_TCI_MEM_NAME=${CFG_DRV_TCI_MEM_NAME}
+        SEL_BSP_TYPE=${CFG_DRV_BSP_TYPE}
+        SEL_BSP_OPT_LEVEL=${CFG_DRV_BSP_OPT_LEVEL}
+        SEL_MAX_HEAP_BYTES=${CFG_DRV_MAX_HEAP_BYTES}
+        SEL_EPCS=${CFG_DRV_EPCS}
+        ;;
+    *)
+        echo "ERROR: No APP_TYPE specified in ${APP_SETTINGS_FILE}!"
+        echo "       Valid values are app or drv!"
+        exit 1
+        ;;
+esac
+
+if [ -z "${SEL_CPU_NAME}" ]; then
+    echo "ERROR: The board has no CPU processing ${APP_TYPE}!"
     exit 1
 fi
 
-BSP_PATH=${OUT_PATH}/bsp-${CFG_APP_CPU_NAME}
+BSP_PATH=${OUT_PATH}/bsp-${SEL_CPU_NAME}
 
-BSP_GEN_ARGS="${CFG_APP_BSP_TYPE} ${BSP_PATH} ${BOARD_PATH}/quartus \
+BSP_GEN_ARGS="${SEL_BSP_TYPE} ${BSP_PATH} ${BOARD_PATH}/quartus \
 --set hal.enable_c_plus_plus false \
 --set hal.linker.enable_alt_load_copy_exceptions false \
 --set hal.enable_clean_exit false \
 --set hal.enable_exit false \
---cpu-name ${CFG_APP_CPU_NAME} \
---set hal.sys_clk_timer ${CFG_APP_SYS_TIMER_NAME} \
---cmd add_section_mapping .tc_i_mem ${CFG_APP_TCI_MEM_NAME} \
+--set hal.enable_reduced_device_drivers true \
+--set hal.enable_small_c_library true \
+--set hal.enable_lightweight_device_driver_api true \
+--cpu-name ${SEL_CPU_NAME} \
+--set hal.sys_clk_timer ${SEL_SYS_TIMER_NAME} \
+--cmd add_section_mapping .tc_i_mem ${SEL_TCI_MEM_NAME} \
 "
+
+# Add flag for explicitly using EPCS flash.
+if [ -n "${SEL_EPCS}" ]; then
+    BSP_CFLAGS+="-DALT_USE_EPCS_FLASH "
+fi
+
+if [ -n "${SEL_MAX_HEAP_BYTES}" ];
+then
+    BSP_CFLAGS+="-DALT_MAX_HEAP_BYTES=${SEL_MAX_HEAP_BYTES} "
+    echo "INFO: Specify maximum heap size to ${SEL_MAX_HEAP_BYTES} BYTES!"
+fi
 
 if [ -z "${DEBUG}" ];
 then
     BSP_GEN_ARGS+="\
     --set hal.stdout none --set hal.stdin none --set hal.stderr none \
-    --set hal.make.bsp_cflags_optimization ${CFG_APP_BSP_OPT_LEVEL} \
+    --set hal.make.bsp_cflags_optimization ${SEL_BSP_OPT_LEVEL} \
     "
 else
-    BSP_GEN_ARGS+="--set hal.make.bsp_cflags_optimization -O0"
+    BSP_GEN_ARGS+="--set hal.make.bsp_cflags_optimization -O0 "
     echo "INFO: Prepare BSP for debug."
 fi
+
+BSP_GEN_ARGS+="--set hal.make.bsp_cflags_user_flags ${BSP_CFLAGS} "
 
 nios2-bsp ${BSP_GEN_ARGS}
 RET=$?
@@ -142,14 +200,18 @@ if [ ${RET} -ne 0 ]; then
     exit ${RET}
 fi
 
-# Let's source the apps.settings
-CFG_APP_ARGS=
-APP_SETTINGS_FILE=${APP_PATH}/apps.settings
-if [ -f ${APP_SETTINGS_FILE} ]; then
-    source ${APP_SETTINGS_FILE}
+# The stack.sh script has created a temporary file including the just created
+# library name!
+TMP_LIB_FILE=${OUT_PATH}/created-lib.tmp
+
+if [ -f "${TMP_LIB_FILE}" ]; then
+    echo "INFO: Link lib${LIB_NAME} to application."
+    LIB_NAME=$(cat ${TMP_LIB_FILE})
+    rm -f ${TMP_LIB_FILE}
 else
-    echo "ERROR: ${APP_SETTINGS_FILE} not found!"
-    exit 1
+    echo "WARNING: The stack.sh script has not generated the ${TMP_LIB_FILE} file!"
+    echo "         Thus, I must guess what library shall be linked to the application!"
+    LIB_NAME=
 fi
 
 if [ -n "${DEBUG}" ];
@@ -169,11 +231,20 @@ APP_GEN_ARGS="\
 --set CFLAGS=${CFLAGS} -D${DEBUG_MODE} \
 --set OBJDUMP_INCLUDE_SOURCE 1 \
 --set CREATE_OBJDUMP 0 \
---set QSYS_SUB_CPU ${CFG_APP_PROC_NAME} \
+--set QSYS_SUB_CPU ${SEL_PROC_NAME} \
 --set QUARTUS_PROJECT_DIR=${BOARD_PATH}/quartus \
 --set OPLK_BASE_DIR=${OPLK_BASE_DIR} \
-${CFG_APP_ARGS} \
 "
+
+# Add flag for explicitly using EPCS flash.
+if [ -n "${SEL_EPCS}" ]; then
+    APP_CFLAGS+="-DALT_USE_EPCS_FLASH "
+fi
+
+# Add application CFLAGS
+if [ -n "${APP_CFLAGS}" ]; then
+    APP_GEN_ARGS+="--set APP_CFLAGS_DEFINED_SYMBOLS=${APP_CFLAGS} "
+fi
 
 # Get path to board includes
 BOARD_INCLUDE_PATH=$(readlink -f "${BOARD_PATH}/include")
@@ -187,12 +258,6 @@ fi
 # Add board includes to app includes
 APP_INCLUDES+=" ${BOARD_INCLUDE_PATH}"
 
-# Add includes
-for i in ${APP_INCLUDES}
-do
-    APP_GEN_ARGS+="--inc-dir ${i} "
-done
-
 # Add JTAG cable from board.settings
 if [ -n "${CFG_JTAG_CABLE}" ];
 then
@@ -201,9 +266,23 @@ then
 fi
 
 # And add stack library
-LIB_STACK_DIR=$(find ${OUT_PATH} -type d -name "liboplk*")
+if [ -n "${LIB_NAME}" ]; then
+    LIB_STACK_DIR=$(find ${OUT_PATH} -type d -name "lib${LIB_NAME}")
+else
+    LIB_STACK_DIR=$(find ${OUT_PATH} -type d -name "liboplk*")
+fi
 
 APP_GEN_ARGS+="--use-lib-dir ${LIB_STACK_DIR} "
+
+# And add include to stack proj
+LIB_PROJ_DIR=${OPLK_BASE_DIR}/stack/proj/generic/$(basename $LIB_STACK_DIR)
+APP_INCLUDES+=" ${LIB_PROJ_DIR}"
+
+# Add includes
+for i in ${APP_INCLUDES}
+do
+    APP_GEN_ARGS+="--inc-dir ${i} "
+done
 
 nios2-app-generate-makefile ${APP_GEN_ARGS}
 RET=$?
@@ -217,7 +296,7 @@ chmod +x ${OPLK_BASE_DIR}/tools/altera-nios2/fix-app-makefile
 ${OPLK_BASE_DIR}/tools/altera-nios2/fix-app-makefile ${OUT_PATH}/Makefile
 
 # Add EPCS flash makefile rules
-if [ -n "${CFG_APP_EPCS}" ]; then
+if [ -n "${SEL_EPCS}" ]; then
     chmod +x ${OPLK_BASE_DIR}/tools/altera-nios2/add-app-makefile-epcs
     ${OPLK_BASE_DIR}/tools/altera-nios2/add-app-makefile-epcs ${OUT_PATH}/Makefile
 fi

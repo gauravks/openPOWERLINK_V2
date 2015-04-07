@@ -51,7 +51,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PLK_CLASS_NAME    "plk"
 #define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
 #define PLK_DRV_NAME      "plk"
-#define PLK_DEV_FILE      "/dev/plk"
 #define PLK_IOC_MAGIC     '='
 
 //------------------------------------------------------------------------------
@@ -76,6 +75,48 @@ typedef struct
     UINT32                  errVal;
 } tErrHndIoctl;
 
+/**
+\brief PDO mem structure
+
+The structure is used to retrieve the PDO memory allocated by kernel and
+mapped into user virtual address space.
+*/
+typedef struct
+{
+    UINT32                  memSize;        ///< Size of PDO to be allocated and mapped
+    void*                   pPdoAddr;       ///< Pointer to the pdo address returned by kernel
+} tPdoMem;
+
+/**
+\brief Benchmark memory struture
+
+The structure is used to retrieve the benchmark address.
+*/
+typedef struct
+{
+    void*                   pBaseAddr;       ///< Pointer to the benchmark address returned by kernel
+} tBenchmarkMem;
+
+/**
+\brief POWERLINK status LEDs memory struture
+
+The structure is used to retrieve the POWERLINK status LEDs address.
+*/
+typedef struct
+{
+    void*                   pBaseAddr;       ///< Pointer to the LEDs address returned by kernel
+} tPlkLedMem;
+
+/**
+\brief Kernel to user memory mapping structure
+
+The structure is used to map openPOWERLINK kernel kayer memory into user layer.
+*/
+typedef struct
+{
+    void*                   pKernelAddr;       ///< Pointer to the Kernel address
+    void*                   pUserAddr;         ///< Pointer to the User address
+} tMemStruc;
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
@@ -85,6 +126,8 @@ typedef struct
 //------------------------------------------------------------------------------
 #if (TARGET_SYSTEM == _LINUX_)
 #include <common/driver-linux.h>
+#else if (TARGET_SYSTEM == _WIN32_)
+#include <common/driver-windows.h>
 #endif
 
 #endif /* _INC_common_driver_H_ */

@@ -46,6 +46,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
+#ifndef CTRL_FILETRANSFER_SIZE
+#define CTRL_FILETRANSFER_SIZE      1024
+#endif
 
 //------------------------------------------------------------------------------
 // typedef
@@ -66,6 +69,9 @@ typedef enum eCtrlCmd
     kCtrlGetVersionLow,                 ///< Get lower part of kernel stack version
     kCtrlGetFeaturesHigh,               ///< Get higher part of features of kernel stack
     kCtrlGetFeaturesLow,                ///< Get lower part of features of kernel stack
+    kCtrlWriteFile,                     ///< Write file to kernel stack
+    kCtrlSetKernelFactoryImage,         ///< Sets factory image to be loaded after kCtrlShutdown command
+    kCtrlSetKernelUpdateImage,          ///< Sets update image to be loaded after kCtrlShutdown command
 } tCtrlCmdType;
 
 /**
@@ -100,6 +106,56 @@ typedef struct
     UINT            ethDevNumber;       ///< Device number of the ethernet interface
     char            szEthDevName[128];  ///< Device name of the ethernet interface
 } tCtrlInitParam;
+
+/**
+\brief File transfer type
+
+The following enumeration defines file types to be transferred from kernel to
+user layer or vice versa.
+*/
+typedef enum
+{
+    kCtrlFileTypeUnknown = 0,           ///< Unknown file type
+    kCtrlFileTypeFirmwareUpdate,        ///< Firmware update file
+
+} eCtrlFileType;
+
+/**
+\brief  File transfer type data type
+
+Data type for the enumerator \ref eCtrlFileType.
+*/
+typedef UINT8 tCtrlFileType;
+
+/**
+\brief Data chunk
+
+The following structure defines the data chunk descriptor to transfer an image
+file from the user to the kernel layer or vice versa.
+*/
+typedef struct
+{
+    UINT8           fStart;             ///< Start flag
+    UINT8           fLast;              ///< Last flag
+    tCtrlFileType   fileType;           ///< File type currently transferred
+    UINT8           reserved;
+    UINT32          length;             ///< Length of data chunk
+    UINT32          offset;             ///< Offset within image file
+} tCtrlDataChunk;
+
+/**
+\brief Image file transfer buffer
+
+The following structure defines the image file transfer buffer shared by the
+kernel and user layer stack. It is used to transfer files like a firmware update.
+*/
+typedef struct
+{
+    UINT16          bufferSize;         ///< Size of the file transfer buffer
+    UINT16          reserved;
+    tCtrlDataChunk  dataChunk;          ///< Data chunk descriptor
+    UINT8           aBuffer[CTRL_FILETRANSFER_SIZE]; ///< Data buffer
+} tCtrlFileTransferBuffer;
 
 //------------------------------------------------------------------------------
 // function prototypes

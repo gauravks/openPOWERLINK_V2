@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <xil_types.h>
@@ -49,14 +50,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <xil_io.h>
 #include <xparameters.h>
 #include <targetsection.h>
-
+#include <dualprocshm-mem.h>
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
 
 // Memory
-#define DUALPROCSHM_MALLOC(size)    malloc(size)
-#define DUALPROCSHM_FREE(ptr)       free(ptr)
+#define DUALPROCSHM_MALLOC(size)              malloc(size)
+#define DUALPROCSHM_FREE(ptr)                 free(ptr)
+#define DUALPROCSHM_MEMCPY(dest, src, siz)    memcpy(dest, src, siz)
 
 // Sleep
 #define DUALPROCSHM_USLEEP(x)       usleep((unsigned int)x)
@@ -66,7 +68,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DPSHM_WRITE8(base, val)     Xil_Out8((UINT32)base, val);
 #define DPSHM_READ16(base)          Xil_In16((UINT32)base);
 #define DPSHM_WRITE16(base, val)    Xil_Out16((UINT32)base, val);
-
+#define DPSHM_READ32(base)          Xil_In32((UINT32)base);
+#define DPSHM_WRITE32(base, val)    Xil_Out32((UINT32)base, val);
+#define DPSHM_ENABLE_INTR(fEnable)  target_enableGlobalInterrupt(fEnable)
 // Memory barrier
 // FIXME: Find other suitable way to handle memory barrier for Microblaze
 #define DPSHM_DMB()                 usleep(2)
@@ -93,6 +97,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DPSHM_DISABLE_SYNC_INTR()                                  \
     XIntc_DisableIntr(TARGET_SYNC_IRQ_ID, TARGET_SYNC_IRQ |        \
                       Xil_In32(TARGET_IRQ_IC_BASE + XIN_IER_OFFSET))
+
+#define DPSHM_ENABLE_HOST_SYNC_IRQ()
+#define DPSHM_DISABLE_HOST_SYNC_IRQ()
 
 #ifndef TRACE
 #ifndef NDEBUG

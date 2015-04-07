@@ -190,7 +190,7 @@ static tOplkError cbLedStateChange(tLedType LedType_p, BOOL fOn_p);
 static tOplkError cbCfmEventCnProgress(tCfmEventCnProgress* pEventCnProgress_p);
 static tOplkError cbCfmEventCnResult(unsigned int uiNodeId_p, tNmtNodeCommand NodeCommand_p);
 #endif
-void setupRequiredKernelFeatures(void);
+UINT32 getRequiredKernelFeatures(void);
 
 //============================================================================//
 //            P U B L I C   F U N C T I O N S                                 //
@@ -227,7 +227,7 @@ tOplkError ctrlu_init(void)
         goto Exit;
     }
 
-    setupRequiredKernelFeatures();
+    ctrlInstance_l.requiredKernelFeatures = getRequiredKernelFeatures();
     if ((ret = ctrlu_getKernelInfo(&ctrlInstance_l.kernelInfo)) != kErrorOk)
     {
         ctrlucal_exit();
@@ -887,6 +887,120 @@ The function returns the initialization state of the stack.
 BOOL ctrlu_stackIsInitialized(void)
 {
     return ctrlInstance_l.fInitialized;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief Returns kernel feature flags
+
+The function returns the configured kernel features that are required by the user library.
+
+\return The function returns the kernel feature flags.
+
+\ingroup module_ctrlu
+*/
+//------------------------------------------------------------------------------
+UINT32 ctrlu_getFeatureFlags(void)
+{
+    return getRequiredKernelFeatures();
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Write file to kernel stack
+
+The function writes the given file to the kernel layer.
+
+\param  type_p              Select file type to be written
+\param  length_p            Length of given file
+\param  pBuffer_p           Pointer to file buffer
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlu
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlu_writeFileToKernel(tCtrlFileType type_p, INT length_p, UINT8* pBuffer_p)
+{
+    tOplkError      ret = kErrorOk;
+    UINT16          retVal;
+    tCtrlDataChunk  dataChunk;
+    INT             length = length_p;
+
+    if ((pBuffer_p == NULL) || (length_p <= 0))
+        return kErrorInvalidOperation;
+
+    OPLK_MEMSET((void*)&dataChunk, 0, sizeof(tCtrlDataChunk));
+
+    DEBUG_LVL_CTRL_TRACE("%s Start write to kernel stack...\n", __func__);
+
+    // Signalize start of file image
+    dataChunk.offset = 0;
+    dataChunk.fStart = 1;
+
+    dataChunk.fileType = type_p;
+
+    do
+    {
+        if (length < CTRL_FILETRANSFER_SIZE)
+        {
+            dataChunk.length = length;
+            dataChunk.fLast = 1;
+        }
+        else
+        {
+            dataChunk.length = CTRL_FILETRANSFER_SIZE;
+            dataChunk.fLast = 0;
+        }
+
+        ret = ctrlucal_setFileTransferChunk(&dataChunk);
+        if (ret != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("Setting file transfer chunk failed with 0x%X\n", ret);
+            goto Exit;
+        }
+
+        ret = ctrlucal_storeFileTransfer(dataChunk.length, pBuffer_p + dataChunk.offset);
+        if (ret != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("Storing file transfer chunk failed with 0x%X\n", ret);
+            goto Exit;
+        }
+
+        ret = ctrlucal_executeCmd(kCtrlWriteFile, &retVal);
+        if (ret != kErrorOk || (tOplkError)retVal != kErrorOk)
+        {
+            DEBUG_LVL_ERROR_TRACE("%s Exec write file to kernel failed\n", __func__);
+            DEBUG_LVL_ERROR_TRACE(" Command ret: 0x%X\n", ret);
+            DEBUG_LVL_ERROR_TRACE(" Kernel ret:  0x%X\n", retVal);
+
+            // Return kernel error if user is ok
+            ret = (ret == kErrorOk) ? (tOplkError)retVal : ret;
+            goto Exit;
+        }
+
+        dataChunk.fStart = 0; // First chunk is done for sure
+
+        // Switch to next file chunk
+        dataChunk.offset += dataChunk.length;
+        length -= dataChunk.length;
+
+#if (DEBUG_GLB_LVL & DEBUG_LVL_CTRL)
+        {
+            static UINT8    lastProg = 0;
+            UINT8           currentProg = (dataChunk.offset * 100) / length_p;
+
+            if (currentProg > lastProg)
+            {
+                TRACE(" Downloading %08X (%3d %%)\n", dataChunk.offset, currentProg);
+                lastProg = currentProg;
+            }
+        }
+#endif
+    } while (length > 0);
+
+Exit:
+    return ret;
 }
 
 //============================================================================//
@@ -1918,45 +2032,49 @@ static tOplkError linkDomainObjects(tLinkObjectRequest* pLinkRequest_p,
 
 //------------------------------------------------------------------------------
 /**
-\brief  Setup required kernel features
+\brief  Get required kernel features
 
-The function sets up the feature which are required from the kernel stack.
+The function returns the features which are required from the kernel stack.
 They will be set depending on the compilation guarded by feature macros
 of the user stack.
+
+\return Returns the required kernel features
+\retval Returns a UINT32 variable with the kernel feature flags.
 */
 //------------------------------------------------------------------------------
-void setupRequiredKernelFeatures(void)
+UINT32 getRequiredKernelFeatures(void)
 {
-    ctrlInstance_l.requiredKernelFeatures = 0;
+    UINT32          requiredKernelFeatures = 0;
 
 #if defined(CONFIG_INCLUDE_NMT_MN)
     // We do have NMT functionality compiled in and therefore need an MN
     // kernel stack
-    ctrlInstance_l.requiredKernelFeatures |= OPLK_KERNEL_MN;
+    requiredKernelFeatures |= OPLK_KERNEL_MN;
 #endif
 
 #if defined(CONFIG_INCLUDE_PDO)
     // We contain the PDO module for isochronous transfers and therefore need
     // a kernel module which can handle isochronous transfers.
-    ctrlInstance_l.requiredKernelFeatures |= OPLK_KERNEL_ISOCHR;
+    requiredKernelFeatures |= OPLK_KERNEL_ISOCHR;
 #endif
 
 #if defined(CONFIG_INCLUDE_PRES_FORWARD)
     // We contain the PRES forwarding module (used for diagnosis) and therefore
     // need a kernel whith this feature.
-    ctrlInstance_l.requiredKernelFeatures |= OPLK_KERNEL_PRES_FORWARD;
+    requiredKernelFeatures |= OPLK_KERNEL_PRES_FORWARD;
 #endif
 
 #if defined(CONFIG_INCLUDE_VETH)
     // We contain the virtual ethernet module and therefore need a kernel
     // which supports virtual ethernet.
-    ctrlInstance_l.requiredKernelFeatures |= OPLK_KERNEL_VETH;
+    requiredKernelFeatures |= OPLK_KERNEL_VETH;
 #endif
 
 #if (CONFIG_DLL_PRES_CHAINING_CN == TRUE)
     ctrlInstance_l.requiredKernelFeatures |= OPLK_KERNEL_PRES_CHAINING_CN;
 #endif
 
+    return requiredKernelFeatures;
 }
 
 /// \}

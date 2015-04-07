@@ -71,6 +71,8 @@ UINT16     ctrlkcal_getStatus(void);
 void       ctrlkcal_updateHeartbeat(UINT16 heartbeat_p);
 tOplkError ctrlkcal_readInitParam(tCtrlInitParam* pInitParam_p);
 void       ctrlkcal_storeInitParam(tCtrlInitParam* pInitParam_p);
+tOplkError ctrlkcal_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p);
+tOplkError ctrlkcal_readFileTransfer(UINT length_p, UINT8* pBuffer_p);
 
 #ifdef __cplusplus
 }

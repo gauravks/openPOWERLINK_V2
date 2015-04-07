@@ -95,6 +95,7 @@ typedef struct
     tCtrlInitParam      initParam;          ///< Initialization parameters
     UINT16              heartbeat;          ///< Heartbeat counter
     UINT32              features;           ///< Features provided by the kernel stack
+    tCtrlkExecuteCmdCb  pfnExecuteCmdCb;    ///< Command execution callback
 } tCtrlkInstance;
 
 //------------------------------------------------------------------------------
@@ -119,12 +120,14 @@ static void setupKernelFeatures(void);
 
 The function initializes the kernel control module.
 
+\param  pfnExecuteCmdCb_p   Command execution callback
+
 \return The function returns a tOplkError error code.
 
 \ingroup module_ctrlk
 */
 //------------------------------------------------------------------------------
-tOplkError ctrlk_init(void)
+tOplkError ctrlk_init(tCtrlkExecuteCmdCb pfnExecuteCmdCb_p)
 {
     tOplkError      ret = kErrorOk;
     if ((ret = ctrlkcal_init()) != kErrorOk)
@@ -137,6 +140,8 @@ tOplkError ctrlk_init(void)
     instance_l.heartbeat = 1;
 
     setupKernelFeatures();
+
+    instance_l.pfnExecuteCmdCb = pfnExecuteCmdCb_p;
 
     return kErrorOk;
 
@@ -156,6 +161,8 @@ The function cleans up the kernel control module.
 //------------------------------------------------------------------------------
 void ctrlk_exit(void)
 {
+    instance_l.pfnExecuteCmdCb = NULL;
+
     ctrlkcal_exit();
 }
 
@@ -235,6 +242,12 @@ tOplkError ctrlk_executeCmd(tCtrlCmdType cmd_p, UINT16* pRet_p, UINT16* pStatus_
     UINT16              status;
     BOOL                fExit;
     tOplkError          retVal;
+
+    if (instance_l.pfnExecuteCmdCb != NULL)
+    {
+        if (instance_l.pfnExecuteCmdCb(cmd_p, pRet_p, pStatus_p, pfExit_p))
+            return kErrorOk;
+    }
 
     switch (cmd_p)
     {
@@ -340,6 +353,48 @@ The function returns the heartbeat counter.
 UINT16 ctrlk_getHeartbeat(void)
 {
     return instance_l.heartbeat;
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get current file transfer data chunk
+
+The function returns the current file transfer data chunk descriptor.
+
+\param  pDataChunk_p        Pointer to data chunk structure which is written.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_ctrlk
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlk_getFileTransferChunk(tCtrlDataChunk* pDataChunk_p)
+{
+    return ctrlkcal_getFileTransferChunk(pDataChunk_p);
+}
+
+//------------------------------------------------------------------------------
+/**
+\brief  Read file transfer buffer
+
+The function reads the file transfer buffer's data and copies it to the given
+buffer.
+
+\param  length_p            Size of the given buffer.
+\param  pBuffer_p           Pointer to the buffer which is used to store the
+                            read data.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk            The data chunk was copied to pBuffer_p successful.
+\retval kErrorNoResource    The provided buffer length is shorter than the
+                            data chunk.
+
+\ingroup module_ctrlk
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlk_readFileTransfer(UINT length_p, UINT8* pBuffer_p)
+{
+    return ctrlkcal_readFileTransfer(length_p, pBuffer_p);
 }
 
 //============================================================================//

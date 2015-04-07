@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-
+#include <dualprocshm-mem.h>
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ The generic defines are valid for the whole openPOWERLINK stack.
 #define CONFIG_INCLUDE_SDOS
 #define CONFIG_INCLUDE_SDOC
 #define CONFIG_INCLUDE_SDO_ASND
-#define CONFIG_INCLUDE_VETH
+//#define CONFIG_INCLUDE_VETH
 
 #ifndef BENCHMARK_MODULES
 #define BENCHMARK_MODULES                   (0 |\
@@ -89,6 +89,8 @@ Note: The settings are specific for MN with openMAC!
     ///< support auto-response (e.g. openMAC)
 #define CONFIG_EDRV_TIME_TRIG_TX            TRUE
     ///< support time triggered transmission (e.g. openMAC)
+#define CONFIG_EDRV_MAX_TX2_BUFFERS         64
+    ///< set number for second Tx buffer queue to support larger networks
 #define CONFIG_EDRVCYC_NEG_SHIFT_US         100U
     ///< us (timer irq before next cycle)
 /**@}*/
@@ -105,6 +107,9 @@ The Data Link Layer (DLL) defines determine the POWERLINK DLL module.
 #define CONFIG_DLL_PRES_FILTER_COUNT           3
     ///< max. supported PRes packet filters (for specific nodes)
 #define CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_SYNC    FALSE
+
+#define CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC   TRUE
+#define CONFIG_EDRV_ASND_DEFFERRED_RX_BUFFERS       16
     ///< disable deferred RX frames if Edrv does not support it
 #define CONFIG_EDRV_VETH_DEFFERRED_RX_BUFFERS       5
 /**@}*/
@@ -119,6 +124,7 @@ The timer defines determine the high resolution timer module.
 /**@}*/
 
 #define CONFIG_EVENT_SIZE_CIRCBUF_KERNEL_INTERNAL   2048
+#define CTRL_FILETRANSFER_SIZE                      2048
 
 //------------------------------------------------------------------------------
 // typedef

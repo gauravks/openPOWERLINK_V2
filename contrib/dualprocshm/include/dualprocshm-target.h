@@ -43,11 +43,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <stdint.h>
 
 #if defined(__ZYNQ__)
 
 #include "dualprocshm-zynq.h"
+
+#elif defined(_KERNEL_MODE)
+
+#include "dualprocshm-pcie.h"
+
+#elif defined (__BR_ANTARESIF__)
+
+#include "dualprocshm-pcie.h"
 
 #else
 
@@ -87,34 +94,46 @@ If the following data types are not defined in the environment, then they are
 set to those provided by stdint.h.
 */
 /**@{*/
+#ifndef _NTDEF_        // defined in ntdef.H, included by dualprocshm-winkernel.h
 #ifndef INT
-#define INT         int32_t
+#define INT       int32_t
 #endif
 
 #ifndef UINT8
-#define UINT8       uint8_t
+#define UINT8     uint8_t
 #endif
 
 #ifndef UINT16
-#define UINT16      uint16_t
+#define UINT16    uint16_t
 #endif
 
 #ifndef UINT32
-#define UINT32      uint32_t
+#define UINT32    uint32_t
 #endif
 
-#ifndef BOOL
-#define BOOL        uint8_t
+#ifndef UINT64
+#define UINT64    uint64_t
 #endif
+
 /**@}*/
 
 #ifndef FALSE
-#define FALSE       0x00
+#define FALSE     0x00
 #endif
 
 #ifndef TRUE
-#define TRUE        0xFF
+#define TRUE      0xFF
 #endif
+
+#endif // _NTDEF_
+
+#ifndef BOOL
+#if defined(_WIN32) || defined(_WIN64)
+#define BOOL      unsigned char
+#else
+#define BOOL      uint8_t
+#endif // _WIN32
+#endif // BOOL
 
 #ifndef UNUSED_PARAMETER
 #define UNUSED_PARAMETER(par)    (void)par
@@ -122,6 +141,34 @@ set to those provided by stdint.h.
 
 #ifndef TRACE
 #define TRACE(...)
+#endif
+
+#ifndef MAX_COMMON_MEM_SIZE
+#define MAX_COMMON_MEM_SIZE        2048                         ///< Max common memory size
+#endif
+
+#ifndef MAX_DYNAMIC_BUFF_COUNT
+#define MAX_DYNAMIC_BUFF_COUNT     20                           ///< Number of maximum dynamic buffers
+#endif
+
+#ifndef MAX_DYNAMIC_BUFF_COUNT
+#define MAX_DYNAMIC_BUFF_SIZE      MAX_DYNAMIC_BUFF_COUNT * 4   ///< Max dynamic buffer size
+#endif
+
+#ifndef SHARED_MEM_BASE
+#define SHARED_MEM_BASE            NULL
+#endif
+
+#ifndef COMMON_MEM_BASE
+#define COMMON_MEM_BASE            NULL
+#endif
+
+#ifndef MEM_ADDR_TABLE_BASE
+#define MEM_ADDR_TABLE_BASE        NULL
+#endif
+
+#ifndef MEM_INTR_BASE
+#define MEM_INTR_BASE              NULL
 #endif
 
 //------------------------------------------------------------------------------
@@ -141,18 +188,25 @@ typedef void (*targetSyncHdl)(void*);
 #ifdef __cplusplus
 extern "C" {
 #endif
-UINT8*  dualprocshm_getCommonMemAddr(UINT16* pSize_p);
-UINT8*  dualprocshm_getDynMapTableAddr(void);
-UINT8*  dualprocshm_getIntrMemAddr(void);
-void    dualprocshm_releaseIntrMemAddr();
-void    dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
-void    dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
-void    dualprocshm_releaseCommonMemAddr(UINT16 pSize_p);
-void    dualprocshm_releaseDynMapTableAddr(void);
-void    dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p) SECTION_DUALPROCSHM_ACQUIRE_LOCK;
-void    dualprocshm_targetReleaseLock(UINT8* pBase_p) SECTION_DUALPROCSHM_RELEASE_LOCK;
-void    dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
-void    dualprocshm_enableSyncIrq(BOOL fEnable_p);
+UINT8* dualprocshm_getCommonMemAddr(UINT16* pSize_p);
+UINT8* dualprocshm_getDynMapTableAddr(void);
+UINT8* dualprocshm_getIntrMemAddr(void);
+void   dualprocshm_releaseIntrMemAddr();
+void   dualprocshm_targetReadData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
+void   dualprocshm_targetWriteData(UINT8* pBase_p, UINT16 size_p, UINT8* pData_p);
+void   dualprocshm_releaseCommonMemAddr(UINT16 pSize_p);
+void   dualprocshm_releaseDynMapTableAddr(void);
+void   dualprocshm_targetAcquireLock(UINT8* pBase_p, UINT8 lockToken_p) SECTION_DUALPROCSHM_ACQUIRE_LOCK;
+void   dualprocshm_targetReleaseLock(UINT8* pBase_p) SECTION_DUALPROCSHM_RELEASE_LOCK;
+void   dualprocshm_regSyncIrqHdl(targetSyncHdl callback_p, void* pArg_p);
+void   dualprocshm_enableSyncIrq(BOOL fEnable_p);
+void   dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT32 addr_p);
+UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p);
+void   dualprocshm_targetInit(UINT32 procInstance_p);
+UINT8* dualprocshm_targetMapMem(UINT32 baseAddr_p);
+UINT64 dualprocshm_targetGetRemoteMemBase(void);
+UINT8* dualprocshm_targetGetSharedMemInfo(UINT32* pSize_p);
+
 #ifdef __cplusplus
 }
 #endif
