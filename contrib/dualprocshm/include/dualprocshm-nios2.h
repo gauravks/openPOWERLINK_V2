@@ -95,9 +95,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DPSHM_ENABLE_INTR(fEnable)  target_enableGlobalInterrupt(fEnable)
 
 #define DPSHM_ENABLE_HOST_SYNC_IRQ()    \
-                    DPSHM_WRITE8(PCIE_HARD_IP_0_BASE + 0x50, 0x1)
+                    DPSHM_WRITE8(PCIE_CONFIG_BASE + 0x50, 0x1)
 #define DPSHM_DISABLE_HOST_SYNC_IRQ()   \
-                    DPSHM_WRITE8(PCIE_HARD_IP_0_BASE + 0x50, 0x0)
+                    DPSHM_WRITE8(PCIE_CONFIG_BASE + 0x50, 0x0)
 
 // Memory barrier
 // FIXME: Find other suitable way to handle memory barrier for NIOS2
