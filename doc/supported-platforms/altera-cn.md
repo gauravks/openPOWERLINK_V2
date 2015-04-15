@@ -141,7 +141,7 @@ completed.
 
 # How to write the program to local flash  {#sect_altera-cn_flash}
 
-Requirement: Steps in the previous section _How to build the binary_ are
+Requirement: Steps in the previous section *How to build the binaries* are
 completed.
 
 1. After successfully building the design use the makefile to program the
