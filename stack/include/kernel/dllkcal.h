@@ -62,10 +62,10 @@ typedef struct
 {
     ULONG       curTxFrameCountGen;                         ///< Number of frames in the generic TX queue
     ULONG       curTxFrameCountNmt;                         ///< Number of frames in the NMT TX queue
-    ULONG       curRxFrameCount;                            ///< Number of frames in the RX queue
+    ULONG       curRxAsyncFrameCount;                       ///< Number of async frames in the RX queue
     ULONG       maxTxFrameCountGen;                         ///< Max number of frames in the generic TX queue
     ULONG       maxTxFrameCountNmt;                         ///< Max number of frames in the NMT TX queue
-    ULONG       maxRxFrameCount;                            ///< Max number of frames in the RX queue
+    ULONG       maxRxAsyncFrameCount;                       ///< Max number of async frames in the RX queue
 } tDllkCalStatistics;
 
 //------------------------------------------------------------------------------

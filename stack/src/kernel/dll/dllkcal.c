@@ -408,6 +408,28 @@ tOplkError dllkcal_process(tEvent* pEvent_p)
         case kEventTypeReleaseRxFrame:
             pFrameInfo = (tFrameInfo*)pEvent_p->pEventArg;
             ret = dllk_releaseRxFrame(pFrameInfo->pFrame, pFrameInfo->frameSize);
+
+#if CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC == TRUE
+            if (ret == kErrorOk)
+            {
+                // Only track Rx frames which are released by user layer!
+                if (ami_getUint16Be(&pFrameInfo->pFrame->etherType) == C_DLL_ETHERTYPE_EPL)
+                {
+                    tMsgType msgType = (tMsgType)ami_getUint8Le(&pFrameInfo->pFrame->messageType);
+
+                    if ((msgType != kMsgTypePreq) || (msgType != kMsgTypePres))
+                    {
+                        // Release asynchronous POWERLINK frame
+                        instance_l.statistics.curRxAsyncFrameCount--;
+                    }
+                }
+                else
+                {
+                    // Release non-POWERLINK frame
+                    instance_l.statistics.curRxAsyncFrameCount--;
+                }
+            }
+#endif
             break;
 #endif
 
@@ -561,17 +583,17 @@ tOplkError dllkcal_asyncFrameReceived(tFrameInfo* pFrameInfo_p)
 #endif
 
     ret = eventk_postEvent(&event);
-    if (ret != kErrorOk)
+#if CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC == TRUE
+    if (ret == kErrorOk)
     {
-        instance_l.statistics.curRxFrameCount++;
-    }
-    else
-    {
-        instance_l.statistics.maxRxFrameCount++;
-#if CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC != FALSE
+        // Update statistics to track number of Rx frames in kernel-to-user queue
+        instance_l.statistics.curRxAsyncFrameCount++;
+        if (instance_l.statistics.curRxAsyncFrameCount > instance_l.statistics.maxRxAsyncFrameCount)
+            instance_l.statistics.maxRxAsyncFrameCount = instance_l.statistics.curRxAsyncFrameCount;
+
         ret = kErrorReject; // Signalizes dllk to release buffer later
-#endif
     }
+#endif
 
     return ret;
 }
@@ -878,6 +900,16 @@ tOplkError dllkcal_getSoaRequest(tDllReqServiceId* pReqServiceId_p,
 {
     tOplkError      ret = kErrorOk;
     UINT            count;
+
+#if (CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC == TRUE && defined(CONFIG_EDRV_ASND_DEFFERRED_RX_BUFFERS))
+    if (instance_l.statistics.curRxAsyncFrameCount >= CONFIG_EDRV_ASND_DEFFERRED_RX_BUFFERS)
+    {
+        // Edrv has no more asynchronous Rx buffers, thus, do not assign the
+        // next asynchronous phase to any node. Otherwise the MAC would drop
+        // those asynchronous frames anyway.
+        goto Exit;
+    }
+#endif
 
     for (count = DLLKCAL_MAX_QUEUES; count > 0; count--)
     {
