@@ -460,7 +460,6 @@ void dualprocshm_targetSetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p, UINT
 \ingroup module_dualprocshm
 */
 //------------------------------------------------------------------------------
-
 UINT8* dualprocshm_targetGetDynBuffAddr(UINT8* pMemTableBase, UINT16 index_p)
 {
     UINT32    tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;

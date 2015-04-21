@@ -78,6 +78,8 @@ HANDLE     ctrlucal_getFd(void);
 
 tOplkError ctrlucal_setFileTransferChunk(tCtrlDataChunk* pDataChunk_p);
 tOplkError ctrlucal_storeFileTransfer(UINT length_p, UINT8* pBuffer_p);
+tOplkError ctrlucal_getMappedMem(UINT32 kernelOffs_p, UINT32 size_p,
+                                 UINT8** ppUserMem_p);
 
 #ifdef __cplusplus
 }
