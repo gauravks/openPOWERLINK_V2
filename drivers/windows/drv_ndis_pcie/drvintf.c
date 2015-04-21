@@ -190,6 +190,12 @@ void drv_executeCmd(tCtrlCmd* pCtrlCmd_p)
             break;
     }
 
+    if (timeout == CMD_TIMEOUT_CNT)
+    {
+        pCtrlCmd_p->retVal = kErrorGeneralError;
+        return;
+    }
+
     if (cmd == kCtrlInitStack && pCtrlCmd_p->retVal == kErrorOk)
     {
         ret = initEvent();
