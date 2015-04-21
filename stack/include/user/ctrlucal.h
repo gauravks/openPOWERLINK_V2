@@ -76,6 +76,9 @@ int        ctrlucal_getFd(void);
 HANDLE     ctrlucal_getFd(void);
 #endif
 
+
+tOplkError ctrlucal_getMappedMem(UINT32 kernelOffs_p, UINT32 size_p,
+                                 UINT8** ppUserMem_p);
 #ifdef __cplusplus
 }
 #endif

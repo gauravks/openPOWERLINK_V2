@@ -448,7 +448,7 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_PDO_GET_MEM:
         {
             tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-            oplkRet = drv_getPdoMem((UINT8**)&pPdoMem->pPdoAddr, pPdoMem->memSize);
+            oplkRet = drv_getPdoMem(&pPdoMem->pdoMemOffset, pPdoMem->memSize);
 
             if (oplkRet != kErrorOk)
             {
@@ -460,14 +460,6 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
                 pIrp_p->IoStatus.Information = sizeof(tPdoMem);
             }
             status = STATUS_SUCCESS;
-            break;
-        }
-        case PLK_CMD_PDO_FREE_MEM:
-        {
-            tPdoMem*   pPdoMem = (tPdoMem*) pIrp_p->AssociatedIrp.SystemBuffer;
-            drv_freePdoMem(pPdoMem->pPdoAddr, pPdoMem->memSize);
-            status = STATUS_SUCCESS;
-            pIrp_p->IoStatus.Information = 0;
             break;
         }
         case PLK_CMD_CLEAN:
@@ -501,7 +493,9 @@ NTSTATUS powerlinkIoctl(PDEVICE_OBJECT pDeviceObject_p, PIRP pIrp_p)
         case PLK_CMD_MAP_MEM:
         {
             tMemStruc*   pMemStruc = (tMemStruc*) pIrp_p->AssociatedIrp.SystemBuffer;
-            oplkRet = drv_mapKernelMem((UINT8**) &pMemStruc->pKernelAddr, (UINT8**) &pMemStruc->pUserAddr);
+            oplkRet = drv_mapKernelMem((UINT8**) &pMemStruc->pKernelAddr,
+                                       (UINT8**) &pMemStruc->pUserAddr,
+                                       &pMemStruc->size);
 
             if (oplkRet != kErrorOk)
             {
