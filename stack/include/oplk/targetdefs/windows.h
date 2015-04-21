@@ -126,16 +126,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OPLK_MEMBAR()               MemoryBarrier()//((void)0)
 
 #ifdef CONFIG_PCIE
+//TODO@gks: Retrieve it from PCIe headers
+#define  ATOMIC_MEM_OFFSET      0x80000
 #define OPLK_ATOMIC_T    UCHAR
 #define OPLK_LOCK_T      LOCK_T
-#define OPLK_ATOMIC_INIT(base) \
-                if (target_initLock(&base->lock) != 0) \
-                return kErrorNoResource
+#define OPLK_ATOMIC_INIT(base)
+//FIXME: Use atomic modify ipcore
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
-                target_lock(); \
-                oldval = READ_UCHAR(address); \
-                WRITE_UCHAR(address, newval); \
-                target_unlock()
+                        OPLK_IO_WR8((address + ATOMIC_MEM_OFFSET), newval); \
+                        oldval = OPLK_IO_RD8((address + ATOMIC_MEM_OFFSET))
 #else
 #define OPLK_LOCK_T      UINT8
 #define OPLK_ATOMIC_T    ULONG
