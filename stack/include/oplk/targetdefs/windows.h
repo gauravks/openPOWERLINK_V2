@@ -128,14 +128,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef CONFIG_PCIE
 #define OPLK_ATOMIC_T    UCHAR
 #define OPLK_LOCK_T      LOCK_T
-#define OPLK_ATOMIC_INIT(base) \
-                if (target_initLock(&base->lock) != 0) \
-                return kErrorNoResource
+#define OPLK_ATOMIC_INIT(base)
+//FIXME: Use atomic modify ipcore
 #define OPLK_ATOMIC_EXCHANGE(address, newval, oldval) \
-                target_lock(); \
                 oldval = READ_UCHAR(address); \
-                WRITE_UCHAR(address, newval); \
-                target_unlock()
+                WRITE_UCHAR(address, newval)
 #else
 #define OPLK_LOCK_T      UINT8
 #define OPLK_ATOMIC_T    ULONG
