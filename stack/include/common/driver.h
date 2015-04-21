@@ -84,7 +84,7 @@ kernel stack and mapped into user virtual address space.
 typedef struct
 {
     UINT32                  memSize;        ///< Size of PDO to be allocated and mapped
-    void*                   pPdoAddr;       ///< Pointer to the pdo address returned by kernel
+    UINT32                  pdoMemOffset;   ///< Offset of PDO memory returned by kernel
 } tPdoMem;
 
 /**
@@ -116,6 +116,7 @@ typedef struct
 {
     void*                   pKernelAddr;       ///< Pointer to the Kernel address
     void*                   pUserAddr;         ///< Pointer to the User address
+    UINT32                  size;              ///< Size of the shared memory
 } tMemStruc;
 //------------------------------------------------------------------------------
 // function prototypes

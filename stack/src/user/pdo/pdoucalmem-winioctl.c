@@ -9,14 +9,16 @@ for PDO exchange between user-kernel layers for a Windows user-kernel interface
 using IOCTL.
 
 The kernel driver is responsible for allocating the shared memory for the PDOs
-and map virtual address in user space. The user layer then retrieves the virtual
-address for the memory in a IOCTL call.
+and map virtual address in user space. The control CAL module then retrieves
+the virtual address for the memory and manages future access in user layer. The
+PDO memory address is retrived from the control CAL module using the offset
+acquired from the kernel driver.
 
 \ingroup module_pdoucal
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
-Copyright (c) 2014, Kalycito Infotech Private Limited
+Copyright (c) 2015, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -82,7 +84,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-HANDLE    pFileHandle_l;
+static HANDLE    pFileHandle_l;
 
 //------------------------------------------------------------------------------
 // local function prototypes
@@ -144,9 +146,11 @@ The function allocates shared memory for the user needed to transfer the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_allocateMem(size_t memSize_p, UINT8** ppPdoMem_p)
 {
-    ULONG      bytesReturned;
-    tPdoMem    inPdoMem;
-    tPdoMem    outPdoMem;
+    ULONG           bytesReturned;
+    tPdoMem         inPdoMem;
+    tPdoMem         outPdoMem;
+    tOplkError      ret;
+    UINT8*          pPdoMem;
 
     if (pFileHandle_l == NULL)
         return kErrorNoResource;
@@ -161,10 +165,16 @@ tOplkError pdoucal_allocateMem(size_t memSize_p, UINT8** ppPdoMem_p)
         return kErrorNoResource;
     }
 
-    if (bytesReturned == 0 || outPdoMem.pPdoAddr == NULL)
+    if (bytesReturned == 0 || outPdoMem.pdoMemOffset == 0)
         return kErrorNoResource;
 
-    *ppPdoMem_p = outPdoMem.pPdoAddr;
+    ret = ctrlucal_getMappedMem(outPdoMem.pdoMemOffset, outPdoMem.memSize,
+                                &pPdoMem);
+
+    if (ret != kErrorOk || pPdoMem == NULL)
+        return kErrorNoResource;
+
+    *ppPdoMem_p = pPdoMem;
 
     return kErrorOk;
 }
@@ -186,22 +196,9 @@ transferring the PDOs.
 //------------------------------------------------------------------------------
 tOplkError pdoucal_freeMem(UINT8* pMem_p, size_t memSize_p)
 {
-    ULONG      bytesReturned;
-    tPdoMem    PdoMem;
+    UNUSED_PARAMETER(memSize_p);
 
-    if (pFileHandle_l == NULL)
-        return kErrorNoResource;
-
-    PdoMem.memSize = (UINT)memSize_p;
-    PdoMem.pPdoAddr = pMem_p;
-
-    if (!DeviceIoControl(pFileHandle_l, PLK_CMD_PDO_FREE_MEM,
-                         &PdoMem, sizeof(tPdoMem), NULL, 0,
-                         &bytesReturned, NULL))
-    {
-        DEBUG_LVL_ERROR_TRACE("%s() Unable to free mem %d\n", __func__, GetLastError());
-        return kErrorGeneralError;
-    }
+    pMem_p = NULL;
 
     return kErrorOk;
 }

@@ -569,24 +569,25 @@ void drv_getEvent(void* pEvent_p, size_t* pSize_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Get PDO memory
+\brief  Get PDO memory offset
 
-Retrieves the PDO memory from the dualprocshm library and maps it into user space
-before sharing it to user application.
+Retrieves the PDO memory offset from the dualprocshm library and shares it
+with user application.
 
-\param  ppPdoMem_p    Pointer to PDO memory.
-\param  memSize_p     Size of the PDO memory.
+\param  pPdoMemOffs_p    Pointer to PDO memory offset value.
+\param  memSize_p        Size of the PDO memory.
 
 \return Returns tOplkError error code.
 
 \ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
-tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
+tOplkError drv_getPdoMem(UINT32* pPdoMemOffs_p, size_t memSize_p)
 {
     tDualprocReturn    dualRet;
-    UINT8*             pMem;
-    tMemInfo*          pPdoMemInfo = &drvInstance_l.pdoMem;
+    UINT32             offset;
+    UINT8*             pMem = NULL;
+    UINT8*             bar0Addr = (UINT8*)ndis_getBarAddr(OPLK_PCIEBAR_SHM);
 
     if (!drvInstance_l.fDriverActive)
         return kErrorNoResource;
@@ -600,54 +601,17 @@ tOplkError drv_getPdoMem(UINT8** ppPdoMem_p, size_t memSize_p)
         return kErrorNoResource;
     }
 
-    pPdoMemInfo->pKernelVa = pMem;
-    pPdoMemInfo->memSize = memSize_p;
+    offset = (UINT32)(pMem - bar0Addr);
 
-    if (mapMemory(pPdoMemInfo) != kErrorOk)
-    {
-        DEBUG_LVL_ERROR_TRACE("%s() error mapping memory\n", __func__);
-        return kErrorNoResource;
-    }
+    *pPdoMemOffs_p = offset;
 
-    *ppPdoMem_p = pPdoMemInfo->pUserVa;
-
-    TRACE("%s() PDO memory address in user space %p\n", __func__, pPdoMemInfo->pUserVa);
+    TRACE("%s() PDO memory offset is %x\n", __func__, offset);
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Free PDO memory
-
-Frees the PDO memory previously allocated.
-
-\param  ppPdoMem_p    Pointer to PDO memory.
-\param  memSize_p     Size of the PDO memory.
-
-\ingroup module_driver_ndispcie
-*/
-//------------------------------------------------------------------------------
-void drv_freePdoMem(UINT8* pPdoMem_p, size_t memSize_p)
-{
-    tMemInfo*          pPdoMemInfo = &drvInstance_l.pdoMem;
-    tDualprocReturn    dualRet;
-
-    unmapMemory(pPdoMemInfo);
-
-    dualRet = dualprocshm_freeMemory(drvInstance_l.dualProcDrvInst, DUALPROCSHM_BUFF_ID_PDO, FALSE);
-    if (dualRet != kDualprocSuccessful)
-    {
-        DEBUG_LVL_ERROR_TRACE("%s() couldn't free PDO buffer (%d)\n",
-                              __func__, dualRet);
-        return;
-    }
-
-    pPdoMem_p = NULL;
-}
-
-//------------------------------------------------------------------------------
-/**
-\brief  Get Benchmark Base
+\brief  Get benchmark base
 
 Retrieves the benchmark memory from NDIS driver and maps it into user virtual
 address space for providing access to user layer.
@@ -716,8 +680,8 @@ void drv_freeBenchmarkMem(UINT8* pBenchmarkMem_p)
 /**
 \brief  Get POWERLINK status LEDs Base
 
-Retrieves the status LEDs memory from NDIS driver and maps it into user virtual
-address space for accessing for user layer.
+Retrieves the openPOWERLINK status/error LEDs memory from NDIS driver and maps
+it into user virtual address space to be accessed by user space LED module.
 
 \param  ppPlkLedMem_p    Pointer to POWERLINK LEDs memory.
 
@@ -738,7 +702,7 @@ tOplkError drv_getPlkLedMem(UINT8** ppPlkLedMem_p)
     if (pPlkLedMemInfo->pUserVa != NULL)
         goto Exit;
 
-    pMem = (UINT8*) ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
+    pMem = (UINT8*)ndis_getBarAddr(OPLK_PCIEBAR_COMM_MEM);
 
     if (pMem == NULL)
         return kErrorNoResource;
@@ -783,25 +747,32 @@ void drv_freePlkLedMem(UINT8* pPlkLedMem_p)
 
 //------------------------------------------------------------------------------
 /**
-\brief  Map memory in openPOWERLINK kernel into user layer
+\brief  Map complete shared memory into user layer
 
-Maps the kernel layer memory specified by the caller into user layer.
+Maps the shared memory between openPOWERLINK kernel and user stack
+into the user space of the OS. The routine also shares the base address of
+the shared memory in openPOWERLINK kernel layer (i.e. on board memory) for
+offset calculation.
+
+This mapped memory can then be used by the user application without accessing
+the driver. 
 
 \param  ppKernelMem_p    Double pointer to kernel memory.
 \param  ppUserMem_p      Double pointer to kernel memory mapped in user layer.
+\param  pSize_p          Size of the shared memory.
 
 \return Returns tOplkError error code.
 
 \ingroup module_driver_ndispcie
 */
 //------------------------------------------------------------------------------
-tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p)
+tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p, UINT32* pSize_p)
 {
     tDualprocReturn         dualRet;
     tMemInfo*               pKernel2UserMemInfo = &drvInstance_l.kernel2UserMem;
     tDualprocSharedMemInst  sharedMemInst;
 
-    if(*ppKernelMem_p == NULL || *ppUserMem_p == NULL)
+    if (*ppKernelMem_p == NULL || *ppUserMem_p == NULL)
         return kErrorNoResource;
 
     dualRet = dualprocshm_getSharedMemInfo(drvInstance_l.dualProcDrvInst,
@@ -816,7 +787,16 @@ tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p)
     }
 
     pKernel2UserMemInfo->pKernelVa = (void*)sharedMemInst.baseAddr;
-    pKernel2UserMemInfo->memSize = sharedMemInst.span;
+    // TODO: The span for shared memory is doubled to include the 
+    //       shared memory mapped through atomic modify IP.
+    //       Use PCIe bar header to identify the actual size
+    pKernel2UserMemInfo->memSize = sharedMemInst.span * 2;
+
+    if (pKernel2UserMemInfo->pUserVa != NULL)
+    {
+        // The memory is already mapped. Return existing information
+        goto Exit;
+    }
 
     if (mapMemory(pKernel2UserMemInfo) != kErrorOk)
     {
@@ -824,6 +804,7 @@ tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p)
         return kErrorNoResource;
     }
 
+Exit:
     dualRet = dualprocshm_getSharedMemInfo(drvInstance_l.dualProcDrvInst,
                                            dualprocshm_getRemoteProcInst(),
                                            &sharedMemInst);
@@ -836,14 +817,18 @@ tOplkError drv_mapKernelMem(UINT8** ppKernelMem_p, UINT8** ppUserMem_p)
     }
 
     *ppUserMem_p = pKernel2UserMemInfo->pUserVa;
-    *ppKernelMem_p = (UINT8*) sharedMemInst.baseAddr;
+    *ppKernelMem_p = (UINT8*)sharedMemInst.baseAddr;
+    *pSize_p = pKernel2UserMemInfo->memSize;
 
+    TRACE("Mapped memory info U:%p K:%p size %x", pKernel2UserMemInfo->pUserVa,
+                                                  (UINT8*)sharedMemInst.baseAddr,
+                                                  pKernel2UserMemInfo->memSize);
     return kErrorOk;
 }
 
 //------------------------------------------------------------------------------
 /**
-\brief  Unmap mapped memory
+\brief  Free kernel memory
 
 Unmap and free the kernel to user memory mapped before.
 
@@ -1050,9 +1035,9 @@ static void exitDllQueues(void)
 
     if (drvInstance_l.dllQueueInst[kDllCalQueueTxSync] != NULL)
         circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxSync]);
-/*
-    //TODO: VETH to be integrated later
-    if (drvInstance_l.dllQueueInst[kDllCalQueueTxVeth] != NULL)
+    /*
+        //TODO: VETH to be integrated later
+        if (drvInstance_l.dllQueueInst[kDllCalQueueTxVeth] != NULL)
         circbuf_disconnect(drvInstance_l.dllQueueInst[kDllCalQueueTxVeth]);
         */
 }
@@ -1112,7 +1097,7 @@ Exit:
 
 Maps the specified memory into user space.
 
-\param  pMemInfo_p          Pointer memory map information structure for the
+\param  pMemInfo_p          Pointer to memory map information structure for the
                             memory to map.
 
 \return Returns tOplkError error code.
@@ -1120,7 +1105,7 @@ Maps the specified memory into user space.
 //------------------------------------------------------------------------------
 static tOplkError mapMemory(tMemInfo* pMemInfo_p)
 {
-    if(pMemInfo_p->pKernelVa == NULL )
+    if (pMemInfo_p->pKernelVa == NULL)
         return kErrorNoResource;
 
     // Allocate new MDL pointing to PDO memory

@@ -95,6 +95,7 @@ typedef struct
 // local vars
 //------------------------------------------------------------------------------
 static tMemMapInstance      memMapInstance_l;
+
 //------------------------------------------------------------------------------
 // local function prototypes
 //------------------------------------------------------------------------------
@@ -164,6 +165,7 @@ tMemMapReturn memmap_shutdown(void)
 
     pMemStruc->pKernelAddr = NULL;
     pMemStruc->pUserAddr = NULL;
+    pMemStruc->size = 0;
     memMapInstance_l.pFileHandle = NULL;
 
     return kMemMapOk;
@@ -191,7 +193,8 @@ void* memmap_mapKernelBuffer(void* pKernelBuffer_p, UINT bufferSize_p)
     offset = (UINT)((UINT8*)pKernelBuffer_p - (UINT8*)pMemStruc->pKernelAddr);
 
     // Negative offset not possible
-    if (offset < 0)
+    if (offset < 0 || (((UINT8*)pKernelBuffer_p + bufferSize_p) >
+        ((UINT8*)pMemStruc->pKernelAddr + pMemStruc->size)))
        return NULL;
 
     pUserAddr = (UINT8*)pMemStruc->pUserAddr + offset;

@@ -82,7 +82,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // local vars
 //------------------------------------------------------------------------------
-static HANDLE    fileHandle_l;
+static HANDLE           fileHandle_l;
+static tMemStruc        sharedMemStruc_l;
 
 //------------------------------------------------------------------------------
 // local function prototypes
@@ -106,6 +107,9 @@ The function initializes the user control CAL module.
 tOplkError ctrlucal_init(void)
 {
     UINT32      errCode;
+    tMemStruc   inMemStruc;
+    tMemStruc*  pOutMemStruc = &sharedMemStruc_l;
+    ULONG       bytesReturned;
 
     fileHandle_l = CreateFile(PLK_DEV_FILE,                         // Name of the NT "device" to open
                               GENERIC_READ | GENERIC_WRITE,         // Access rights requested
@@ -119,6 +123,15 @@ tOplkError ctrlucal_init(void)
     {
         errCode = GetLastError();
         DEBUG_LVL_ERROR_TRACE("%s() CreateFile failed with error 0x%x\n", __func__, errCode);
+        return kErrorNoResource;
+    }
+
+    if (!DeviceIoControl(fileHandle_l, PLK_CMD_MAP_MEM,
+        &inMemStruc, sizeof(tMemStruc), pOutMemStruc, sizeof(tMemStruc),
+        &bytesReturned, NULL))
+    {
+        errCode = GetLastError();
+        DEBUG_LVL_ERROR_TRACE("%s() Failed to get mapped memory. Error 0x%x\n", __func__, errCode);
         return kErrorNoResource;
     }
 
@@ -136,6 +149,21 @@ The function cleans up the user control CAL module.
 //------------------------------------------------------------------------------
 void ctrlucal_exit(void)
 {
+    tMemStruc*  pMemStruc = &sharedMemStruc_l;
+    ULONG       bytesReturned;
+
+    if (!DeviceIoControl(fileHandle_l, PLK_CMD_UNMAP_MEM,
+        pMemStruc, sizeof(tMemStruc), NULL, 0,
+        &bytesReturned, NULL))
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Unable to free mem %d\n", __func__, GetLastError());
+        return kErrorGeneralError;
+    }
+
+    sharedMemStruc_l.pKernelAddr = NULL;
+    sharedMemStruc_l.pUserAddr = NULL;
+    sharedMemStruc_l.size = 0;
+
     CloseHandle(fileHandle_l);
 }
 
@@ -362,6 +390,46 @@ The function returns the file descriptor of the kernel module.
 HANDLE ctrlucal_getFd(void)
 {
     return fileHandle_l;
+}
+
+
+//------------------------------------------------------------------------------
+/**
+\brief  Get user memory
+
+The routine calculates the base address of the memory in user space using
+the provided offset and returns the address back.
+
+\param  kernelOffs_p            Offset of the memory in kernel.
+\param  size_p                  Size of the memory.
+\parame ppUserMem_p             Pointer to the user memory.
+
+\return The function returns a tOplkError error code.
+\retval kErrorOk                The memory was successfully returned.
+\retval kErrorNoResource        No memory available.
+\retval kErrorInvalidOperation  The provided offset is incorrect.
+
+\ingroup module_ctrlucal
+*/
+//------------------------------------------------------------------------------
+tOplkError ctrlucal_getMappedMem(UINT32 kernelOffs_p, UINT32 size_p,
+                                 UINT8** ppUserMem_p)
+{
+    UINT8*      pMem;
+    UINT8*      pUserMemHighAddr = (UINT8*) sharedMemStruc_l.pUserAddr +
+                                   sharedMemStruc_l.size;
+
+    if (sharedMemStruc_l.pUserAddr == NULL)
+        return kErrorNoResource;
+
+    pMem = (UINT8*) sharedMemStruc_l.pUserAddr + kernelOffs_p;
+
+    if ((pMem + size_p) > pUserMemHighAddr)
+        return kErrorInvalidOperation;
+
+    *ppUserMem_p = pMem;
+
+    return kErrorOk;
 }
 
 //============================================================================//
