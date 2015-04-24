@@ -109,9 +109,9 @@ The Data Link Layer (DLL) defines determine the POWERLINK DLL module.
 #define CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_SYNC    FALSE
 
 #define CONFIG_DLL_DEFERRED_RXFRAME_RELEASE_ASYNC   TRUE
-#define CONFIG_EDRV_ASND_DEFFERRED_RX_BUFFERS       16
+#define CONFIG_EDRV_ASND_DEFERRED_RX_BUFFERS        16
     ///< disable deferred RX frames if Edrv does not support it
-#define CONFIG_EDRV_VETH_DEFERRED_RX_BUFFERS        5
+#define CONFIG_EDRV_VETH_DEFRRED_RX_BUFFERS         5
 /**@}*/
 
 /**
