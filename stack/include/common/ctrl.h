@@ -66,6 +66,9 @@ typedef enum
     kCtrlGetVersionLow          = 0x0005,   ///< Get lower part of kernel stack version
     kCtrlGetFeaturesHigh        = 0x0006,   ///< Get higher part of features of kernel stack
     kCtrlGetFeaturesLow         = 0x0007,   ///< Get lower part of features of kernel stack
+
+    kCtrlDeviceSpecificStart    = 0x8000,   ///< Start of device specific ctrl commands
+    kCtrlDeviceSpecificEnd      = 0x8FFF,   ///< End of device specific ctrl commands
 } eCtrlCmdType;
 
 /**
