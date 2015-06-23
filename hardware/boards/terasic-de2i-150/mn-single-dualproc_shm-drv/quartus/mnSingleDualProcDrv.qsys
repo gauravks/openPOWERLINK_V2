@@ -71,7 +71,7 @@
    {
       datum baseAddress
       {
-         value = "8192";
+         value = "16384";
          type = "String";
       }
    }
@@ -79,7 +79,7 @@
    {
       datum baseAddress
       {
-         value = "8144";
+         value = "24576";
          type = "String";
       }
    }
@@ -174,7 +174,7 @@
  <parameter name="projectName">mnSingleDualProcDrv.qpf</parameter>
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="1" />
- <parameter name="timeStamp" value="1426852072134" />
+ <parameter name="timeStamp" value="1435073194192" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_50.clk_in" type="clock" dir="end" />
@@ -312,6 +312,7 @@
   <parameter name="AUTO_CLK100_CLOCK_RATE" value="100000000" />
   <parameter name="AUTO_CLK100_CLOCK_DOMAIN" value="2" />
   <parameter name="AUTO_CLK100_RESET_DOMAIN" value="2" />
+  <parameter name="cpu0_resetCpuBridge" value="flash_bridge" />
  </module>
  <module
    kind="altera_generic_tristate_controller"
@@ -510,7 +511,7 @@
    start="pcp_0.slow_bridge"
    end="openmac_0.macReg">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x2000" />
+  <parameter name="baseAddress" value="0x4000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
@@ -519,7 +520,7 @@
    start="pcp_0.slow_bridge"
    end="openmac_0.macTimer">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x1fd0" />
+  <parameter name="baseAddress" value="0x6000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
