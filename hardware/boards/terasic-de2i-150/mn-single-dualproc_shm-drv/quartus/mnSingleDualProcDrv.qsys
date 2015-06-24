@@ -25,6 +25,22 @@
          type = "boolean";
       }
    }
+   element atomicmodify_0
+   {
+      datum _sortIndex
+      {
+         value = "9";
+         type = "int";
+      }
+   }
+   element atomicmodify_1
+   {
+      datum _sortIndex
+      {
+         value = "10";
+         type = "int";
+      }
+   }
    element clk_100
    {
       datum _sortIndex
@@ -138,6 +154,22 @@
          type = "String";
       }
    }
+   element atomicmodify_0.s0
+   {
+      datum baseAddress
+      {
+         value = "524288";
+         type = "String";
+      }
+   }
+   element atomicmodify_1.s0
+   {
+      datum baseAddress
+      {
+         value = "524288";
+         type = "String";
+      }
+   }
    element tri_state_0
    {
       datum _sortIndex
@@ -174,7 +206,7 @@
  <parameter name="projectName">mnSingleDualProcDrv.qpf</parameter>
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="1" />
- <parameter name="timeStamp" value="1435073194192" />
+ <parameter name="timeStamp" value="1435143978059" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="clk" internal="clk_50.clk_in" type="clock" dir="end" />
@@ -319,7 +351,7 @@
    version="13.0"
    enabled="1"
    name="SSRAM_0">
-  <parameter name="TCM_ADDRESS_W" value="22" />
+  <parameter name="TCM_ADDRESS_W" value="19" />
   <parameter name="TCM_DATA_W" value="32" />
   <parameter name="TCM_BYTEENABLE_W" value="4" />
   <parameter name="TCM_READ_WAIT" value="0" />
@@ -376,14 +408,14 @@
    version="13.0"
    enabled="1"
    name="tri_state_0">
-  <parameter name="INTERFACE_INFO"><![CDATA[<info><slave name="tcs"><master name="SSRAM_0.tcm"><pin role="" width="1" type="Invalid" output_name="" output_enable_name="" input_name="" /><pin role="begintransfer_n" width="1" type="Output" output_name="tcm_begintransfer_n_out" output_enable_name="" input_name="" /><pin role="address" width="22" type="Output" output_name="tcm_address_out" output_enable_name="" input_name="" /><pin role="write_n" width="1" type="Output" output_name="tcm_write_n_out" output_enable_name="" input_name="" /><pin role="byteenable_n" width="4" type="Output" output_name="tcm_byteenable_n_out" output_enable_name="" input_name="" /><pin role="data" width="32" type="Bidirectional" output_name="tcm_data_out" output_enable_name="tcm_data_outen" input_name="tcm_data_in" /><pin role="outputenable_n" width="1" type="Output" output_name="tcm_outputenable_n_out" output_enable_name="" input_name="" /><pin role="chipselect_n" width="1" type="Output" output_name="tcm_chipselect_n_out" output_enable_name="" input_name="" /></master></slave></info>]]></parameter>
+  <parameter name="INTERFACE_INFO"><![CDATA[<info><slave name="tcs"><master name="SSRAM_0.tcm"><pin role="" width="1" type="Invalid" output_name="" output_enable_name="" input_name="" /><pin role="begintransfer_n" width="1" type="Output" output_name="tcm_begintransfer_n_out" output_enable_name="" input_name="" /><pin role="address" width="19" type="Output" output_name="tcm_address_out" output_enable_name="" input_name="" /><pin role="write_n" width="1" type="Output" output_name="tcm_write_n_out" output_enable_name="" input_name="" /><pin role="byteenable_n" width="4" type="Output" output_name="tcm_byteenable_n_out" output_enable_name="" input_name="" /><pin role="data" width="32" type="Bidirectional" output_name="tcm_data_out" output_enable_name="tcm_data_outen" input_name="tcm_data_in" /><pin role="outputenable_n" width="1" type="Output" output_name="tcm_outputenable_n_out" output_enable_name="" input_name="" /><pin role="chipselect_n" width="1" type="Output" output_name="tcm_chipselect_n_out" output_enable_name="" input_name="" /></master></slave></info>]]></parameter>
   <parameter name="AUTO_CLK_CLOCK_RATE" value="100000000" />
   <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone IV GX" />
  </module>
  <module kind="openmac" version="1.0.2" enabled="1" name="openmac_0">
   <parameter name="sys_mainClk" value="50000000" />
   <parameter name="sys_mainClkx2" value="100000000" />
-  <parameter name="sys_dmaAddrWidth" value="22" />
+  <parameter name="sys_dmaAddrWidth" value="19" />
   <parameter name="gui_phyType" value="2" />
   <parameter name="gui_phyCount" value="1" />
   <parameter name="gui_extraSmi" value="false" />
@@ -417,6 +449,14 @@
   <parameter name="clockFrequencyKnown" value="true" />
   <parameter name="inputClockFrequency" value="0" />
   <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module kind="atomicmodify" version="1.1.0" enabled="1" name="atomicmodify_0">
+  <parameter name="sys_m0Addrw" value="19" />
+  <parameter name="AUTO_C0_CLOCK_RATE" value="100000000" />
+ </module>
+ <module kind="atomicmodify" version="1.1.0" enabled="1" name="atomicmodify_1">
+  <parameter name="sys_m0Addrw" value="19" />
+  <parameter name="AUTO_C0_CLOCK_RATE" value="100000000" />
  </module>
  <connection
    kind="reset"
@@ -596,15 +636,6 @@
    version="13.0"
    start="clk_50.clk_reset"
    end="clk_125.clk_in_reset" />
- <connection
-   kind="avalon"
-   version="13.0"
-   start="pcp_0.cpu_bridge"
-   end="SSRAM_0.uas">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
  <connection kind="clock" version="13.0" start="clk_100.clk" end="SSRAM_0.clk" />
  <connection kind="clock" version="13.0" start="clk_100.clk" end="tri_state_0.clk" />
  <connection kind="avalon" version="13.0" start="openmac_0.dma" end="SSRAM_0.uas">
@@ -627,6 +658,81 @@
    version="13.0"
    start="clk_50.clk"
    end="pcie_subsytem.clk" />
+ <connection
+   kind="reset"
+   version="13.0"
+   start="clk_50.clk_reset"
+   end="atomicmodify_0.r0" />
+ <connection
+   kind="reset"
+   version="13.0"
+   start="clk_100.clk_reset"
+   end="atomicmodify_0.r0" />
+ <connection
+   kind="clock"
+   version="13.0"
+   start="clk_100.clk"
+   end="atomicmodify_0.c0" />
+ <connection
+   kind="avalon"
+   version="13.0"
+   start="pcp_0.cpu_bridge"
+   end="atomicmodify_0.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00080000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="13.0"
+   start="atomicmodify_0.m0"
+   end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="13.0"
+   start="atomicmodify_1.m0"
+   end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="reset"
+   version="13.0"
+   start="clk_50.clk_reset"
+   end="atomicmodify_1.r0" />
+ <connection
+   kind="reset"
+   version="13.0"
+   start="clk_100.clk_reset"
+   end="atomicmodify_1.r0" />
+ <connection
+   kind="avalon"
+   version="13.0"
+   start="pcie_subsytem.pcie_to_bar1_config_bridge"
+   end="atomicmodify_1.s0">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x00080000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection
+   kind="clock"
+   version="13.0"
+   start="clk_100.clk"
+   end="atomicmodify_1.c0" />
+ <connection
+   kind="avalon"
+   version="13.0"
+   start="pcp_0.cpu_bridge"
+   end="SSRAM_0.uas">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
  <connection
    kind="avalon"
    version="13.0"
