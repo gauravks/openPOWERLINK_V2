@@ -1,16 +1,16 @@
 /**
 ********************************************************************************
-\file   common/driver.h
+\file   common/driver-linuxpcie.h
 
-\brief  Header file for openPOWERLINK drivers
+\brief  Header file for openPOWERLINK PCIe driver interface for Linux kernel
 
 This file contains the necessary definitions for using the openPOWERLINK
-kernel driver modules.
+PCIe driver interface for Linux kernel.
 *******************************************************************************/
 
 /*------------------------------------------------------------------------------
 Copyright (c) 2014, Bernecker+Rainer Industrie-Elektronik Ges.m.b.H. (B&R)
-Copyright (c) 2013, SYSTEC electronic GmbH
+Copyright (c) 2015, Kalycito Infotech Private Limited
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,95 +36,40 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------*/
 
-#ifndef _INC_common_driver_H_
-#define _INC_common_driver_H_
+#ifndef _INC_common_driver_linux_pcie_H_
+#define _INC_common_driver_linux_pcie_H_
 
 //------------------------------------------------------------------------------
 // includes
 //------------------------------------------------------------------------------
-#include <common/oplkinc.h>
-#include <common/dllcal.h>
 
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
-#define PLK_CLASS_NAME    "plk"
-#define PLK_DEV_NAME      "plk" // used for "/dev" and "/proc" entry
-#define PLK_DRV_NAME      "plk"
-#define PLK_IOC_MAGIC     '='
+#define PLK_DEV_FILE      "/dev/plk"
+//------------------------------------------------------------------------------
+//  Commands for <ioctl>
+//------------------------------------------------------------------------------
+#define PLK_CMD_CTRL_EXECUTE_CMD                _IOWR(PLK_IOC_MAGIC, 0, tCtrlCmd)
+#define PLK_CMD_CTRL_STORE_INITPARAM            _IOW (PLK_IOC_MAGIC, 1, tCtrlInitParam)
+#define PLK_CMD_CTRL_READ_INITPARAM             _IOR (PLK_IOC_MAGIC, 2, tCtrlInitParam)
+#define PLK_CMD_CTRL_GET_STATUS                 _IOR (PLK_IOC_MAGIC, 3, UINT16)
+#define PLK_CMD_CTRL_GET_HEARTBEAT              _IOR (PLK_IOC_MAGIC, 4, UINT16)
+#define PLK_CMD_POST_EVENT                      _IOW (PLK_IOC_MAGIC, 5, tEvent)
+#define PLK_CMD_GET_EVENT                       _IOR (PLK_IOC_MAGIC, 6, tEvent)
+#define PLK_CMD_DLLCAL_ASYNCSEND                _IO  (PLK_IOC_MAGIC, 7)
+#define PLK_CMD_ERRHND_WRITE                    _IOW (PLK_IOC_MAGIC, 8, tErrHndIoctl)
+#define PLK_CMD_ERRHND_READ                     _IOR (PLK_IOC_MAGIC, 9, tErrHndIoctl)
+#define PLK_CMD_PDO_SYNC                        _IO  (PLK_IOC_MAGIC, 10)
+#define PLK_CMD_MEMMAP_MAP_MEM                  _IOWR(PLK_IOC_MAGIC, 11, tMemmap)
+#define PLK_CMD_PDO_MAP_OFFSET                  _IOR (PLK_IOC_MAGIC, 12, ULONGLONG)
 
 //------------------------------------------------------------------------------
 // typedef
 //------------------------------------------------------------------------------
-typedef struct
-{
-    tDllCalQueue            queue;
-    void*                   pData;
-    size_t                  size;
-} tIoctlDllCalAsync;
 
-typedef struct
-{
-    void*                   pData;
-    size_t                  size;
-} tIoctlBufInfo;
-
-typedef struct
-{
-    UINT32                  offset;
-    UINT32                  errVal;
-} tErrHndIoctl;
-
-/**
-\brief PDO mem structure
-
-The structure is used to retrieve the PDO memory allocated by kernel and
-mapped into user virtual address space.
-*/
-typedef struct
-{
-    UINT32                  memSize;        ///< Size of PDO to be allocated and mapped
-    void*                   pPdoAddr;       ///< Pointer to the pdo address returned by kernel
-} tPdoMem;
-
-/**
-\brief Benchmark memory struture
-
-The structure is used to retrieve the benchmark address.
-*/
-typedef struct
-{
-    void*                   pBaseAddr;       ///< Pointer to the benchmark address returned by kernel
-} tBenchmarkMem;
-
-/**
-\brief Kernel to user memory mapping structure
-
-The structure is used to map openPOWERLINK kernel kayer memory into user layer.
-*/
-typedef struct
-{
-    void*                   pKernelAddr;       ///< Pointer to the Kernel address
-    void*                   pUserAddr;         ///< Pointer to the User address
-} tMemStruc;
 //------------------------------------------------------------------------------
 // function prototypes
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// include architecture specific definitions
-//------------------------------------------------------------------------------
-#if (TARGET_SYSTEM == _LINUX_)
-
-#ifdef __PCIE__
-#include <common/driver-linuxpcie.h>
-#else
-
-#include <common/driver-linux.h>
-#endif
-
-#else if (TARGET_SYSTEM == _WIN32_)
-#include <common/driver-windows.h>
-#endif
-
-#endif /* _INC_common_driver_H_ */
+#endif /* _INC_common_driver_linux_pcie_H_ */
