@@ -777,7 +777,8 @@ The function reads the shared memory base address of the provided driver instanc
 from the common memory header segment.
 
 \param  pInstance_p         Driver instance.
-\param  pShmBaseAddr_p      Pointer to buffer where the read data is to be stored.
+\param  procInstance_p      The processor instance whose sharedmemory instance is queried.
+\param  pShmMemInst_p       Pointer to buffer where the read data is to be stored.
 
 \return The function returns a tDualprocReturn error code.
 \retval kDualprocSuccessful       The shared memory address is read successfully.
