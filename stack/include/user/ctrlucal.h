@@ -70,7 +70,7 @@ tOplkError ctrlucal_executeCmd(tCtrlCmdType cmd_p, UINT16* pRetVal_p);
 tOplkError ctrlucal_checkKernelStack(void);
 void       ctrlucal_storeInitParam(tCtrlInitParam* pInitParam_p);
 tOplkError ctrlucal_readInitParam(tCtrlInitParam* pInitParam_p);
-#ifdef  __LINUX__
+#ifdef  __linux__
 int        ctrlucal_getFd(void);
 #elif   _WIN32
 HANDLE     ctrlucal_getFd(void);
