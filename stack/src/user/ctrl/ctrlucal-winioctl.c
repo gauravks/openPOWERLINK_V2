@@ -392,7 +392,6 @@ HANDLE ctrlucal_getFd(void)
     return fileHandle_l;
 }
 
-
 //------------------------------------------------------------------------------
 /**
 \brief  Get user memory
@@ -416,13 +415,13 @@ tOplkError ctrlucal_getMappedMem(UINT32 kernelOffs_p, UINT32 size_p,
                                  UINT8** ppUserMem_p)
 {
     UINT8*      pMem;
-    UINT8*      pUserMemHighAddr = (UINT8*) sharedMemStruc_l.pUserAddr +
+    UINT8*      pUserMemHighAddr = (UINT8*)sharedMemStruc_l.pUserAddr +
                                    sharedMemStruc_l.size;
 
     if (sharedMemStruc_l.pUserAddr == NULL)
         return kErrorNoResource;
 
-    pMem = (UINT8*) sharedMemStruc_l.pUserAddr + kernelOffs_p;
+    pMem = (UINT8*)sharedMemStruc_l.pUserAddr + kernelOffs_p;
 
     if ((pMem + size_p) > pUserMemHighAddr)
         return kErrorInvalidOperation;
