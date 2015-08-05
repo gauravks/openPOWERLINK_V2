@@ -434,7 +434,7 @@ tDualprocReturn dualprocshm_getMemory(tDualprocDrvInstance pInstance_p, UINT8 id
         pDrvInst->pDynResTbl[id_p].memInst->span = (UINT16)*pSize_p;
 
         // Write the address in mapping table
-        if (pDrvInst->pDynResTbl[id_p].pfnSetDynAddr(pDrvInst, id_p, (UINT64)((UINT32)pMemBase)) != 0)
+        if (pDrvInst->pDynResTbl[id_p].pfnSetDynAddr(pDrvInst, id_p, (UINT64)(pMemBase)) != 0)
             return kDualprocNoResource;
     }
     else
@@ -973,7 +973,7 @@ static INT setDynBuffAddr(tDualprocDrvInstance pInstance_p, UINT16 index_p, UINT
     UINT32          tableEntryOffs = index_p * DYN_MEM_TABLE_ENTRY_SIZE;
     UINT32          offset = 0;
     UINT32          sharedMemSize = 0;
-    UINT64          sharedMemBaseAddr = (UINT64)((UINT32)dualprocshm_getSharedMemInst(&sharedMemSize));
+    UINT64          sharedMemBaseAddr = (UINT64)(dualprocshm_getSharedMemInst(&sharedMemSize));
 
     if (addr_p == 0x0)
     {
@@ -1073,7 +1073,7 @@ static tDualprocReturn configureCommonMemHeader(tDualProcInstance procInstance_p
                                                 tDualprocHeader* pCommonMemHeader_p)
 {
     UINT32      sharedMemSize = 0;
-    UINT64      sharedMemBaseAddr = (UINT64)((UINT32)dualprocshm_getSharedMemInst(&sharedMemSize));
+    UINT64      sharedMemBaseAddr = (UINT64)(dualprocshm_getSharedMemInst(&sharedMemSize));
     UINT8       dpshmInstState = dualProcInstance_l.fInitialized;
 
     if (pCommonMemHeader_p == NULL || procInstance_p >= kDualProcLast)
