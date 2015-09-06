@@ -111,9 +111,6 @@ The function initializes the user control CAL module.
 tOplkError ctrlucal_init(void)
 {
     UINT32      errCode;
-    tMemStruc   inMemStruc;
-    tMemStruc*  pOutMemStruc = &sharedMemStruc_l;
-    ULONG       bytesReturned;
 
     hFileHandle_l = CreateFile(PLK_DEV_FILE,                         // Name of the NT "device" to open
                                GENERIC_READ | GENERIC_WRITE,         // Access rights requested
@@ -127,15 +124,6 @@ tOplkError ctrlucal_init(void)
     {
         errCode = GetLastError();
         DEBUG_LVL_ERROR_TRACE("%s() CreateFile failed with error 0x%x\n", __func__, errCode);
-        return kErrorNoResource;
-    }
-
-    if (!DeviceIoControl(hFileHandle_l, PLK_CMD_MAP_MEM,
-        &inMemStruc, sizeof(tMemStruc), pOutMemStruc, sizeof(tMemStruc),
-        &bytesReturned, NULL))
-    {
-        errCode = GetLastError();
-        DEBUG_LVL_ERROR_TRACE("%s() Failed to get mapped memory. Error 0x%x\n", __func__, errCode);
         return kErrorNoResource;
     }
 
@@ -509,9 +497,25 @@ the provided offset and returns the address back.
 tOplkError ctrlucal_getMappedMem(UINT32 kernelOffs_p, UINT32 size_p,
                                  UINT8** ppUserMem_p)
 {
-    UINT8*      pMem;
-    UINT8*      pUserMemHighAddr = (UINT8*)sharedMemStruc_l.pUserAddr +
-                                   sharedMemStruc_l.size;
+    tOplkError  ret = kErrorOk;
+    tMemStruc   inMemStruc;
+    tMemStruc*  pOutMemStruc = &sharedMemStruc_l;
+    ULONG       bytesReturned;
+    UINT8*      pUserMemHighAddr = NULL;
+    UINT8*      pMem = NULL;
+
+    inMemStruc.size = size_p;
+
+    if (!DeviceIoControl(hFileHandle_l, PLK_CMD_MAP_MEM,
+        &inMemStruc, sizeof(tMemStruc), pOutMemStruc, sizeof(tMemStruc),
+        &bytesReturned, NULL))
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() Failed to get mapped memory. Error 0x%x\n", __func__, GetLastError(););
+        return kErrorNoResource;
+    }
+
+    pUserMemHighAddr = (UINT8*)sharedMemStruc_l.pUserAddr +
+                               sharedMemStruc_l.size;
 
     if (sharedMemStruc_l.pUserAddr == NULL)
         return kErrorNoResource;
