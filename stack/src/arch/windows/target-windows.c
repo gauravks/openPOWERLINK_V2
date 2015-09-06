@@ -129,3 +129,34 @@ tOplkError target_setLed(tLedType ledType_p, BOOL fLedOn_p)
 
     return kErrorOk;
 }
+
+//------------------------------------------------------------------------------
+/**
+\brief  Set IP address of specified Ethernet interface
+
+The function sets the IP address, subnetMask and MTU of an Ethernet
+interface.
+
+\param  ifName_p                Name of Ethernet interface.
+\param  ipAddress_p             IP address to set for interface.
+\param  subnetMask_p            Subnet mask to set for interface.
+\param  mtu_p                   MTU to set for interface.
+
+\return The function returns a tOplkError error code.
+
+\ingroup module_target
+*/
+//------------------------------------------------------------------------------
+tOplkError target_setIpAdrs(char* ifName_p, UINT32 ipAddress_p, UINT32 subnetMask_p,
+                            UINT16 mtu_p)
+{
+    UNUSED_PARAMETER(ifName_p);
+    UNUSED_PARAMETER(ipAddress_p);
+    UNUSED_PARAMETER(subnetMask_p);
+    UNUSED_PARAMETER(mtu_p);
+
+    //Note: The given parameters are ignored because the application must set
+    //      these settings to the used IP stack by itself!
+
+    return kErrorOk;
+}
