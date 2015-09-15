@@ -1,10 +1,86 @@
-// notify.cpp : Implementation of CNotify
+/**
+********************************************************************************
+\file   notify.cpp
+
+\brief  CNotify class implementation
+
+TODO
+
+\ingroup module_notify_ndisim
+*******************************************************************************/
+/*------------------------------------------------------------------------------
+Copyright (c) 2015, Kalycito Infotech Private Limited
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the copyright holders nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+------------------------------------------------------------------------------*/
+
+//------------------------------------------------------------------------------
+// includes
+//------------------------------------------------------------------------------
 
 #include "stdafx.h"
 #include "notify.h"
 
+//============================================================================//
+//            G L O B A L   D E F I N I T I O N S                             //
+//============================================================================//
 
-// CNotify
+//------------------------------------------------------------------------------
+// const defines
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// module global vars
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// global function prototypes
+//------------------------------------------------------------------------------
+
+//============================================================================//
+//            P R I V A T E   D E F I N I T I O N S                           //
+//============================================================================//
+
+//------------------------------------------------------------------------------
+// const defines
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local types
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local vars
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// local function prototypes
+//------------------------------------------------------------------------------
+
+//============================================================================//
+//            P U B L I C   F U N C T I O N S                                 //
+//============================================================================//
 
 CNotify::CNotify(VOID) : pInetComponent(NULL),
                          pInetCfg(NULL),
@@ -38,7 +114,7 @@ CNotify::~CNotify(VOID)
     TraceMsg(L"<-----~CNotify.\n");
 }
 
-STDMETHODIMP CNotify::InterfaceSupportsErrorInfo(REFIID riid)
+STDMETHODIMP CNotify::InterfaceSupportsErrorInfo(REFIID riid_p)
 {
     static const IID* const arr[] =
     {
@@ -47,7 +123,7 @@ STDMETHODIMP CNotify::InterfaceSupportsErrorInfo(REFIID riid)
     TraceMsg(L"InterfaceSupportsErrorInfo.\n");
     for (int i = 0; i < sizeof(arr) / sizeof(arr[0]); i++)
     {
-        if (InlineIsEqualGUID(*arr[i], riid))
+        if (InlineIsEqualGUID(*arr[i], riid_p))
             return S_OK;
     }
     return S_FALSE;
@@ -75,7 +151,6 @@ STDMETHODIMP CNotify::Initialize(IN INetCfgComponent* pIComp_p, IN INetCfg* pINe
     }
 
     // We initialize the adapters and virtual miniports if this is not a installation
-
     if (!fInstalling_p)
         hret = initalizeAdapters();
 
@@ -108,7 +183,7 @@ STDMETHODIMP CNotify::ApplyRegistryChanges()
     return hret;
 }
 
-STDMETHODIMP CNotify::ApplyPnpChanges(IN INetCfgPnpReconfigCallback* pICallback)
+STDMETHODIMP CNotify::ApplyPnpChanges(IN INetCfgPnpReconfigCallback* pICallback_p)
 {
     CPhyAdapter*    pPhyAdapter = NULL;
     HRESULT         hret = S_OK;
@@ -120,16 +195,16 @@ STDMETHODIMP CNotify::ApplyPnpChanges(IN INetCfgPnpReconfigCallback* pICallback)
     for (; iterator != pPhyAdapterList.end(); iterator++)
     {
         pPhyAdapter = *iterator;
-        hret = pPhyAdapter->ApplyPnpChanges(pICallback);
+        hret = pPhyAdapter->ApplyPnpChanges(pICallback_p);
     }
     TraceMsg(L"<-----ApplyPnpChanges.\n");
     return hret;
 }
 
 // INetCfgComponentSetup
-STDMETHODIMP CNotify::Install(IN DWORD setupFlags)
+STDMETHODIMP CNotify::Install(IN DWORD setupFlags_p)
 {
-    UNREFERENCED_PARAMETER(setupFlags);
+    UNREFERENCED_PARAMETER(setupFlags_p);
 
     applyAction = kActInstall;
 
@@ -137,23 +212,23 @@ STDMETHODIMP CNotify::Install(IN DWORD setupFlags)
     return S_OK;
 }
 
-STDMETHODIMP CNotify::Upgrade(IN DWORD setupFlags, IN DWORD upgradeFromBuildNo)
+STDMETHODIMP CNotify::Upgrade(IN DWORD setupFlags_p, IN DWORD upgradeFromBuildNo_p)
 {
-    UNREFERENCED_PARAMETER(setupFlags);
-    UNREFERENCED_PARAMETER(upgradeFromBuildNo);
+    UNREFERENCED_PARAMETER(setupFlags_p);
+    UNREFERENCED_PARAMETER(upgradeFromBuildNo_p);
 
-    TraceMsg(L"   setupFlags = %x, upgradeFromBuildNo = %x\n",
-             setupFlags,
-             upgradeFromBuildNo);
+    TraceMsg(L"   setupFlags_p = %x, upgradeFromBuildNo = %x\n",
+             setupFlags_p,
+             upgradeFromBuildNo_p);
 
     TraceMsg(L"Upgrade.\n");
     return S_OK;
 }
 
-STDMETHODIMP CNotify::ReadAnswerFile(IN PCWSTR pszAnswerFile, IN PCWSTR pszAnswerSection)
+STDMETHODIMP CNotify::ReadAnswerFile(IN PCWSTR pszAnswerFile_p, IN PCWSTR pszAnswerSection_p)
 {
-    UNREFERENCED_PARAMETER(pszAnswerFile);
-    UNREFERENCED_PARAMETER(pszAnswerSection);
+    UNREFERENCED_PARAMETER(pszAnswerFile_p);
+    UNREFERENCED_PARAMETER(pszAnswerSection_p);
 
     TraceMsg(L"ReadAnswerFile.\n");
     return S_OK;
@@ -166,18 +241,18 @@ STDMETHODIMP CNotify::Removing()
 }
 
 // INetCfgNotifyBinding
-STDMETHODIMP CNotify::QueryBindingPath(IN DWORD changeFlag, IN INetCfgBindingPath* pNetCfgBindPath)
+STDMETHODIMP CNotify::QueryBindingPath(IN DWORD changeFlag_p, IN INetCfgBindingPath* pNetCfgBindPath_p)
 {
-    UNREFERENCED_PARAMETER(changeFlag);
-    UNREFERENCED_PARAMETER(pNetCfgBindPath);
+    UNREFERENCED_PARAMETER(changeFlag_p);
+    UNREFERENCED_PARAMETER(pNetCfgBindPath_p);
     TraceMsg(L"QueryBindingPath.\n");
-    DumpChangeFlag(changeFlag);
-    DumpBindingPath(pNetCfgBindPath);
+    DumpChangeFlag(changeFlag_p);
+    DumpBindingPath(pNetCfgBindPath_p);
 
     return S_OK;
 }
 
-STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPath* pNetCfgBindPath)
+STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag_p, IN INetCfgBindingPath* pNetCfgBindPath_p)
 {
     INetCfgComponent*    pLowerComponent = NULL;
     INetCfgComponent*    pUpperComponent = NULL;
@@ -187,8 +262,8 @@ STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPa
     HRESULT              hret = S_OK;
 
     TraceMsg(L"----->NotifyBindingPath.\n");
-    DumpChangeFlag(changeFlag);
-    DumpBindingPath(pNetCfgBindPath);
+    DumpChangeFlag(changeFlag_p);
+    DumpBindingPath(pNetCfgBindPath_p);
     // Copied from sample:
     // We are only interested to know 1) when a component is installed
     // and we are binding to it i.e. dwChangeFlag = NCN_ADD | NCN_ENABLE
@@ -199,10 +274,10 @@ STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPa
     // covers the case of NCN_REMOVE | NCN_ENABLE. We don't care about
     // NCN_ADD | NCN_DISABLE (case 1) and NCN_REMOVE | NCN_DISABLE (case 2).
 
-    if (changeFlag & (NCN_ENABLE | NCN_REMOVE))
+    if (changeFlag_p & (NCN_ENABLE | NCN_REMOVE))
     {
         // get the upper and lower bindings
-        hret = getUpperAndLowerBindings(pNetCfgBindPath, &pUpperComponent, &pLowerComponent);
+        hret = getUpperAndLowerBindings(pNetCfgBindPath_p, &pUpperComponent, &pLowerComponent);
         if (hret != S_OK)
             return hret;
 
@@ -236,7 +311,7 @@ STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPa
                      goto ExitFree;
 
                 // Upper binding in our driver, add the adapter
-                if (changeFlag & NCN_ADD)
+                if (changeFlag_p & NCN_ADD)
                 {
                     hret = addAdapter(pLowerComponent);
                     if (hret != S_OK)
@@ -249,7 +324,7 @@ STDMETHODIMP CNotify::NotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPa
                 }
                 else
                 {
-                    if (changeFlag & NCN_REMOVE)
+                    if (changeFlag_p & NCN_REMOVE)
                     {
                         hret = removeAdapter(pLowerComponent);
                         if (hret != S_OK)
@@ -278,15 +353,15 @@ Exit:
 }
 
 // INetCfgNotifyGlobal
-STDMETHODIMP CNotify::GetSupportedNotifications(OUT DWORD* pNotificationFlag)
+STDMETHODIMP CNotify::GetSupportedNotifications(OUT DWORD* pNotificationFlag_p)
 {
     TraceMsg(L"GetSupportedNotifications.\n");
-    *pNotificationFlag = NCN_NET | NCN_NETTRANS | NCN_ADD | NCN_REMOVE |
+    *pNotificationFlag_p = NCN_NET | NCN_NETTRANS | NCN_ADD | NCN_REMOVE |
                          NCN_BINDING_PATH | NCN_ENABLE | NCN_DISABLE;
     return S_OK;
 }
 
-STDMETHODIMP CNotify::SysQueryBindingPath(IN DWORD changeFlag, IN INetCfgBindingPath* pNetCfgBindPath)
+STDMETHODIMP CNotify::SysQueryBindingPath(IN DWORD changeFlag_p, IN INetCfgBindingPath* pNetCfgBindPath_p)
 {
     INetCfgComponent*    pLowerComponent = NULL;
     INetCfgComponent*    pUpperComponent = NULL;
@@ -296,13 +371,13 @@ STDMETHODIMP CNotify::SysQueryBindingPath(IN DWORD changeFlag, IN INetCfgBinding
     HRESULT              hret = S_OK;
 
     TraceMsg(L"---->SysQueryBindingPath\n");
-    DumpChangeFlag(changeFlag);
-    DumpBindingPath(pNetCfgBindPath);
+    DumpChangeFlag(changeFlag_p);
+    DumpBindingPath(pNetCfgBindPath_p);
 
-    if (changeFlag & NCN_ENABLE)
+    if (changeFlag_p & NCN_ENABLE)
     {
         // get the upper and lower bindings
-        hret = getUpperAndLowerBindings(pNetCfgBindPath, &pUpperComponent, &pLowerComponent);
+        hret = getUpperAndLowerBindings(pNetCfgBindPath_p, &pUpperComponent, &pLowerComponent);
         if (hret != S_OK)
             return hret;
 
@@ -358,79 +433,35 @@ Exit:
     return hret;
 }
 
-STDMETHODIMP CNotify::SysNotifyBindingPath(IN DWORD changeFlag, IN INetCfgBindingPath* pNetCfgBindPath)
+STDMETHODIMP CNotify::SysNotifyBindingPath(IN DWORD changeFlag_p, IN INetCfgBindingPath* pNetCfgBindPath_p)
 {
-    UNREFERENCED_PARAMETER(changeFlag);
-    UNREFERENCED_PARAMETER(pNetCfgBindPath);
+    UNREFERENCED_PARAMETER(changeFlag_p);
+    UNREFERENCED_PARAMETER(pNetCfgBindPath_p);
 
     TraceMsg(L"---->SysNotifyBindingPath.\n");
-    DumpChangeFlag(changeFlag);
-    DumpBindingPath(pNetCfgBindPath);
+    DumpChangeFlag(changeFlag_p);
+    DumpBindingPath(pNetCfgBindPath_p);
     TraceMsg(L"<----SysNotifyBindingPath.\n");
     return S_OK;
 }
 
-STDMETHODIMP CNotify::SysNotifyComponent(IN DWORD changeFlag, IN INetCfgComponent* pNetCfgComponent)
+STDMETHODIMP CNotify::SysNotifyComponent(IN DWORD changeFlag_p, IN INetCfgComponent* pNetCfgComponent)
 {
-    UNREFERENCED_PARAMETER(changeFlag);
+    UNREFERENCED_PARAMETER(changeFlag_p);
     UNREFERENCED_PARAMETER(pNetCfgComponent);
     TraceMsg(L"---->SysNotifyComponent.\n");
-    DumpChangeFlag(changeFlag);
+    DumpChangeFlag(changeFlag_p);
     DumpComponent(pNetCfgComponent);
     TraceMsg(L"<----SysNotifyComponent.\n");
     return S_OK;
 }
 
-STDMETHODIMP CNotify::MergePropPages(IN OUT DWORD* pDefPages,
-                                     OUT LPBYTE* pahpspPrivate,
-                                     OUT UINT* pcPrivate,
-                                     IN HWND hwndParent,
-                                     OUT PCWSTR* pszStartPage)
-{
-    // We don't generate any property pages.
-    UNREFERENCED_PARAMETER(pDefPages);
-    UNREFERENCED_PARAMETER(hwndParent);
+//============================================================================//
+//            P R I V A T E   F U N C T I O N S                               //
+//============================================================================//
+/// \name Private Functions
+/// \{
 
-    *pcPrivate = 0;
-    *pahpspPrivate = NULL;
-    *pszStartPage = NULL;
-
-    TraceMsg(L"MergePropPages.\n");
-    return S_OK;
-}
-
-STDMETHODIMP CNotify::ValidateProperties(HWND hwndSheet)
-{
-    UNREFERENCED_PARAMETER(hwndSheet);
-    TraceMsg(L"ValidateProperties.\n");
-    return S_OK;
-}
-
-STDMETHODIMP CNotify::CancelProperties()
-{
-    TraceMsg(L"CancelProperties.\n");
-    return S_OK;
-}
-
-STDMETHODIMP CNotify::ApplyProperties()
-{
-    TraceMsg(L"ApplyProperties.\n");
-    return S_OK;
-}
-
-
-// INetCfgComponentPropertyUi
-STDMETHODIMP CNotify::QueryPropertyUi(IN IUnknown* pUnk)
-{
-    TraceMsg(L"QueryPropertyUi.\n");
-    return S_OK;
-}
-
-STDMETHODIMP CNotify::SetContext(IN IUnknown* pUnk)
-{
-    TraceMsg(L"SetContext.\n");
-    return S_OK;
-}
 HRESULT CNotify::initalizeAdapters(VOID)
 {
     HKEY                 hkeyAdapterList;
@@ -550,7 +581,7 @@ HRESULT CNotify::getUpperAndLowerBindings(INetCfgBindingPath* pInetBindPath_p,
     ReleaseObj(pInetBindInterface);
     ReleaseObj(pEnumNetCfg);
 
-    TraceMsg(L"<------getUpperAndLowerBindings HRESULT(%x)\n",hret);
+    TraceMsg(L"<------getUpperAndLowerBindings HRESULT(%x)\n", hret);
     return hret;
 }
 
@@ -690,7 +721,7 @@ void CNotify::enableProtocolBindings(INetCfgComponent* pAdapter_p, BOOL fEnable_
 {
     IEnumNetCfgBindingPath*       pEnumNetCfgPath = NULL;
     INetCfgComponentBindings*     pNetCfgComponentBind = NULL;
-    INetCfgBindingPath*           pNetCfgBindPath;
+    INetCfgBindingPath*           pNetCfgBindPath_p;
     ULONG                         retCount;
     HRESULT                       hret;
     TraceMsg(L"---->enableProtocolBindings ");
@@ -713,18 +744,18 @@ void CNotify::enableProtocolBindings(INetCfgComponent* pAdapter_p, BOOL fEnable_
 
     ReleaseObj(pNetCfgComponentBind);
 
-    hret = pEnumNetCfgPath->Next(1, &pNetCfgBindPath, &retCount);
+    hret = pEnumNetCfgPath->Next(1, &pNetCfgBindPath_p, &retCount);
 
     while (hret == S_OK)
     {
-        if (!checkBindingStatus(pNetCfgBindPath))
+        if (!checkBindingStatus(pNetCfgBindPath_p))
         {
-            pNetCfgBindPath->Enable(fEnable_p);
+            pNetCfgBindPath_p->Enable(fEnable_p);
         }
 
-        ReleaseObj(pNetCfgBindPath);
-        pNetCfgBindPath = NULL;
-        hret = pEnumNetCfgPath->Next(1, &pNetCfgBindPath, &retCount);
+        ReleaseObj(pNetCfgBindPath_p);
+        pNetCfgBindPath_p = NULL;
+        hret = pEnumNetCfgPath->Next(1, &pNetCfgBindPath_p, &retCount);
     }
 
     ReleaseObj(pEnumNetCfgPath);
@@ -787,7 +818,7 @@ BOOL CNotify::checkBindingStatus(INetCfgBindingPath *pBindPath_p)
     return bExist;
 }
 
-HRESULT CNotify::findAdapter(GUID* pGuidAdapter_p, CPhyAdapter** pPhyAdapter_p)
+HRESULT CNotify::findAdapter(GUID* pGuidAdapter_p, CPhyAdapter** ppPhyAdapter_p)
 {
     CPhyAdapter* pPhyAdapt = NULL;
     GUID         adaptGuid;
@@ -808,7 +839,7 @@ HRESULT CNotify::findAdapter(GUID* pGuidAdapter_p, CPhyAdapter** pPhyAdapter_p)
             TraceMsg(L"TestAdapter %s.\n", szAdaptGuid);
             if (IsEqualGUID(adaptGuid, *pGuidAdapter_p))
             {
-                *pPhyAdapter_p = pPhyAdapt;
+                *ppPhyAdapter_p = pPhyAdapt;
                 return S_OK;
             }
         }
@@ -816,3 +847,5 @@ HRESULT CNotify::findAdapter(GUID* pGuidAdapter_p, CPhyAdapter** pPhyAdapter_p)
     TraceMsg(L"....Not found .\n");
     return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
 }
+
+/// \}
