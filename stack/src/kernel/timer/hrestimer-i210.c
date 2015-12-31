@@ -159,8 +159,13 @@ The function initializes the high-resolution timer module
 //------------------------------------------------------------------------------
 tOplkError hrestimer_init(void)
 {
+    tOplkError      ret = kErrorOk;
     OPLK_MEMSET(&hresTimerInstance_l, 0, sizeof(hresTimerInstance_l));
-    return kErrorOk;
+
+    // Register the default timer callback
+    ret = edrv_registerHresCallback(timerCallback);
+
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -190,6 +195,10 @@ tOplkError hrestimer_exit(void)
             break;
         pTimerInfo->eventArg.timerHdl.handle = 0;
     }
+
+    // De-register the default timer callback
+    ret = edrv_registerHresCallback(NULL);
+
     return ret;
 }
 
@@ -277,10 +286,6 @@ tOplkError hrestimer_modifyTimer(tTimerHdl* pTimerHdl_p, ULONGLONG time_p,
     pTimerInfo->pfnCallback = pfnCallback_p;
     pTimerInfo->period = time_p;
     pTimerInfo->fContinuously = fContinue_p;
-
-    ret = edrv_registerHresCallback(timerCallback);
-    if (ret != kErrorOk)
-        return ret;
 
     timerFreq = (UINT32)(time_p);
     ret = edrv_startTimer(&pTimerInfo->eventArg.timerHdl.handle, timerFreq);
